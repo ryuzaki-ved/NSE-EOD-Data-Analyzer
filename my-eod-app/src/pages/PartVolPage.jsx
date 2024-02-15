@@ -155,6 +155,7 @@ const PartVolPage = () => {
                   backgroundColor: '#1f2937',
                   border: '1px solid #374151',
                   borderRadius: '8px',
+                  color: '#e2e8f0',
                 }}
               />
               <Legend />
@@ -202,6 +203,7 @@ const PartVolPage = () => {
                   backgroundColor: '#1f2937',
                   border: '1px solid #374151',
                   borderRadius: '8px',
+                  color: '#e2e8f0',
                 }}
               />
             </PieChart>
@@ -222,6 +224,7 @@ const PartVolPage = () => {
                   backgroundColor: '#1f2937',
                   border: '1px solid #374151',
                   borderRadius: '8px',
+                  color: '#e2e8f0',
                 }}
               />
               <Legend />
@@ -245,6 +248,7 @@ const PartVolPage = () => {
                   backgroundColor: '#1f2937',
                   border: '1px solid #374151',
                   borderRadius: '8px',
+                  color: '#e2e8f0',
                 }}
               />
               <Legend />
