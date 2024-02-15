@@ -9,6 +9,18 @@ const FIIDerivStatsPage = () => {
   const [loading, setLoading] = useState(true)
   const [selectedInstrument, setSelectedInstrument] = useState('ALL')
 
+  // Helper function to format numbers with Indian comma system
+  const formatIndianNumber = (num) => {
+    if (typeof num !== 'number') return num
+    return num.toLocaleString('en-IN')
+  }
+
+  // Helper function to format amounts in crores with Indian comma system
+  const formatAmountInCrores = (amount) => {
+    if (typeof amount !== 'number') return amount
+    const crores = amount / 1e7
+    return `₹${crores.toLocaleString('en-IN', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}Cr`
+  }
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -345,26 +357,32 @@ const FIIDerivStatsPage = () => {
                 <p className="text-gray-300">
                   FII have Options activity near{' '}
                   <span className="text-green-400 font-bold">
-                    {latestIndexOptionsData.buy_str_act?.toFixed(0) || 0}
+                    {formatIndianNumber(Math.round(latestIndexOptionsData.buy_str_act || 0))}
                   </span>{' '}
                   for buying and{' '}
                   <span className="text-red-400 font-bold">
-                    {latestIndexOptionsData.sell_str_act?.toFixed(0) || 0}
+                    {formatIndianNumber(Math.round(latestIndexOptionsData.sell_str_act || 0))}
                   </span>{' '}
                   for selling.
                 </p>
                 <div className="border-t border-gray-700 pt-3">
-                  <p className="text-gray-300">
-                    The strikes traded around for buy{' '}
-                    <span className="text-green-400 font-bold">
-                      {roundToFifty(latestIndexOptionsData.buy_str_act || 0)}
-                    </span>
-                    , and sell{' '}
-                    <span className="text-red-400 font-bold">
-                      {roundToFifty(latestIndexOptionsData.sell_str_act || 0)}
-                    </span>
-                    .
+                  <p className="text-gray-300 mb-3">
+                    The strikes traded around for:
                   </p>
+                  <div className="space-y-2 ml-4">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-green-400 font-bold text-lg">BUY:</span>
+                      <span className="text-green-400 font-bold text-lg">
+                        {formatIndianNumber(roundToFifty(latestIndexOptionsData.buy_str_act || 0))}
+                      </span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-red-400 font-bold text-lg">SELL:</span>
+                      <span className="text-red-400 font-bold text-lg">
+                        {formatIndianNumber(roundToFifty(latestIndexOptionsData.sell_str_act || 0))}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
             ) : (
@@ -403,13 +421,13 @@ const FIIDerivStatsPage = () => {
                     <div className="flex justify-between">
                       <span>Latest Buy Amount:</span>
                       <span className="text-green-400">
-                        ₹{(latestNiftyData.buy_amt_adj / 1e7).toFixed(1)}Cr
+                        {formatAmountInCrores(latestNiftyData.buy_amt_adj)}
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span>Latest Sell Amount:</span>
                       <span className="text-red-400">
-                        ₹{(latestNiftyData.sell_amt_adj / 1e7).toFixed(1)}Cr
+                        {formatAmountInCrores(latestNiftyData.sell_amt_adj)}
                       </span>
                     </div>
                   </div>
@@ -423,11 +441,11 @@ const FIIDerivStatsPage = () => {
                       <span className={buyDiff >= 0 ? 'text-green-400 font-bold' : 'text-red-400 font-bold'}>
                         {buyDiff >= 0 ? 'increased' : 'decreased'}
                       </span>
-                      {' '}by ₹{Math.abs(buyDiff / 1e7).toFixed(1)}Cr for buying contracts and trading activity{' '}
+                      {' '}by {formatAmountInCrores(Math.abs(buyDiff))} for buying contracts and trading activity{' '}
                       <span className={sellDiff >= 0 ? 'text-green-400 font-bold' : 'text-red-400 font-bold'}>
                         {sellDiff >= 0 ? 'increased' : 'decreased'}
                       </span>
-                      {' '}by ₹{Math.abs(sellDiff / 1e7).toFixed(1)}Cr for selling contracts.
+                      {' '}by {formatAmountInCrores(Math.abs(sellDiff))} for selling contracts.
                     </p>
                   </div>
                 </div>
