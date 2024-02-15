@@ -274,6 +274,8 @@ const PartVolPage = () => {
         data={filteredData}
         columns={columns}
         title="Participant Trading Volume Data"
+        defaultSortKey="date"
+        defaultSortDirection="desc"
       />
     </div>
   )

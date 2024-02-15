@@ -1,11 +1,25 @@
 import React, { useState } from 'react'
 import { ChevronUp, ChevronDown, Search } from 'lucide-react'
 
-const DataTable = ({ data, columns, title }) => {
-  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' })
+const DataTable = ({ data, columns, title, defaultSortKey = null, defaultSortDirection = 'asc' }) => {
+  const [sortConfig, setSortConfig] = useState({ 
+    key: defaultSortKey, 
+    direction: defaultSortDirection 
+  })
   const [searchTerm, setSearchTerm] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 10
+
+  // Helper function to parse date strings like "10-Jul-2025"
+  const parseDateString = (dateStr) => {
+    if (typeof dateStr !== 'string') return new Date(0)
+    const [day, month, year] = dateStr.split('-')
+    const monthMap = {
+      'Jan': 0, 'Feb': 1, 'Mar': 2, 'Apr': 3, 'May': 4, 'Jun': 5,
+      'Jul': 6, 'Aug': 7, 'Sep': 8, 'Oct': 9, 'Nov': 10, 'Dec': 11
+    }
+    return new Date(parseInt(year), monthMap[month] || 0, parseInt(day))
+  }
 
   const handleSort = (key) => {
     let direction = 'asc'
@@ -19,10 +33,19 @@ const DataTable = ({ data, columns, title }) => {
     let sortableData = [...data]
     if (sortConfig.key) {
       sortableData.sort((a, b) => {
-        if (a[sortConfig.key] < b[sortConfig.key]) {
+        let aVal = a[sortConfig.key]
+        let bVal = b[sortConfig.key]
+        
+        // Special handling for date sorting
+        if (sortConfig.key === 'date') {
+          aVal = parseDateString(aVal)
+          bVal = parseDateString(bVal)
+        }
+        
+        if (aVal < bVal) {
           return sortConfig.direction === 'asc' ? -1 : 1
         }
-        if (a[sortConfig.key] > b[sortConfig.key]) {
+        if (aVal > bVal) {
           return sortConfig.direction === 'asc' ? 1 : -1
         }
         return 0
@@ -116,7 +139,7 @@ const DataTable = ({ data, columns, title }) => {
           <div className="text-sm text-gray-400">
             Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, filteredData.length)} of {filteredData.length} entries
           </div>
-          <div className="flex space-x-2">
+          <div className="flex items-center space-x-2">
             <button
               onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}
@@ -133,6 +156,16 @@ const DataTable = ({ data, columns, title }) => {
               className="px-3 py-1 bg-dark-700 border border-gray-600 rounded disabled:opacity-50 hover:bg-dark-600 transition-colors"
             >
               Next
+            </button>
+            <button
+              onClick={() => setSortConfig(prev => ({ 
+                ...prev, 
+                direction: prev.direction === 'asc' ? 'desc' : 'asc' 
+              }))}
+              className="px-3 py-1 bg-dark-700 border border-gray-600 rounded hover:bg-dark-600 transition-colors text-sm"
+              title="Reverse sort order"
+            >
+              {sortConfig.direction === 'asc' ? '↑' : '↓'} Reverse
             </button>
           </div>
         </div>

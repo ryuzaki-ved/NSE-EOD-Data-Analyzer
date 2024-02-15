@@ -1,13 +1,17 @@
 import React, { useState, useEffect } from 'react'
-import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
+import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, ComposedChart } from 'recharts'
 import DataTable from '../components/DataTable'
 import MetricCard from '../components/MetricCard'
-import { TrendingUp, TrendingDown, DollarSign, Activity, BarChart3 } from 'lucide-react'
+import { TrendingUp, TrendingDown, DollarSign, Activity, BarChart3, Eye, Target } from 'lucide-react'
 
 const FIIDerivStatsPage = () => {
   const [data, setData] = useState([])
   const [loading, setLoading] = useState(true)
   const [selectedInstrument, setSelectedInstrument] = useState('ALL')
+  const [selectedPieInstruments, setSelectedPieInstruments] = useState([
+    'BANKNIFTY FUTURES', 'NIFTY FUTURES', 'FINNIFTY FUTURES', 'MIDCPNIFTY FUTURES', 'NIFTYNXT50 FUTURES',
+    'BANKNIFTY OPTIONS', 'NIFTY OPTIONS', 'FINNIFTY OPTIONS', 'MIDCPNIFTY OPTIONS', 'NIFTYNXT50 OPTIONS'
+  ])
 
   useEffect(() => {
     const fetchData = async () => {
@@ -42,6 +46,20 @@ const FIIDerivStatsPage = () => {
   const totalOI = filteredData.reduce((sum, item) => sum + (item.oi_amt_adj || 0), 0)
   const netFlow = totalBuyAmt - totalSellAmt
 
+  // Helper function to round to nearest 50
+  const roundToFifty = (value) => Math.round(value / 50) * 50
+
+  // Get most recent date data for Deep Data section
+  const latestDate = data.length > 0 ? data.reduce((latest, item) => {
+    const itemDate = new Date(item.date.split('-').reverse().join('-'))
+    const latestDateObj = new Date(latest.split('-').reverse().join('-'))
+    return itemDate > latestDateObj ? item.date : latest
+  }, data[0].date) : ''
+
+  const latestIndexOptionsData = data.find(item => 
+    item.date === latestDate && item.instrument === 'INDEX OPTIONS'
+  )
+
   // Prepare chart data
   const chartData = data.reduce((acc, item) => {
     const existingDate = acc.find(d => d.date === item.date)
@@ -61,8 +79,13 @@ const FIIDerivStatsPage = () => {
   }, [])
 
   // Instrument-wise data for pie chart
+  const allInstruments = [...new Set(data.map(item => item.instrument))]
+  const availableInstruments = allInstruments.filter(inst => 
+    !['INDEX FUTURES', 'INDEX OPTIONS', 'STOCK FUTURES', 'STOCK OPTIONS'].includes(inst)
+  )
+
   const instrumentData = data.reduce((acc, item) => {
-    if (item.instrument !== 'INDEX FUTURES' && item.instrument !== 'INDEX OPTIONS') {
+    if (selectedPieInstruments.includes(item.instrument)) {
       const existing = acc.find(d => d.name === item.instrument)
       if (existing) {
         existing.value += item.oi_amt_adj || 0
@@ -75,6 +98,23 @@ const FIIDerivStatsPage = () => {
     }
     return acc
   }, [])
+
+  // Futures and Options OI distribution data for Deep Data section
+  const latestDateData = data.filter(item => item.date === latestDate)
+  
+  const futuresOIData = latestDateData
+    .filter(item => item.instrument.includes('FUTURES') && !item.instrument.includes('STOCK') && item.instrument !== 'INDEX FUTURES')
+    .map(item => ({
+      name: item.instrument.replace(' FUTURES', ''),
+      value: item.oi_amt_adj || 0
+    }))
+
+  const optionsOIData = latestDateData
+    .filter(item => item.instrument.includes('OPTIONS') && !item.instrument.includes('STOCK') && item.instrument !== 'INDEX OPTIONS')
+    .map(item => ({
+      name: item.instrument.replace(' OPTIONS', ''),
+      value: item.oi_amt_adj || 0
+    }))
 
   const COLORS = ['#0ea5e9', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#06b6d4', '#84cc16', '#f97316']
 
@@ -232,6 +272,30 @@ const FIIDerivStatsPage = () => {
 
         <div className="glass-card p-6">
           <h3 className="text-xl font-semibold mb-4">Instrument Distribution</h3>
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-3">Select Instruments:</label>
+            <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto p-2 bg-dark-800/50 rounded-lg border border-gray-700">
+              {availableInstruments.map(instrument => (
+                <button
+                  key={instrument}
+                  onClick={() => {
+                    if (selectedPieInstruments.includes(instrument)) {
+                      setSelectedPieInstruments(prev => prev.filter(inst => inst !== instrument))
+                    } else {
+                      setSelectedPieInstruments(prev => [...prev, instrument])
+                    }
+                  }}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-full transition-all duration-200 border ${
+                    selectedPieInstruments.includes(instrument)
+                      ? 'bg-primary-600 text-white border-primary-500 shadow-lg shadow-primary-500/25 scale-105'
+                      : 'bg-dark-700 text-gray-300 border-gray-600 hover:bg-dark-600 hover:border-gray-500 hover:text-white'
+                  }`}
+                >
+                  {instrument.replace(' FUTURES', '').replace(' OPTIONS', '')}
+                </button>
+              ))}
+            </div>
+          </div>
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
               <Pie
@@ -259,11 +323,147 @@ const FIIDerivStatsPage = () => {
         </div>
       </div>
 
+      {/* Deep Data Section */}
+      <div className="glass-card p-8 border-2 border-primary-500/30 bg-gradient-to-br from-primary-900/10 to-purple-900/10">
+        <div className="flex items-center space-x-3 mb-6">
+          <div className="p-2 rounded-lg bg-gradient-to-r from-primary-500 to-purple-500">
+            <Eye className="h-6 w-6 text-white" />
+          </div>
+          <h2 className="text-3xl font-bold gradient-text">Deep Data</h2>
+          <div className="px-3 py-1 bg-primary-500/20 rounded-full text-xs text-primary-400 border border-primary-500/30">
+            PREMIUM INSIGHTS
+          </div>
+        </div>
+
+        <div className="grid lg:grid-cols-3 gap-8">
+          {/* Futures OI Distribution */}
+          <div className="glass-card p-4">
+            <h4 className="text-lg font-semibold mb-3 text-center">Index Futures OI Distribution</h4>
+            <ResponsiveContainer width="100%" height={200}>
+              <PieChart>
+                <Pie
+                  data={futuresOIData}
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={60}
+                  fill="#8884d8"
+                  dataKey="value"
+                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                >
+                  {futuresOIData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: '#1f2937',
+                    border: '1px solid #374151',
+                    borderRadius: '8px',
+                  }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Options OI Distribution */}
+          <div className="glass-card p-4">
+            <h4 className="text-lg font-semibold mb-3 text-center">Index Options OI Distribution</h4>
+            <ResponsiveContainer width="100%" height={200}>
+              <PieChart>
+                <Pie
+                  data={optionsOIData}
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={60}
+                  fill="#8884d8"
+                  dataKey="value"
+                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                >
+                  {optionsOIData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: '#1f2937',
+                    border: '1px solid #374151',
+                    borderRadius: '8px',
+                  }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Deep Insights Text */}
+          <div className="space-y-4">
+            <div className="glass-card p-4 border border-primary-500/20">
+              <div className="flex items-center space-x-2 mb-3">
+                <Target className="h-5 w-5 text-primary-400" />
+                <h4 className="text-lg font-semibold">Strike Activity Analysis</h4>
+              </div>
+              {latestIndexOptionsData ? (
+                <div className="space-y-3 text-sm">
+                  <p className="text-gray-300">
+                    <span className="text-primary-400 font-medium">Latest Data:</span> {latestDate}
+                  </p>
+                  <p className="text-gray-300">
+                    FII have Options activity near{' '}
+                    <span className="text-green-400 font-bold">
+                      {latestIndexOptionsData.buy_str_act?.toFixed(0) || 0}
+                    </span>{' '}
+                    for buying and{' '}
+                    <span className="text-red-400 font-bold">
+                      {latestIndexOptionsData.sell_str_act?.toFixed(0) || 0}
+                    </span>{' '}
+                    for selling.
+                  </p>
+                  <div className="border-t border-gray-700 pt-3">
+                    <p className="text-gray-300">
+                      The strikes traded around for buy{' '}
+                      <span className="text-green-400 font-bold">
+                        {roundToFifty(latestIndexOptionsData.buy_str_act || 0)}
+                      </span>
+                      , and sell{' '}
+                      <span className="text-red-400 font-bold">
+                        {roundToFifty(latestIndexOptionsData.sell_str_act || 0)}
+                      </span>
+                      .
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-gray-400 text-sm">No recent INDEX OPTIONS data available</p>
+              )}
+            </div>
+
+            <div className="glass-card p-4 border border-purple-500/20">
+              <h4 className="text-sm font-semibold text-purple-400 mb-2">Market Sentiment</h4>
+              <div className="space-y-2 text-xs text-gray-400">
+                <div className="flex justify-between">
+                  <span>Futures OI:</span>
+                  <span className="text-primary-400">
+                    ₹{(futuresOIData.reduce((sum, item) => sum + item.value, 0) / 1e7).toFixed(1)}Cr
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Options OI:</span>
+                  <span className="text-purple-400">
+                    ₹{(optionsOIData.reduce((sum, item) => sum + item.value, 0) / 1e7).toFixed(1)}Cr
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Data Table */}
       <DataTable
         data={filteredData}
         columns={columns}
         title="FII Derivatives Data"
+        defaultSortKey="date"
+        defaultSortDirection="desc"
       />
     </div>
   )
