@@ -908,7 +908,7 @@ const PartOIPage = () => {
       </div>
 
       {/* Deep Insights Section */}
-      <div className="glass-card p-8 border-2 border-primary-500/30 bg-gradient-to-br from-primary-900/10 to-purple-900/10">
+      <div className="glass-card p-8 border-2 border-primary-500/30 bg-gradient-to-br from-primary-900/10 to-purple-900/10 glow-gold-border">
         <div className="flex items-center space-x-3 mb-6">
           <div className="p-2 rounded-lg bg-gradient-to-r from-primary-500 to-purple-500">
             <Eye className="h-6 w-6 text-white" />

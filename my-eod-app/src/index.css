@@ -38,6 +38,29 @@
   }
 }
 
+/* Glowing gold border for Deep Insights - border only, not inside */
+.glow-gold-border {
+  position: relative;
+  z-index: 1;
+  border-radius: 3rem;
+}
+.glow-gold-border::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 3rem; /* match card */
+  padding: 2px; /* border thickness */
+  background: linear-gradient(120deg, #fffbe6 0%, #ffd700 40%, #ffb300 100%);
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box, 
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 2;
+  box-shadow: 0 0 16px 4px #ffd70080, 0 0 32px 8px #fffbe680;
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
