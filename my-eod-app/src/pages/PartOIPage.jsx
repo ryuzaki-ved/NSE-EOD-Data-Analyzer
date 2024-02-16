@@ -292,6 +292,270 @@ const PartOIPage = () => {
       // Skip insights for 0.00 ratios
       if (callBuyPutBuy === 0 || callBuyCallSell === 0 || putSellPutBuy === 0 || putSellCallSell === 0) return
       
+      // Detailed analysis for Call Buy / Put Buy (Negative Values)
+      if (callLongDiff < 0 && putLongDiff >= 0) {
+        // Numerator Negative (Call Buy Negative): Bearish
+        insights.push(
+          <div key={`${clientType}-call-buy-negative`} className="flex items-start space-x-3">
+            <div className="w-2 h-2 bg-red-400 rounded-full mt-2 flex-shrink-0"></div>
+            <p className="text-gray-300 text-sm leading-relaxed">
+              <span className="text-red-400 font-bold underline">{clientType}</span> shows{' '}
+              <span className="text-red-400 font-bold">bearish sentiment</span> - declining call buying ({formatDifference(callLongDiff)}) signals{' '}
+              <span className="text-red-400 font-bold">weakening bullish sentiment</span>
+            </p>
+          </div>
+        )
+      } else if (callLongDiff >= 0 && putLongDiff < 0) {
+        // Denominator Negative (Put Buy Negative): Bullish
+        insights.push(
+          <div key={`${clientType}-put-buy-negative`} className="flex items-start space-x-3">
+            <div className="w-2 h-2 bg-green-400 rounded-full mt-2 flex-shrink-0"></div>
+            <p className="text-gray-300 text-sm leading-relaxed">
+              <span className="text-green-400 font-bold underline">{clientType}</span> shows{' '}
+              <span className="text-green-400 font-bold">bullish sentiment</span> - less put buying ({formatDifference(putLongDiff)}) suggests{' '}
+              <span className="text-green-400 font-bold">reduced bearish sentiment</span>
+            </p>
+          </div>
+        )
+      } else if (callLongDiff < 0 && putLongDiff < 0) {
+        // Both Negative: Analyze magnitudes
+        if (Math.abs(callLongDiff) > Math.abs(putLongDiff)) {
+          // Numerator Negative > Denominator Negative: Moderately Bearish
+          insights.push(
+            <div key={`${clientType}-call-put-both-neg-mod-bear`} className="flex items-start space-x-3">
+              <div className="w-2 h-2 bg-red-400 rounded-full mt-2 flex-shrink-0 animate-pulse"></div>
+              <p className="text-gray-300 text-sm leading-relaxed">
+                <span className="text-red-400 font-bold underline">{clientType}</span> shows{' '}
+                <span className="text-red-400 font-bold animate-pulse">moderately bearish</span> sentiment - stronger decline in call buying ({formatDifference(callLongDiff)}) vs put buying ({formatDifference(putLongDiff)}) indicates{' '}
+                <span className="text-red-400 font-bold">deeper bearishness</span>
+              </p>
+            </div>
+          )
+        } else if (Math.abs(callLongDiff) < Math.abs(putLongDiff)) {
+          // Numerator Negative < Denominator Negative: Mildly Bearish
+          insights.push(
+            <div key={`${clientType}-call-put-both-neg-mild-bear`} className="flex items-start space-x-3">
+              <div className="w-2 h-2 bg-orange-400 rounded-full mt-2 flex-shrink-0"></div>
+              <p className="text-gray-300 text-sm leading-relaxed">
+                <span className="text-orange-400 font-bold underline">{clientType}</span> shows{' '}
+                <span className="text-orange-400 font-bold">mildly bearish</span> sentiment - call buying decline ({formatDifference(callLongDiff)}) less than put buying decline ({formatDifference(putLongDiff)}), suggesting{' '}
+                <span className="text-orange-400 font-bold">mild bearishness</span>
+              </p>
+            </div>
+          )
+        } else {
+          // Both Negative: Equal magnitudes
+          insights.push(
+            <div key={`${clientType}-call-put-both-neg-equal`} className="flex items-start space-x-3">
+              <div className="w-2 h-2 bg-red-400 rounded-full mt-2 flex-shrink-0"></div>
+              <p className="text-gray-300 text-sm leading-relaxed">
+                <span className="text-red-400 font-bold underline">{clientType}</span> shows{' '}
+                <span className="text-red-400 font-bold">moderately bearish</span> sentiment - both call and put buying decreasing equally, indicating{' '}
+                <span className="text-red-400 font-bold">weaker market interest</span>
+              </p>
+            </div>
+          )
+        }
+      }
+
+      // Detailed analysis for Call Buy / Call Sell (Negative Values)
+      if (callLongDiff < 0 && callShortDiff >= 0) {
+        // Numerator Negative (Call Buy Negative): Bearish
+        insights.push(
+          <div key={`${clientType}-call-buy-sell-neg`} className="flex items-start space-x-3">
+            <div className="w-2 h-2 bg-red-400 rounded-full mt-2 flex-shrink-0"></div>
+            <p className="text-gray-300 text-sm leading-relaxed">
+              <span className="text-red-400 font-bold underline">{clientType}</span> shows{' '}
+              <span className="text-red-400 font-bold">bearish activity</span> - declining call buying ({formatDifference(callLongDiff)}) reflects{' '}
+              <span className="text-red-400 font-bold">reduced bullish activity</span>
+            </p>
+          </div>
+        )
+      } else if (callLongDiff >= 0 && callShortDiff < 0) {
+        // Denominator Negative (Call Sell Negative): Bullish
+        insights.push(
+          <div key={`${clientType}-call-sell-neg`} className="flex items-start space-x-3">
+            <div className="w-2 h-2 bg-green-400 rounded-full mt-2 flex-shrink-0"></div>
+            <p className="text-gray-300 text-sm leading-relaxed">
+              <span className="text-green-400 font-bold underline">{clientType}</span> shows{' '}
+              <span className="text-green-400 font-bold">bullish sentiment</span> - less call selling ({formatDifference(callShortDiff)}) signals{' '}
+              <span className="text-green-400 font-bold">reduced bearish sentiment</span>
+            </p>
+          </div>
+        )
+      } else if (callLongDiff < 0 && callShortDiff < 0) {
+        // Both Negative: Analyze magnitudes
+        if (Math.abs(callLongDiff) > Math.abs(callShortDiff)) {
+          // Numerator Negative > Denominator Negative: Strongly Bearish
+          insights.push(
+            <div key={`${clientType}-call-both-neg-strong-bear`} className="flex items-start space-x-3">
+              <div className="w-2 h-2 bg-red-400 rounded-full mt-2 flex-shrink-0 animate-pulse"></div>
+              <p className="text-gray-300 text-sm leading-relaxed">
+                <span className="text-red-400 font-bold underline">{clientType}</span> shows{' '}
+                <span className="text-red-400 font-bold animate-pulse">strongly bearish</span> sentiment - significant drop in call buying ({formatDifference(callLongDiff)}) vs call selling ({formatDifference(callShortDiff)}) shows{' '}
+                <span className="text-red-400 font-bold">stronger bearish sentiment</span>
+              </p>
+            </div>
+          )
+        } else if (Math.abs(callLongDiff) < Math.abs(callShortDiff)) {
+          // Numerator Negative < Denominator Negative: Mildly Bearish
+          insights.push(
+            <div key={`${clientType}-call-both-neg-mild-bear`} className="flex items-start space-x-3">
+              <div className="w-2 h-2 bg-orange-400 rounded-full mt-2 flex-shrink-0"></div>
+              <p className="text-gray-300 text-sm leading-relaxed">
+                <span className="text-orange-400 font-bold underline">{clientType}</span> shows{' '}
+                <span className="text-orange-400 font-bold">mildly bearish</span> sentiment - call buying decline ({formatDifference(callLongDiff)}) less than call selling decline ({formatDifference(callShortDiff)}), showing{' '}
+                <span className="text-orange-400 font-bold">some remaining bullishness</span>
+              </p>
+            </div>
+          )
+        } else {
+          // Both Negative: Equal magnitudes
+          insights.push(
+            <div key={`${clientType}-call-both-neg-equal`} className="flex items-start space-x-3">
+              <div className="w-2 h-2 bg-red-400 rounded-full mt-2 flex-shrink-0"></div>
+              <p className="text-gray-300 text-sm leading-relaxed">
+                <span className="text-red-400 font-bold underline">{clientType}</span> shows{' '}
+                <span className="text-red-400 font-bold">moderately bearish</span> sentiment - both call buying and selling decrease equally, signaling{' '}
+                <span className="text-red-400 font-bold">market indecisiveness</span>
+              </p>
+            </div>
+          )
+        }
+      }
+
+      // Detailed analysis for Put Sell / Put Buy (Negative Values)
+      if (putShortDiff < 0 && putLongDiff >= 0) {
+        // Numerator Negative (Put Sell Negative): Bullish
+        insights.push(
+          <div key={`${clientType}-put-sell-neg`} className="flex items-start space-x-3">
+            <div className="w-2 h-2 bg-green-400 rounded-full mt-2 flex-shrink-0"></div>
+            <p className="text-gray-300 text-sm leading-relaxed">
+              <span className="text-green-400 font-bold underline">{clientType}</span> shows{' '}
+              <span className="text-green-400 font-bold">bullish sentiment</span> - fewer puts being sold ({formatDifference(putShortDiff)}) suggests{' '}
+              <span className="text-green-400 font-bold">less bearish market sentiment</span>
+            </p>
+          </div>
+        )
+      } else if (putShortDiff >= 0 && putLongDiff < 0) {
+        // Denominator Negative (Put Buy Negative): Bearish
+        insights.push(
+          <div key={`${clientType}-put-buy-sell-neg`} className="flex items-start space-x-3">
+            <div className="w-2 h-2 bg-red-400 rounded-full mt-2 flex-shrink-0"></div>
+            <p className="text-gray-300 text-sm leading-relaxed">
+              <span className="text-red-400 font-bold underline">{clientType}</span> shows{' '}
+              <span className="text-red-400 font-bold">bearish sentiment</span> - reduced put buying ({formatDifference(putLongDiff)}) signals{' '}
+              <span className="text-red-400 font-bold">reduced hedging activity</span>
+            </p>
+          </div>
+        )
+      } else if (putShortDiff < 0 && putLongDiff < 0) {
+        // Both Negative: Analyze magnitudes (Note: Both Negative is Moderately Bullish for Put Sell/Put Buy)
+        if (Math.abs(putShortDiff) > Math.abs(putLongDiff)) {
+          // Numerator Negative > Denominator Negative: Moderately Bullish
+          insights.push(
+            <div key={`${clientType}-put-both-neg-mod-bull`} className="flex items-start space-x-3">
+              <div className="w-2 h-2 bg-green-400 rounded-full mt-2 flex-shrink-0 animate-pulse"></div>
+              <p className="text-gray-300 text-sm leading-relaxed">
+                <span className="text-green-400 font-bold underline">{clientType}</span> shows{' '}
+                <span className="text-green-400 font-bold animate-pulse">moderately bullish</span> sentiment - put selling falls more ({formatDifference(putShortDiff)}) than put buying ({formatDifference(putLongDiff)}), indicating{' '}
+                <span className="text-green-400 font-bold">stronger bullish reversal</span>
+              </p>
+            </div>
+          )
+        } else if (Math.abs(putShortDiff) < Math.abs(putLongDiff)) {
+          // Numerator Negative < Denominator Negative: Mildly Bullish
+          insights.push(
+            <div key={`${clientType}-put-both-neg-mild-bull`} className="flex items-start space-x-3">
+              <div className="w-2 h-2 bg-cyan-400 rounded-full mt-2 flex-shrink-0"></div>
+              <p className="text-gray-300 text-sm leading-relaxed">
+                <span className="text-cyan-400 font-bold underline">{clientType}</span> shows{' '}
+                <span className="text-cyan-400 font-bold">mildly bullish</span> sentiment - put selling declines less ({formatDifference(putShortDiff)}) than put buying ({formatDifference(putLongDiff)}), signaling{' '}
+                <span className="text-cyan-400 font-bold">weaker bullish shift</span>
+              </p>
+            </div>
+          )
+        } else {
+          // Both Negative: Equal magnitudes - Moderately Bullish
+          insights.push(
+            <div key={`${clientType}-put-both-neg-equal-bull`} className="flex items-start space-x-3">
+              <div className="w-2 h-2 bg-green-400 rounded-full mt-2 flex-shrink-0"></div>
+              <p className="text-gray-300 text-sm leading-relaxed">
+                <span className="text-green-400 font-bold underline">{clientType}</span> shows{' '}
+                <span className="text-green-400 font-bold">moderately bullish</span> sentiment - both put selling and buying decreasing equally, showing{' '}
+                <span className="text-green-400 font-bold">less bearish activity and potential upside</span>
+              </p>
+            </div>
+          )
+        }
+      }
+
+      // Detailed analysis for Put Sell / Call Sell (Negative Values)
+      if (putShortDiff < 0 && callShortDiff >= 0) {
+        // Numerator Negative (Put Sell Negative): Bullish
+        insights.push(
+          <div key={`${clientType}-put-call-sell-neg`} className="flex items-start space-x-3">
+            <div className="w-2 h-2 bg-green-400 rounded-full mt-2 flex-shrink-0"></div>
+            <p className="text-gray-300 text-sm leading-relaxed">
+              <span className="text-green-400 font-bold underline">{clientType}</span> shows{' '}
+              <span className="text-green-400 font-bold">bullish sentiment</span> - less put selling ({formatDifference(putShortDiff)}) shows{' '}
+              <span className="text-green-400 font-bold">reduced bearish sentiment</span>
+            </p>
+          </div>
+        )
+      } else if (putShortDiff >= 0 && callShortDiff < 0) {
+        // Denominator Negative (Call Sell Negative): Bearish
+        insights.push(
+          <div key={`${clientType}-call-sell-put-neg`} className="flex items-start space-x-3">
+            <div className="w-2 h-2 bg-red-400 rounded-full mt-2 flex-shrink-0"></div>
+            <p className="text-gray-300 text-sm leading-relaxed">
+              <span className="text-red-400 font-bold underline">{clientType}</span> shows{' '}
+              <span className="text-red-400 font-bold">bearish sentiment</span> - fewer calls being sold ({formatDifference(callShortDiff)}) signals{' '}
+              <span className="text-red-400 font-bold">reduced bearish sentiment in market</span>
+            </p>
+          </div>
+        )
+      } else if (putShortDiff < 0 && callShortDiff < 0) {
+        // Both Negative: Analyze magnitudes (Note: Both Negative is Moderately Bullish for Put Sell/Call Sell)
+        if (Math.abs(putShortDiff) > Math.abs(callShortDiff)) {
+          // Numerator Negative > Denominator Negative: Moderately Bullish
+          insights.push(
+            <div key={`${clientType}-put-call-sell-both-neg-mod-bull`} className="flex items-start space-x-3">
+              <div className="w-2 h-2 bg-green-400 rounded-full mt-2 flex-shrink-0 animate-pulse"></div>
+              <p className="text-gray-300 text-sm leading-relaxed">
+                <span className="text-green-400 font-bold underline">{clientType}</span> shows{' '}
+                <span className="text-green-400 font-bold animate-pulse">moderately bullish</span> sentiment - put selling declines more ({formatDifference(putShortDiff)}) than call selling ({formatDifference(callShortDiff)}), signaling{' '}
+                <span className="text-green-400 font-bold">greater bullish pressure</span>
+              </p>
+            </div>
+          )
+        } else if (Math.abs(putShortDiff) < Math.abs(callShortDiff)) {
+          // Numerator Negative < Denominator Negative: Mildly Bullish
+          insights.push(
+            <div key={`${clientType}-put-call-sell-both-neg-mild-bull`} className="flex items-start space-x-3">
+              <div className="w-2 h-2 bg-cyan-400 rounded-full mt-2 flex-shrink-0"></div>
+              <p className="text-gray-300 text-sm leading-relaxed">
+                <span className="text-cyan-400 font-bold underline">{clientType}</span> shows{' '}
+                <span className="text-cyan-400 font-bold">mildly bullish</span> sentiment - put selling drops less ({formatDifference(putShortDiff)}) than call selling ({formatDifference(callShortDiff)}), indicating{' '}
+                <span className="text-cyan-400 font-bold">weak bullish sentiment</span>
+              </p>
+            </div>
+          )
+        } else {
+          // Both Negative: Equal magnitudes - Moderately Bullish
+          insights.push(
+            <div key={`${clientType}-put-call-sell-both-neg-equal-bull`} className="flex items-start space-x-3">
+              <div className="w-2 h-2 bg-green-400 rounded-full mt-2 flex-shrink-0"></div>
+              <p className="text-gray-300 text-sm leading-relaxed">
+                <span className="text-green-400 font-bold underline">{clientType}</span> shows{' '}
+                <span className="text-green-400 font-bold">moderately bullish</span> sentiment - both put and call selling decrease equally, signaling{' '}
+                <span className="text-green-400 font-bold">less bearish activity and potential upside</span>
+              </p>
+            </div>
+          )
+        }
+      }
+
       // Daily Call Buy/Put Buy insights
       if (callBuyPutBuy > 1.5) {
         insights.push(
