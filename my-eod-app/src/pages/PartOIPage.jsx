@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 import DataTable from '../components/DataTable'
 import MetricCard from '../components/MetricCard'
-import { Users, TrendingUp, PieChart as PieChartIcon, Activity, Eye, Target } from 'lucide-react'
+import { Users, TrendingUp, PieChart as PieChartIcon, Activity, Eye, Target, Calendar } from 'lucide-react'
 
 const PartOIPage = () => {
   const [data, setData] = useState([])
@@ -52,6 +52,11 @@ const PartOIPage = () => {
     return num.toLocaleString('en-IN')
   }
 
+  const formatDifference = (diff) => {
+    if (typeof diff !== 'number') return diff
+    const formatted = Math.abs(diff).toLocaleString('en-IN')
+    return diff >= 0 ? `+${formatted}` : `-${formatted}`
+  }
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -100,6 +105,16 @@ const PartOIPage = () => {
 
   // Prepare ratio data for Deep Insights
   const latestDateData = data.filter(item => item.date === latestDate && item.client_type !== 'TOTAL')
+  
+  // Get previous date data for daily changes
+  const sortedDates = [...new Set(data.map(item => item.date))].sort((a, b) => {
+    const dateA = new Date(a.split('-').reverse().join('-'))
+    const dateB = new Date(b.split('-').reverse().join('-'))
+    return dateB - dateA
+  })
+  const previousDate = sortedDates[1] || sortedDates[0]
+  const previousDateData = data.filter(item => item.date === previousDate && item.client_type !== 'TOTAL')
+  
   const ratioData = latestDateData.map(item => {
     const callBuyPutBuy = calculateRatio(item.option_index_call_long, item.option_index_put_long)
     const callBuyCallSell = calculateRatio(item.option_index_call_long, item.option_index_call_short)
@@ -116,41 +131,250 @@ const PartOIPage = () => {
     }
   })
 
-  // Generate insights based on ratios
+  // Prepare daily change data
+  const dailyChangeData = latestDateData.map(item => {
+    const prevItem = previousDateData.find(prev => prev.client_type === item.client_type) || {
+      option_index_call_long: 0,
+      option_index_put_long: 0,
+      option_index_call_short: 0,
+      option_index_put_short: 0
+    }
+    
+    const callLongDiff = item.option_index_call_long - prevItem.option_index_call_long
+    const putLongDiff = item.option_index_put_long - prevItem.option_index_put_long
+    const callShortDiff = item.option_index_call_short - prevItem.option_index_call_short
+    const putShortDiff = item.option_index_put_short - prevItem.option_index_put_short
+    
+    const callBuyPutBuy = calculateRatio(callLongDiff, putLongDiff)
+    const callBuyCallSell = calculateRatio(callLongDiff, callShortDiff)
+    const putSellPutBuy = calculateRatio(putShortDiff, putLongDiff)
+    const putSellCallSell = calculateRatio(putShortDiff, callShortDiff)
+    
+    return {
+      clientType: item.client_type,
+      callLongDiff,
+      putLongDiff,
+      callShortDiff,
+      putShortDiff,
+      callBuyPutBuy,
+      callBuyCallSell,
+      putSellPutBuy,
+      putSellCallSell
+    }
+  })
+
+  // Generate insights based on ratios with rich formatting
   const generateInsights = () => {
     const insights = []
     
     ratioData.forEach(({ clientType, callBuyPutBuy, callBuyCallSell, putSellPutBuy, putSellCallSell }) => {
+      // Skip insights for 0.00 ratios
+      if (callBuyPutBuy === 0 || callBuyCallSell === 0 || putSellPutBuy === 0 || putSellCallSell === 0) return
+      
       // Call Buy/Put Buy insights (Bullish vs Bearish bias)
       if (callBuyPutBuy > 1.5) {
-        insights.push(`${clientType} shows strong bullish bias with Call Buy/Put Buy ratio of ${formatRatio(callBuyPutBuy)}`)
+        insights.push(
+          <div key={`${clientType}-bullish`} className="flex items-start space-x-3">
+            <div className="w-2 h-2 bg-green-400 rounded-full mt-2 flex-shrink-0 animate-pulse"></div>
+            <p className="text-gray-300 text-sm leading-relaxed">
+              <span className="text-green-400 font-bold underline">{clientType}</span> shows{' '}
+              <span className="text-green-400 font-bold">strong bullish bias</span> with Call Buy/Put Buy ratio of{' '}
+              <span className="text-green-400 font-bold">{formatRatio(callBuyPutBuy)}</span>
+            </p>
+          </div>
+        )
       } else if (callBuyPutBuy < 0.7) {
-        insights.push(`${clientType} shows strong bearish bias with Call Buy/Put Buy ratio of ${formatRatio(callBuyPutBuy)}`)
+        insights.push(
+          <div key={`${clientType}-bearish`} className="flex items-start space-x-3">
+            <div className="w-2 h-2 bg-red-400 rounded-full mt-2 flex-shrink-0 animate-pulse"></div>
+            <p className="text-gray-300 text-sm leading-relaxed">
+              <span className="text-red-400 font-bold underline">{clientType}</span> shows{' '}
+              <span className="text-red-400 font-bold">strong bearish bias</span> with Call Buy/Put Buy ratio of{' '}
+              <span className="text-red-400 font-bold">{formatRatio(callBuyPutBuy)}</span>
+            </p>
+          </div>
+        )
       }
       
       // Call Buy/Call Sell insights (Long vs Short positioning)
       if (callBuyCallSell > 1.5) {
-        insights.push(`${clientType} has aggressive long call positioning with ratio ${formatRatio(callBuyCallSell)}`)
+        insights.push(
+          <div key={`${clientType}-long-calls`} className="flex items-start space-x-3">
+            <div className="w-2 h-2 bg-blue-400 rounded-full mt-2 flex-shrink-0 animate-pulse"></div>
+            <p className="text-gray-300 text-sm leading-relaxed">
+              <span className="text-blue-400 font-bold underline">{clientType}</span> has{' '}
+              <span className="text-blue-400 font-bold">aggressive long call positioning</span> with ratio{' '}
+              <span className="text-blue-400 font-bold">{formatRatio(callBuyCallSell)}</span>
+            </p>
+          </div>
+        )
       } else if (callBuyCallSell < 0.7) {
-        insights.push(`${clientType} is heavily short on calls with ratio ${formatRatio(callBuyCallSell)}`)
+        insights.push(
+          <div key={`${clientType}-short-calls`} className="flex items-start space-x-3">
+            <div className="w-2 h-2 bg-orange-400 rounded-full mt-2 flex-shrink-0 animate-pulse"></div>
+            <p className="text-gray-300 text-sm leading-relaxed">
+              <span className="text-orange-400 font-bold underline">{clientType}</span> is{' '}
+              <span className="text-orange-400 font-bold">heavily short on calls</span> with ratio{' '}
+              <span className="text-orange-400 font-bold">{formatRatio(callBuyCallSell)}</span>
+            </p>
+          </div>
+        )
       }
       
       // Put Sell/Put Buy insights (Put writing vs Put buying)
       if (putSellPutBuy > 1.5) {
-        insights.push(`${clientType} is aggressively writing puts (bullish) with ratio ${formatRatio(putSellPutBuy)}`)
+        insights.push(
+          <div key={`${clientType}-put-writing`} className="flex items-start space-x-3">
+            <div className="w-2 h-2 bg-purple-400 rounded-full mt-2 flex-shrink-0 animate-pulse"></div>
+            <p className="text-gray-300 text-sm leading-relaxed">
+              <span className="text-purple-400 font-bold underline">{clientType}</span> is{' '}
+              <span className="text-purple-400 font-bold">aggressively writing puts</span>{' '}
+              <span className="text-green-400 font-bold">(bullish)</span> with ratio{' '}
+              <span className="text-purple-400 font-bold">{formatRatio(putSellPutBuy)}</span>
+            </p>
+          </div>
+        )
       } else if (putSellPutBuy < 0.7) {
-        insights.push(`${clientType} is heavily buying puts (bearish) with ratio ${formatRatio(putSellPutBuy)}`)
+        insights.push(
+          <div key={`${clientType}-put-buying`} className="flex items-start space-x-3">
+            <div className="w-2 h-2 bg-pink-400 rounded-full mt-2 flex-shrink-0 animate-pulse"></div>
+            <p className="text-gray-300 text-sm leading-relaxed">
+              <span className="text-pink-400 font-bold underline">{clientType}</span> is{' '}
+              <span className="text-pink-400 font-bold">heavily buying puts</span>{' '}
+              <span className="text-red-400 font-bold">(bearish)</span> with ratio{' '}
+              <span className="text-pink-400 font-bold">{formatRatio(putSellPutBuy)}</span>
+            </p>
+          </div>
+        )
       }
       
       // Put Sell/Call Sell insights (Put vs Call writing preference)
       if (putSellCallSell > 1.2) {
-        insights.push(`${clientType} prefers put writing over call writing with ratio ${formatRatio(putSellCallSell)}`)
+        insights.push(
+          <div key={`${clientType}-prefer-puts`} className="flex items-start space-x-3">
+            <div className="w-2 h-2 bg-cyan-400 rounded-full mt-2 flex-shrink-0"></div>
+            <p className="text-gray-300 text-sm leading-relaxed">
+              <span className="text-cyan-400 font-bold underline">{clientType}</span>{' '}
+              <span className="text-cyan-400 font-bold">prefers put writing</span> over call writing with ratio{' '}
+              <span className="text-cyan-400 font-bold">{formatRatio(putSellCallSell)}</span>
+            </p>
+          </div>
+        )
       } else if (putSellCallSell < 0.8) {
-        insights.push(`${clientType} prefers call writing over put writing with ratio ${formatRatio(putSellCallSell)}`)
+        insights.push(
+          <div key={`${clientType}-prefer-calls`} className="flex items-start space-x-3">
+            <div className="w-2 h-2 bg-yellow-400 rounded-full mt-2 flex-shrink-0"></div>
+            <p className="text-gray-300 text-sm leading-relaxed">
+              <span className="text-yellow-400 font-bold underline">{clientType}</span>{' '}
+              <span className="text-yellow-400 font-bold">prefers call writing</span> over put writing with ratio{' '}
+              <span className="text-yellow-400 font-bold">{formatRatio(putSellCallSell)}</span>
+            </p>
+          </div>
+        )
       }
     })
     
-    return insights.length > 0 ? insights : ['Market positioning appears balanced across all participant categories']
+    return insights.length > 0 ? insights : [
+      <div key="balanced" className="flex items-start space-x-3">
+        <div className="w-2 h-2 bg-gray-400 rounded-full mt-2 flex-shrink-0"></div>
+        <p className="text-gray-300 text-sm leading-relaxed">
+          Market positioning appears <span className="text-gray-400 font-bold">balanced</span> across all participant categories
+        </p>
+      </div>
+    ]
+  }
+
+  // Generate daily change insights with rich formatting
+  const generateDailyChangeInsights = () => {
+    const insights = []
+    
+    dailyChangeData.forEach(({ clientType, callBuyPutBuy, callBuyCallSell, putSellPutBuy, putSellCallSell, callLongDiff, putLongDiff, callShortDiff, putShortDiff }) => {
+      // Skip insights for 0.00 ratios
+      if (callBuyPutBuy === 0 || callBuyCallSell === 0 || putSellPutBuy === 0 || putSellCallSell === 0) return
+      
+      // Daily Call Buy/Put Buy insights
+      if (callBuyPutBuy > 1.5) {
+        insights.push(
+          <div key={`${clientType}-daily-bullish`} className="flex items-start space-x-3">
+            <div className="w-2 h-2 bg-green-400 rounded-full mt-2 flex-shrink-0 animate-pulse"></div>
+            <p className="text-gray-300 text-sm leading-relaxed">
+              <span className="text-green-400 font-bold underline">{clientType}</span> added{' '}
+              <span className="text-green-400 font-bold">strong bullish positions</span> today with Call/Put ratio of{' '}
+              <span className="text-green-400 font-bold">{formatRatio(callBuyPutBuy)}</span>
+            </p>
+          </div>
+        )
+      } else if (callBuyPutBuy < 0.7) {
+        insights.push(
+          <div key={`${clientType}-daily-bearish`} className="flex items-start space-x-3">
+            <div className="w-2 h-2 bg-red-400 rounded-full mt-2 flex-shrink-0 animate-pulse"></div>
+            <p className="text-gray-300 text-sm leading-relaxed">
+              <span className="text-red-400 font-bold underline">{clientType}</span> added{' '}
+              <span className="text-red-400 font-bold">strong bearish positions</span> today with Call/Put ratio of{' '}
+              <span className="text-red-400 font-bold">{formatRatio(callBuyPutBuy)}</span>
+            </p>
+          </div>
+        )
+      }
+      
+      // Daily position building/unwinding insights
+      if (callLongDiff > 0 && putLongDiff < 0) {
+        insights.push(
+          <div key={`${clientType}-bullish-shift`} className="flex items-start space-x-3">
+            <div className="w-2 h-2 bg-blue-400 rounded-full mt-2 flex-shrink-0"></div>
+            <p className="text-gray-300 text-sm leading-relaxed">
+              <span className="text-blue-400 font-bold underline">{clientType}</span> showed{' '}
+              <span className="text-blue-400 font-bold">bullish shift</span> - added calls ({formatDifference(callLongDiff)}) and reduced puts ({formatDifference(putLongDiff)})
+            </p>
+          </div>
+        )
+      } else if (callLongDiff < 0 && putLongDiff > 0) {
+        insights.push(
+          <div key={`${clientType}-bearish-shift`} className="flex items-start space-x-3">
+            <div className="w-2 h-2 bg-orange-400 rounded-full mt-2 flex-shrink-0"></div>
+            <p className="text-gray-300 text-sm leading-relaxed">
+              <span className="text-orange-400 font-bold underline">{clientType}</span> showed{' '}
+              <span className="text-orange-400 font-bold">bearish shift</span> - reduced calls ({formatDifference(callLongDiff)}) and added puts ({formatDifference(putLongDiff)})
+            </p>
+          </div>
+        )
+      }
+      
+      // Aggressive position changes
+      if (Math.abs(callLongDiff) > 100000 || Math.abs(putLongDiff) > 100000) {
+        insights.push(
+          <div key={`${clientType}-aggressive`} className="flex items-start space-x-3">
+            <div className="w-2 h-2 bg-purple-400 rounded-full mt-2 flex-shrink-0 animate-pulse"></div>
+            <p className="text-gray-300 text-sm leading-relaxed">
+              <span className="text-purple-400 font-bold underline">{clientType}</span> made{' '}
+              <span className="text-purple-400 font-bold">aggressive position changes</span> today with significant OI movements
+            </p>
+          </div>
+        )
+      }
+      
+      // Unwinding insights
+      if (callShortDiff < 0 && putShortDiff < 0) {
+        insights.push(
+          <div key={`${clientType}-unwinding`} className="flex items-start space-x-3">
+            <div className="w-2 h-2 bg-yellow-400 rounded-full mt-2 flex-shrink-0"></div>
+            <p className="text-gray-300 text-sm leading-relaxed">
+              <span className="text-yellow-400 font-bold underline">{clientType}</span> showed{' '}
+              <span className="text-yellow-400 font-bold">position unwinding</span> - reduced both call and put shorts
+            </p>
+          </div>
+        )
+      }
+    })
+    
+    return insights.length > 0 ? insights : [
+      <div key="minimal-changes" className="flex items-start space-x-3">
+        <div className="w-2 h-2 bg-gray-400 rounded-full mt-2 flex-shrink-0"></div>
+        <p className="text-gray-300 text-sm leading-relaxed">
+          <span className="text-gray-400 font-bold">Minimal position changes</span> observed across participant categories today
+        </p>
+      </div>
+    ]
   }
 
   const COLORS = ['#0ea5e9', '#8b5cf6', '#10b981', '#f59e0b']
@@ -431,11 +655,11 @@ const PartOIPage = () => {
           </div>
         </div>
 
-        {/* Ratio Analysis Table */}
-        <div className="glass-card p-6 border border-primary-500/20 mb-6">
+        {/* Overall Positions Analysis */}
+        <div className="glass-card p-6 border border-primary-500/20 mb-8">
           <div className="flex items-center space-x-2 mb-4">
             <Target className="h-5 w-5 text-primary-400" />
-            <h4 className="text-xl font-semibold">Index Options Ratio Analysis</h4>
+            <h4 className="text-xl font-semibold">Index Options Ratio Analysis (Overall Positions)</h4>
             <div className="text-sm text-gray-400">({latestDate})</div>
           </div>
           
@@ -488,18 +712,99 @@ const PartOIPage = () => {
               </span>
             </div>
           </div>
+          
+          {/* Market Positioning Insights */}
+          <div className="mt-6 pt-6 border-t border-gray-700">
+            <h5 className="text-lg font-semibold text-purple-400 mb-4">Market Positioning Insights</h5>
+            <div className="space-y-3">
+              {generateInsights()}
+            </div>
+          </div>
         </div>
 
-        {/* Generated Insights */}
-        <div className="glass-card p-6 border border-purple-500/20">
-          <h4 className="text-xl font-semibold text-purple-400 mb-4">Market Positioning Insights</h4>
-          <div className="space-y-3">
-            {generateInsights().map((insight, index) => (
-              <div key={index} className="flex items-start space-x-3">
-                <div className="w-2 h-2 bg-purple-400 rounded-full mt-2 flex-shrink-0"></div>
-                <p className="text-gray-300 text-sm leading-relaxed">{insight}</p>
-              </div>
-            ))}
+        {/* Daily Changes Analysis */}
+        <div className="glass-card p-6 border border-cyan-500/20">
+          <div className="flex items-center space-x-2 mb-4">
+            <Calendar className="h-5 w-5 text-cyan-400" />
+            <h4 className="text-xl font-semibold">Positions made today (Daily Changes)</h4>
+            <div className="text-sm text-gray-400">({previousDate} → {latestDate})</div>
+          </div>
+          
+          {/* Daily Changes Table */}
+          <div className="overflow-x-auto mb-6">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-700">
+                  <th className="text-left py-3 px-4 font-medium text-gray-300">Client Type</th>
+                  <th className="text-center py-3 px-4 font-medium text-gray-300">Call Long Diff</th>
+                  <th className="text-center py-3 px-4 font-medium text-gray-300">Put Long Diff</th>
+                  <th className="text-center py-3 px-4 font-medium text-gray-300">Call Short Diff</th>
+                  <th className="text-center py-3 px-4 font-medium text-gray-300">Put Short Diff</th>
+                </tr>
+              </thead>
+              <tbody>
+                {dailyChangeData.map((row, index) => (
+                  <tr key={index} className="border-b border-gray-800 hover:bg-white/5 transition-colors">
+                    <td className="py-3 px-4 font-semibold text-cyan-400">{row.clientType}</td>
+                    <td className={`py-3 px-4 text-center font-semibold ${row.callLongDiff >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                      {formatDifference(row.callLongDiff)}
+                    </td>
+                    <td className={`py-3 px-4 text-center font-semibold ${row.putLongDiff >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                      {formatDifference(row.putLongDiff)}
+                    </td>
+                    <td className={`py-3 px-4 text-center font-semibold ${row.callShortDiff >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                      {formatDifference(row.callShortDiff)}
+                    </td>
+                    <td className={`py-3 px-4 text-center font-semibold ${row.putShortDiff >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                      {formatDifference(row.putShortDiff)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          
+          {/* Daily Ratio Analysis Table */}
+          <div className="overflow-x-auto mb-6">
+            <h5 className="text-lg font-semibold mb-3">Daily Change Ratios</h5>
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-700">
+                  <th className="text-left py-3 px-4 font-medium text-gray-300">Client Type</th>
+                  <th className="text-center py-3 px-4 font-medium text-gray-300">Call Buy / Put Buy</th>
+                  <th className="text-center py-3 px-4 font-medium text-gray-300">Call Buy / Call Sell</th>
+                  <th className="text-center py-3 px-4 font-medium text-gray-300">Put Sell / Put Buy</th>
+                  <th className="text-center py-3 px-4 font-medium text-gray-300">Put Sell / Call Sell</th>
+                </tr>
+              </thead>
+              <tbody>
+                {dailyChangeData.map((row, index) => (
+                  <tr key={index} className="border-b border-gray-800 hover:bg-white/5 transition-colors">
+                    <td className="py-3 px-4 font-semibold text-cyan-400">{row.clientType}</td>
+                    <td className={`py-3 px-4 text-center ${getRatioClass(row.callBuyPutBuy)}`}>
+                      {formatRatio(row.callBuyPutBuy)}
+                    </td>
+                    <td className={`py-3 px-4 text-center ${getRatioClass(row.callBuyCallSell)}`}>
+                      {formatRatio(row.callBuyCallSell)}
+                    </td>
+                    <td className={`py-3 px-4 text-center ${getRatioClass(row.putSellPutBuy)}`}>
+                      {formatRatio(row.putSellPutBuy)}
+                    </td>
+                    <td className={`py-3 px-4 text-center ${getRatioClass(row.putSellCallSell)}`}>
+                      {formatRatio(row.putSellCallSell)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          
+          {/* Daily Change Insights */}
+          <div className="pt-4 border-t border-gray-700">
+            <h5 className="text-lg font-semibold text-cyan-400 mb-4">Daily Position Change Insights</h5>
+            <div className="space-y-3">
+              {generateDailyChangeInsights()}
+            </div>
           </div>
         </div>
       </div>
