@@ -4,6 +4,7 @@ import DataTable from '../components/DataTable'
 import MetricCard from '../components/MetricCard'
 import { Users, TrendingUp, PieChart as PieChartIcon, Activity, Eye, Target, Calendar } from 'lucide-react'
 import DeepInsights from '../components/DeepInsightsPartOI'
+import { calculateRatio, getRatioClass, formatRatio, formatIndianNumber, formatDifference } from '../utils/partOIHelpers'
 
 const PartOIPage = () => {
   const [data, setData] = useState([])
@@ -26,38 +27,6 @@ const PartOIPage = () => {
     fetchData()
   }, [])
 
-  // Helper functions for Deep Insights
-  const calculateRatio = (numerator, denominator) => {
-    if (denominator === 0 || denominator === null || denominator === undefined) {
-      return numerator > 0 ? 'Inf' : 'N/A'
-    }
-    return numerator / denominator
-  }
-
-  const getRatioClass = (ratio) => {
-    if (ratio === 'N/A' || ratio === 'Inf') return 'text-gray-400'
-    if (ratio > 1.5) return 'text-green-400 font-bold animate-pulse'
-    if (ratio > 1) return 'text-green-400 font-semibold'
-    if (ratio < 0.7) return 'text-red-400 font-bold animate-pulse'
-    if (ratio < 1) return 'text-red-400 font-semibold'
-    return 'text-gray-300'
-  }
-
-  const formatRatio = (ratio) => {
-    if (ratio === 'N/A' || ratio === 'Inf') return ratio
-    return ratio.toFixed(2)
-  }
-
-  const formatIndianNumber = (num) => {
-    if (typeof num !== 'number') return num
-    return num.toLocaleString('en-IN')
-  }
-
-  const formatDifference = (diff) => {
-    if (typeof diff !== 'number') return diff
-    const formatted = Math.abs(diff).toLocaleString('en-IN')
-    return diff >= 0 ? `+${formatted}` : `-${formatted}`
-  }
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">

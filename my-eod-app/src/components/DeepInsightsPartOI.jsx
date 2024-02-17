@@ -1,14 +1,12 @@
 import React from 'react'
 import { Eye, Target, Calendar } from 'lucide-react'
+import { getRatioClass, formatRatio, formatDifference } from '../utils/partOIHelpers'
 
 const DeepInsights = ({
   latestDate,
   previousDate,
   ratioData,
   dailyChangeData,
-  getRatioClass,
-  formatRatio,
-  formatDifference,
   generateInsights,
   generateDailyChangeInsights
 }) => {
