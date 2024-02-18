@@ -2,19 +2,29 @@ import React, { useState, useEffect } from 'react'
 import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 import DataTable from '../components/DataTable'
 import MetricCard from '../components/MetricCard'
-import { Activity, TrendingUp, BarChart3, Users } from 'lucide-react'
+import { Activity, TrendingUp, BarChart3, Users, Eye } from 'lucide-react'
+import DeepInsightsPartVol from '../components/DeepInsightsPartVol'
 
 const PartVolPage = () => {
   const [data, setData] = useState([])
+  const [oiData, setOiData] = useState([])
   const [loading, setLoading] = useState(true)
   const [selectedClientType, setSelectedClientType] = useState('ALL')
+  const [deepInsightsData, setDeepInsightsData] = useState([])
+  const [insightsLatestDate, setInsightsLatestDate] = useState('')
+  const [insightsPreviousDate, setInsightsPreviousDate] = useState('')
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch('/data/participant_vol.json')
-        const jsonData = await response.json()
-        setData(jsonData)
+        const [volResponse, oiResponse] = await Promise.all([
+          fetch('/data/participant_vol.json'),
+          fetch('/data/participant_oi.json')
+        ])
+        const volData = await volResponse.json()
+        const oiJsonData = await oiResponse.json()
+        setData(volData)
+        setOiData(oiJsonData)
       } catch (error) {
         console.error('Error fetching data:', error)
       } finally {
@@ -24,6 +34,106 @@ const PartVolPage = () => {
 
     fetchData()
   }, [])
+
+  // Process deep insights data when both datasets are loaded
+  useEffect(() => {
+    if (data.length > 0 && oiData.length > 0) {
+      // Get sorted dates from combined data
+      const allDates = [...new Set([...data.map(item => item.date), ...oiData.map(item => item.date)])]
+        .sort((a, b) => {
+          const dateA = new Date(a.split('-').reverse().join('-'))
+          const dateB = new Date(b.split('-').reverse().join('-'))
+          return dateB - dateA
+        })
+      
+      const latestDate = allDates[0]
+      const previousDate = allDates[1]
+      
+      setInsightsLatestDate(latestDate)
+      setInsightsPreviousDate(previousDate)
+      
+      // Process data for each client type
+      const clientTypes = ['Client', 'DII', 'FII', 'Pro']
+      const processedData = []
+      
+      clientTypes.forEach(clientType => {
+        // Get volume data for latest and previous dates
+        const latestVolData = data.find(item => item.date === latestDate && item.client_type === clientType)
+        const previousVolData = data.find(item => item.date === previousDate && item.client_type === clientType)
+        
+        // Get OI data for latest and previous dates
+        const latestOiData = oiData.find(item => item.date === latestDate && item.client_type === clientType)
+        const previousOiData = oiData.find(item => item.date === previousDate && item.client_type === clientType)
+        
+        if (latestVolData && previousVolData && latestOiData && previousOiData) {
+          // Calculate volume daily changes
+          const callLongVolDiff = (latestVolData.option_index_call_long || 0) - (previousVolData.option_index_call_long || 0)
+          const putLongVolDiff = (latestVolData.option_index_put_long || 0) - (previousVolData.option_index_put_long || 0)
+          const callShortVolDiff = (latestVolData.option_index_call_short || 0) - (previousVolData.option_index_call_short || 0)
+          const putShortVolDiff = (latestVolData.option_index_put_short || 0) - (previousVolData.option_index_put_short || 0)
+          
+          // Calculate OI daily changes
+          const callLongOiDiff = (latestOiData.option_index_call_long || 0) - (previousOiData.option_index_call_long || 0)
+          const putLongOiDiff = (latestOiData.option_index_put_long || 0) - (previousOiData.option_index_put_long || 0)
+          const callShortOiDiff = (latestOiData.option_index_call_short || 0) - (previousOiData.option_index_call_short || 0)
+          const putShortOiDiff = (latestOiData.option_index_put_short || 0) - (previousOiData.option_index_put_short || 0)
+          
+          // Initialize with latest day's volume (not differences)
+          let adjustedCallLongVol = latestVolData.option_index_call_long || 0
+          let adjustedPutLongVol = latestVolData.option_index_put_long || 0
+          let adjustedCallShortVol = latestVolData.option_index_call_short || 0
+          let adjustedPutShortVol = latestVolData.option_index_put_short || 0
+          
+          // Apply conditional adjustments based on OI differences
+          // Call Long OI
+          if (callLongOiDiff >= 0) {
+            adjustedCallLongVol += callLongOiDiff
+          } else {
+            adjustedCallShortVol += Math.abs(callLongOiDiff)
+          }
+          
+          // Put Long OI
+          if (putLongOiDiff >= 0) {
+            adjustedPutLongVol += putLongOiDiff
+          } else {
+            adjustedPutShortVol += Math.abs(putLongOiDiff)
+          }
+          
+          // Call Short OI
+          if (callShortOiDiff >= 0) {
+            adjustedCallShortVol += callShortOiDiff
+          } else {
+            adjustedCallLongVol += Math.abs(callShortOiDiff)
+          }
+          
+          // Put Short OI
+          if (putShortOiDiff >= 0) {
+            adjustedPutShortVol += putShortOiDiff
+          } else {
+            adjustedPutLongVol += Math.abs(putShortOiDiff)
+          }
+          
+          processedData.push({
+            clientType,
+            callLong: adjustedCallLongVol,
+            putLong: adjustedPutLongVol,
+            callShort: adjustedCallShortVol,
+            putShort: adjustedPutShortVol,
+            originalCallLongVol: latestVolData.option_index_call_long || 0,
+            originalPutLongVol: latestVolData.option_index_put_long || 0,
+            originalCallShortVol: latestVolData.option_index_call_short || 0,
+            originalPutShortVol: latestVolData.option_index_put_short || 0,
+            callLongOiDiff,
+            putLongOiDiff,
+            callShortOiDiff,
+            putShortOiDiff
+          })
+        }
+      })
+      
+      setDeepInsightsData(processedData)
+    }
+  }, [data, oiData])
 
   if (loading) {
     return (
@@ -272,6 +382,13 @@ const PartVolPage = () => {
           </ResponsiveContainer>
         </div>
       </div>
+
+      {/* Deep Insights Section */}
+      <DeepInsightsPartVol
+        data={deepInsightsData}
+        latestDate={insightsLatestDate}
+        previousDate={insightsPreviousDate}
+      />
 
       {/* Data Table */}
       <DataTable
