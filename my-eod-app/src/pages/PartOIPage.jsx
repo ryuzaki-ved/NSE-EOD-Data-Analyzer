@@ -5,6 +5,12 @@ import MetricCard from '../components/MetricCard'
 import { Users, TrendingUp, PieChart as PieChartIcon, Activity, Eye, Target, Calendar } from 'lucide-react'
 import DeepInsights from '../components/DeepInsightsPartOI'
 import { calculateRatio, getRatioClass, formatRatio, formatIndianNumber, formatDifference } from '../utils/partOIHelpers'
+import LongVsShortTrendChart from '../components/partOI/LongVsShortTrendChart'
+import ClientTypeDistributionPie from '../components/partOI/ClientTypeDistributionPie'
+import FIIPositionTrendChart from '../components/partOI/FIIPositionTrendChart'
+import ClientVsProBarChart from '../components/partOI/ClientVsProBarChart'
+import FutureIndexOIBarChart from '../components/partOI/FutureIndexOIBarChart'
+import OptionIndexOIBarChart from '../components/partOI/OptionIndexOIBarChart'
 
 const PartOIPage = () => {
   const [data, setData] = useState([])
@@ -669,212 +675,19 @@ const PartOIPage = () => {
 
       {/* Charts */}
       <div className="grid lg:grid-cols-2 gap-8">
-        <div className="glass-card p-6">
-          <h3 className="text-xl font-semibold mb-4">Long vs Short Positions Trend</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <AreaChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-              <XAxis dataKey="date" stroke="#9ca3af" />
-              <YAxis stroke="#9ca3af" />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: '#1f2937',
-                  border: '1px solid #374151',
-                  borderRadius: '8px',
-                  color: '#e2e8f0',
-                }}
-              />
-              <Legend />
-              <Area
-                type="monotone"
-                dataKey="Client_long"
-                stackId="1"
-                stroke="#0ea5e9"
-                fill="#0ea5e9"
-                fillOpacity={0.6}
-                name="Client Long"
-              />
-              <Area
-                type="monotone"
-                dataKey="FII_long"
-                stackId="1"
-                stroke="#10b981"
-                fill="#10b981"
-                fillOpacity={0.6}
-                name="FII Long"
-              />
-              <Area
-                type="monotone"
-                dataKey="DII_long"
-                stackId="1"
-                stroke="#8b5cf6"
-                fill="#8b5cf6"
-                fillOpacity={0.6}
-                name="DII Long"
-              />
-              <Area
-                type="monotone"
-                dataKey="Pro_long"
-                stackId="1"
-                stroke="#f59e0b"
-                fill="#f59e0b"
-                fillOpacity={0.6}
-                name="Pro Long"
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-
-        <div className="glass-card p-6">
-          <h3 className="text-xl font-semibold mb-4">Client Type Distribution (Latest)</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={clientDistribution}
-                cx="50%"
-                cy="50%"
-                outerRadius={80}
-                fill="#8884d8"
-                dataKey="long"
-                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-              >
-                {clientDistribution.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: '#1f2937',
-                  border: '1px solid #374151',
-                  borderRadius: '8px',
-                  color: '#e2e8f0',
-                }}
-              />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
+        <LongVsShortTrendChart chartData={chartData} />
+        <ClientTypeDistributionPie clientDistribution={clientDistribution} COLORS={COLORS} />
       </div>
 
       <div className="grid lg:grid-cols-2 gap-8">
-        <div className="glass-card p-6">
-          <h3 className="text-xl font-semibold mb-4">FII Position Trend</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-              <XAxis dataKey="date" stroke="#9ca3af" />
-              <YAxis stroke="#9ca3af" />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: '#1f2937',
-                  border: '1px solid #374151',
-                  borderRadius: '8px',
-                  color: '#e2e8f0',
-                }}
-              />
-              <Legend />
-              <Line
-                type="monotone"
-                dataKey="FII_long"
-                stroke="#10b981"
-                strokeWidth={3}
-                dot={{ fill: '#10b981', strokeWidth: 2, r: 4 }}
-                name="FII Long"
-              />
-              <Line
-                type="monotone"
-                dataKey="FII_short"
-                stroke="#ef4444"
-                strokeWidth={3}
-                dot={{ fill: '#ef4444', strokeWidth: 2, r: 4 }}
-                name="FII Short"
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-
-        <div className="glass-card p-6">
-          <h3 className="text-xl font-semibold mb-4">Client vs Pro Comparison</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-              <XAxis dataKey="date" stroke="#9ca3af" />
-              <YAxis stroke="#9ca3af" />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: '#1f2937',
-                  border: '1px solid #374151',
-                  borderRadius: '8px',
-                  color: '#e2e8f0',
-                }}
-              />
-              <Legend />
-              <Bar dataKey="Client_long" fill="#0ea5e9" name="Client Long" />
-              <Bar dataKey="Pro_long" fill="#f59e0b" name="Pro Long" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
+        <FIIPositionTrendChart chartData={chartData} />
+        <ClientVsProBarChart chartData={chartData} />
       </div>
 
       {/* Participant Comparison Charts */}
       <div className="grid lg:grid-cols-2 gap-8">
-        <div className="glass-card p-6">
-          <h3 className="text-xl font-semibold mb-4">Future Index OI by Participant</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={clientDistribution.map(item => ({
-              name: item.name,
-              long: data.find(d => d.date === latestDate && d.client_type === item.name)?.future_index_long || 0,
-              short: data.find(d => d.date === latestDate && d.client_type === item.name)?.future_index_short || 0,
-            }))}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-              <XAxis dataKey="name" stroke="#9ca3af" />
-              <YAxis stroke="#9ca3af" />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: '#1f2937',
-                  border: '1px solid #374151',
-                  borderRadius: '8px',
-                  color: '#e2e8f0',
-                }}
-              />
-              <Legend />
-              <Bar dataKey="long" fill="#10b981" name="Long Positions" />
-              <Bar dataKey="short" fill="#ef4444" name="Short Positions" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-
-        <div className="glass-card p-6">
-          <h3 className="text-xl font-semibold mb-4">Option Index OI by Participant</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={clientDistribution.map(item => {
-              const participantData = data.find(d => d.date === latestDate && d.client_type === item.name)
-              return {
-                name: item.name,
-                call_long: (participantData?.option_index_call_long || 0),
-                put_long: (participantData?.option_index_put_long || 0),
-                call_short: (participantData?.option_index_call_short || 0),
-                put_short: (participantData?.option_index_put_short || 0),
-              }
-            })}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-              <XAxis dataKey="name" stroke="#9ca3af" />
-              <YAxis stroke="#9ca3af" />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: '#1f2937',
-                  border: '1px solid #374151',
-                  borderRadius: '8px',
-                  color: '#e2e8f0',
-                }}
-              />
-              <Legend />
-              <Bar dataKey="call_long" fill="#0ea5e9" name="Call Long" />
-              <Bar dataKey="put_long" fill="#8b5cf6" name="Put Long" />
-              <Bar dataKey="call_short" fill="#ef4444" name="Call Short" />
-              <Bar dataKey="put_short" fill="#f59e0b" name="Put Short" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
+        <FutureIndexOIBarChart clientDistribution={clientDistribution} data={data} latestDate={latestDate} />
+        <OptionIndexOIBarChart clientDistribution={clientDistribution} data={data} latestDate={latestDate} />
       </div>
 
       {/* Deep Insights Section */}
