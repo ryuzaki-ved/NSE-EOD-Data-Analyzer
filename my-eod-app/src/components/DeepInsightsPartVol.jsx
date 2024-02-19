@@ -1,5 +1,5 @@
 import React from 'react'
-import { Eye, Target, TrendingUp, TrendingDown } from 'lucide-react'
+import { Eye, Target } from 'lucide-react'
 import { formatDifference } from '../utils/partOIHelpers'
 
 const DeepInsightsPartVol = ({ data, latestDate, previousDate }) => {
@@ -7,17 +7,13 @@ const DeepInsightsPartVol = ({ data, latestDate, previousDate }) => {
     return null
   }
 
-  const getValueColor = (value) => {
-    if (value > 0) return 'text-green-400 font-semibold'
-    if (value < 0) return 'text-red-400 font-semibold'
-    return 'text-gray-300'
-  }
-
-  const getBackgroundColor = (value) => {
-    if (value > 0) return 'bg-green-500/10'
-    if (value < 0) return 'bg-red-500/10'
-    return 'bg-gray-500/10'
-  }
+  // Calculate totals for all client types
+  const totals = data.reduce((acc, row) => ({
+    callLong: acc.callLong + row.callLong,
+    putLong: acc.putLong + row.putLong,
+    callShort: acc.callShort + row.callShort,
+    putShort: acc.putShort + row.putShort
+  }), { callLong: 0, putLong: 0, callShort: 0, putShort: 0 })
 
   return (
     <div className="glass-card p-8 border-2 border-primary-500/30 bg-gradient-to-br from-primary-900/10 to-purple-900/10 glow-gold-border">
@@ -35,7 +31,7 @@ const DeepInsightsPartVol = ({ data, latestDate, previousDate }) => {
       <div className="glass-card p-6 border border-primary-500/20 mb-8">
         <div className="flex items-center space-x-2 mb-4">
           <Target className="h-5 w-5 text-primary-400" />
-          <h4 className="text-xl font-semibold">Index Options Volume Analysis (OI Adjusted)</h4>
+          <h4 className="text-xl font-semibold">Index Options Intraday Volume (Open and Closed Intraday)</h4>
           <div className="text-sm text-gray-400">({previousDate} → {latestDate})</div>
         </div>
         
@@ -54,95 +50,41 @@ const DeepInsightsPartVol = ({ data, latestDate, previousDate }) => {
               {data.map((row, index) => (
                 <tr key={index} className="border-b border-gray-800 hover:bg-white/5 transition-colors">
                   <td className="py-3 px-4 font-semibold text-primary-400">{row.clientType}</td>
-                  <td className={`py-3 px-4 text-center ${getValueColor(row.callLong)} ${getBackgroundColor(row.callLong)} rounded px-2 py-1`}>
+                  <td className="py-3 px-4 text-center text-gray-300">
                     {formatDifference(row.callLong)}
                   </td>
-                  <td className={`py-3 px-4 text-center ${getValueColor(row.putLong)} ${getBackgroundColor(row.putLong)} rounded px-2 py-1`}>
+                  <td className="py-3 px-4 text-center text-gray-300">
                     {formatDifference(row.putLong)}
                   </td>
-                  <td className={`py-3 px-4 text-center ${getValueColor(row.callShort)} ${getBackgroundColor(row.callShort)} rounded px-2 py-1`}>
+                  <td className="py-3 px-4 text-center text-gray-300">
                     {formatDifference(row.callShort)}
                   </td>
-                  <td className={`py-3 px-4 text-center ${getValueColor(row.putShort)} ${getBackgroundColor(row.putShort)} rounded px-2 py-1`}>
+                  <td className="py-3 px-4 text-center text-gray-300">
                     {formatDifference(row.putShort)}
                   </td>
                 </tr>
               ))}
-            </tbody>
-          </table>
-        </div>
-        
-        <div className="mt-4 text-xs text-gray-400 space-y-1">
-          <div className="flex items-center space-x-4">
-            <span className="flex items-center space-x-2">
-              <span className="w-3 h-3 bg-green-400 rounded-full"></span>
-              <span>Positive Values (Green)</span>
-            </span>
-            <span className="flex items-center space-x-2">
-              <span className="w-3 h-3 bg-red-400 rounded-full"></span>
-              <span>Negative Values (Red)</span>
-            </span>
-          </div>
-          <p className="text-gray-400 text-xs mt-2">
-            * Values are adjusted based on OI changes: Positive OI changes add to same category, Negative OI changes add to opposite category
-          </p>
-        </div>
-      </div>
-
-      {/* Breakdown Analysis */}
-      <div className="glass-card p-6 border border-cyan-500/20">
-        <div className="flex items-center space-x-2 mb-4">
-          <TrendingUp className="h-5 w-5 text-cyan-400" />
-          <h4 className="text-xl font-semibold">Original Volume vs Adjusted Volume</h4>
-        </div>
-        
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-gray-700">
-                <th className="text-left py-3 px-4 font-medium text-gray-300">Client Type</th>
-                <th className="text-center py-3 px-4 font-medium text-gray-300">Original Call Long</th>
-                <th className="text-center py-3 px-4 font-medium text-gray-300">Original Put Long</th>
-                <th className="text-center py-3 px-4 font-medium text-gray-300">Original Call Short</th>
-                <th className="text-center py-3 px-4 font-medium text-gray-300">Original Put Short</th>
+              <tr className="border-t-2 border-primary-500/30 bg-primary-500/10">
+                <td className="py-3 px-4 font-bold text-primary-300">Total</td>
+                <td className="py-3 px-4 text-center font-bold text-primary-300">
+                  {formatDifference(totals.callLong)}
+                </td>
+                <td className="py-3 px-4 text-center font-bold text-primary-300">
+                  {formatDifference(totals.putLong)}
+                </td>
+                <td className="py-3 px-4 text-center font-bold text-primary-300">
+                  {formatDifference(totals.callShort)}
+                </td>
+                <td className="py-3 px-4 text-center font-bold text-primary-300">
+                  {formatDifference(totals.putShort)}
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {data.map((row, index) => (
-                <tr key={index} className="border-b border-gray-800 hover:bg-white/5 transition-colors">
-                  <td className="py-3 px-4 font-semibold text-cyan-400">{row.clientType}</td>
-                  <td className={`py-3 px-4 text-center ${getValueColor(row.originalCallLongVol)} ${getBackgroundColor(row.originalCallLongVol)} rounded px-2 py-1`}>
-                    {formatDifference(row.originalCallLongVol)}
-                  </td>
-                  <td className={`py-3 px-4 text-center ${getValueColor(row.originalPutLongVol)} ${getBackgroundColor(row.originalPutLongVol)} rounded px-2 py-1`}>
-                    {formatDifference(row.originalPutLongVol)}
-                  </td>
-                  <td className={`py-3 px-4 text-center ${getValueColor(row.originalCallShortVol)} ${getBackgroundColor(row.originalCallShortVol)} rounded px-2 py-1`}>
-                    {formatDifference(row.originalCallShortVol)}
-                  </td>
-                  <td className={`py-3 px-4 text-center ${getValueColor(row.originalPutShortVol)} ${getBackgroundColor(row.originalPutShortVol)} rounded px-2 py-1`}>
-                    {formatDifference(row.originalPutShortVol)}
-                  </td>
-                </tr>
-              ))}
             </tbody>
           </table>
         </div>
         
-        <div className="mt-4 text-xs text-gray-400 space-y-1">
-          <div className="flex items-center space-x-4">
-            <span className="flex items-center space-x-2">
-              <span className="w-3 h-3 bg-green-400 rounded-full"></span>
-              <span>Positive Values (Green)</span>
-            </span>
-            <span className="flex items-center space-x-2">
-              <span className="w-3 h-3 bg-red-400 rounded-full"></span>
-              <span>Negative Values (Red)</span>
-            </span>
-          </div>
-          <p>
-            * This table shows the original volume values from the latest trading day ({latestDate}) before OI adjustments
-          </p>
+        <div className="mt-4 text-xs text-gray-400">
+          <p>* Values are adjusted based on OI changes: Positive OI changes add to same category, Negative OI changes add to opposite category</p>
         </div>
       </div>
     </div>
