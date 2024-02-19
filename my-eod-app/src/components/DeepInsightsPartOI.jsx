@@ -2,14 +2,27 @@ import React from 'react'
 import { Eye, Target, Calendar } from 'lucide-react'
 import { getRatioClass, formatRatio, formatDifference } from '../utils/partOIHelpers'
 
+// Color mapping for participants
+const PARTICIPANT_COLORS = {
+  'Client': '#0ea5e9',
+  'Pro': '#f59e0b',
+  'DII': '#10b981',
+  'FII': '#ef4444',
+}
+
 const DeepInsights = ({
   latestDate,
   previousDate,
   ratioData,
   dailyChangeData,
   generateInsights,
-  generateDailyChangeInsights
+  generateDailyChangeInsights,
+  groupedInsights = {},
+  groupedDailyChangeInsights = {},
 }) => {
+  // Helper to get color for participant
+  const getColor = (name) => PARTICIPANT_COLORS[name] || '#64748b' // fallback: slate-400
+
   return (
     <div className="glass-card p-8 border-2 border-primary-500/30 bg-gradient-to-br from-primary-900/10 to-purple-900/10 glow-gold-border">
       <div className="flex items-center space-x-3 mb-6">
@@ -80,11 +93,28 @@ const DeepInsights = ({
           </div>
         </div>
         
-        {/* Market Positioning Insights */}
+        {/* Market Positioning Insights - Grouped by participant with vertical lines */}
         <div className="mt-6 pt-6 border-t border-gray-700">
           <h5 className="text-lg font-semibold text-purple-400 mb-4">Market Positioning Insights</h5>
-          <div className="space-y-3">
-            {generateInsights()}
+          <div className="flex flex-col gap-6">
+            {Object.entries(groupedInsights).length > 0
+              ? Object.entries(groupedInsights).map(([clientType, insights]) => (
+                  <div key={clientType} className="flex">
+                    <div
+                      className="mr-4"
+                      style={{
+                        borderLeft: `5px solid ${getColor(clientType)}`,
+                        paddingLeft: 16,
+                        minWidth: 0,
+                      }}
+                    >
+                      <div className="font-bold mb-2" style={{ color: getColor(clientType) }}>{clientType}</div>
+                      <div className="flex flex-col gap-2">{insights}</div>
+                    </div>
+                  </div>
+                ))
+              : <div className="space-y-3">{generateInsights()}</div>
+            }
           </div>
         </div>
       </div>
@@ -150,11 +180,29 @@ const DeepInsights = ({
           </table>
         </div>
         
-        {/* Daily Change Insights */}
+        {/* Daily Change Insights - Grouped by participant with vertical lines */}
         <div className="pt-4 border-t border-gray-700">
           <h5 className="text-lg font-semibold text-cyan-400 mb-4">Daily Position Change Insights</h5>
-          <div className="space-y-3">
-            {generateDailyChangeInsights()}
+          <div className="flex flex-col gap-6">
+            {Object.entries(groupedDailyChangeInsights).length > 0
+              ? Object.entries(groupedDailyChangeInsights).map(([clientType, insights]) => (
+                  <div key={clientType} className="flex">
+                    <div
+                      className="mr-4"
+                      style={{
+                        borderLeft: `5px solid ${getColor(clientType)}`,
+                        paddingLeft: 16,
+                        minWidth: 0,
+                      }}
+                    >
+                      {/* Use a neutral color for the participant name in the 2nd section */}
+                      <div className="font-bold mb-2" style={{ color: '#a589b4' }}>{clientType}</div>
+                      <div className="flex flex-col gap-2">{insights}</div>
+                    </div>
+                  </div>
+                ))
+              : <div className="space-y-3">{generateDailyChangeInsights()}</div>
+            }
           </div>
         </div>
       </div>

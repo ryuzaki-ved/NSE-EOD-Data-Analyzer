@@ -617,6 +617,431 @@ const PartOIPage = () => {
     ]
   }
 
+  // Grouped insights by participant
+  const generateGroupedInsights = () => {
+    const grouped = {};
+    ratioData.forEach(({ clientType, callBuyPutBuy, callBuyCallSell, putSellPutBuy, putSellCallSell }) => {
+      const insights = [];
+      if (callBuyPutBuy === 0 || callBuyCallSell === 0 || putSellPutBuy === 0 || putSellCallSell === 0) return;
+      if (callBuyPutBuy > 1.5) {
+        insights.push(
+          <div key={`${clientType}-bullish`} className="flex items-start space-x-3">
+            <div className="w-2 h-2 bg-green-400 rounded-full mt-2 flex-shrink-0 animate-pulse"></div>
+            <p className="text-gray-300 text-sm leading-relaxed">
+              <span className="text-green-400 font-bold underline">{clientType}</span> shows{' '}
+              <span className="text-green-400 font-bold">strong bullish bias</span> with Call Buy/Put Buy ratio of{' '}
+              <span className="text-green-400 font-bold">{formatRatio(callBuyPutBuy)}</span>
+            </p>
+          </div>
+        );
+      } else if (callBuyPutBuy < 0.7) {
+        insights.push(
+          <div key={`${clientType}-bearish`} className="flex items-start space-x-3">
+            <div className="w-2 h-2 bg-red-400 rounded-full mt-2 flex-shrink-0 animate-pulse"></div>
+            <p className="text-gray-300 text-sm leading-relaxed">
+              <span className="text-red-400 font-bold underline">{clientType}</span> shows{' '}
+              <span className="text-red-400 font-bold">strong bearish bias</span> with Call Buy/Put Buy ratio of{' '}
+              <span className="text-red-400 font-bold">{formatRatio(callBuyPutBuy)}</span>
+            </p>
+          </div>
+        );
+      }
+      if (callBuyCallSell > 1.5) {
+        insights.push(
+          <div key={`${clientType}-long-calls`} className="flex items-start space-x-3">
+            <div className="w-2 h-2 bg-blue-400 rounded-full mt-2 flex-shrink-0 animate-pulse"></div>
+            <p className="text-gray-300 text-sm leading-relaxed">
+              <span className="text-blue-400 font-bold underline">{clientType}</span> has{' '}
+              <span className="text-blue-400 font-bold">aggressive long call positioning</span> with ratio{' '}
+              <span className="text-blue-400 font-bold">{formatRatio(callBuyCallSell)}</span>
+            </p>
+          </div>
+        );
+      } else if (callBuyCallSell < 0.7) {
+        insights.push(
+          <div key={`${clientType}-short-calls`} className="flex items-start space-x-3">
+            <div className="w-2 h-2 bg-orange-400 rounded-full mt-2 flex-shrink-0 animate-pulse"></div>
+            <p className="text-gray-300 text-sm leading-relaxed">
+              <span className="text-orange-400 font-bold underline">{clientType}</span> is{' '}
+              <span className="text-orange-400 font-bold">heavily short on calls</span> with ratio{' '}
+              <span className="text-orange-400 font-bold">{formatRatio(callBuyCallSell)}</span>
+            </p>
+          </div>
+        );
+      }
+      if (putSellPutBuy > 1.5) {
+        insights.push(
+          <div key={`${clientType}-put-writing`} className="flex items-start space-x-3">
+            <div className="w-2 h-2 bg-purple-400 rounded-full mt-2 flex-shrink-0 animate-pulse"></div>
+            <p className="text-gray-300 text-sm leading-relaxed">
+              <span className="text-purple-400 font-bold underline">{clientType}</span> is{' '}
+              <span className="text-purple-400 font-bold">aggressively writing puts</span>{' '}
+              <span className="text-green-400 font-bold">(bullish)</span> with ratio{' '}
+              <span className="text-purple-400 font-bold">{formatRatio(putSellPutBuy)}</span>
+            </p>
+          </div>
+        );
+      } else if (putSellPutBuy < 0.7) {
+        insights.push(
+          <div key={`${clientType}-put-buying`} className="flex items-start space-x-3">
+            <div className="w-2 h-2 bg-pink-400 rounded-full mt-2 flex-shrink-0 animate-pulse"></div>
+            <p className="text-gray-300 text-sm leading-relaxed">
+              <span className="text-pink-400 font-bold underline">{clientType}</span> is{' '}
+              <span className="text-pink-400 font-bold">heavily buying puts</span>{' '}
+              <span className="text-red-400 font-bold">(bearish)</span> with ratio{' '}
+              <span className="text-pink-400 font-bold">{formatRatio(putSellPutBuy)}</span>
+            </p>
+          </div>
+        );
+      }
+      if (putSellCallSell > 1.2) {
+        insights.push(
+          <div key={`${clientType}-prefer-puts`} className="flex items-start space-x-3">
+            <div className="w-2 h-2 bg-cyan-400 rounded-full mt-2 flex-shrink-0"></div>
+            <p className="text-gray-300 text-sm leading-relaxed">
+              <span className="text-cyan-400 font-bold underline">{clientType}</span>{' '}
+              <span className="text-cyan-400 font-bold">prefers put writing</span> over call writing with ratio{' '}
+              <span className="text-cyan-400 font-bold">{formatRatio(putSellCallSell)}</span>
+            </p>
+          </div>
+        );
+      } else if (putSellCallSell < 0.8) {
+        insights.push(
+          <div key={`${clientType}-prefer-calls`} className="flex items-start space-x-3">
+            <div className="w-2 h-2 bg-yellow-400 rounded-full mt-2 flex-shrink-0"></div>
+            <p className="text-gray-300 text-sm leading-relaxed">
+              <span className="text-yellow-400 font-bold underline">{clientType}</span>{' '}
+              <span className="text-yellow-400 font-bold">prefers call writing</span> over put writing with ratio{' '}
+              <span className="text-yellow-400 font-bold">{formatRatio(putSellCallSell)}</span>
+            </p>
+          </div>
+        );
+      }
+      if (insights.length > 0) {
+        grouped[clientType] = insights;
+      }
+    });
+    return grouped;
+  };
+
+  const generateGroupedDailyChangeInsights = () => {
+    const grouped = {};
+    dailyChangeData.forEach(({ clientType, callBuyPutBuy, callBuyCallSell, putSellPutBuy, putSellCallSell, callLongDiff, putLongDiff, callShortDiff, putShortDiff }) => {
+      const insights = [];
+      if (callBuyPutBuy === 0 || callBuyCallSell === 0 || putSellPutBuy === 0 || putSellCallSell === 0) return;
+      // Detailed analysis for Call Buy / Put Buy (Negative Values)
+      if (callLongDiff < 0 && putLongDiff >= 0) {
+        insights.push(
+          <div key={`${clientType}-call-buy-negative`} className="flex items-start space-x-3">
+            <div className="w-2 h-2 bg-red-400 rounded-full mt-2 flex-shrink-0"></div>
+            <p className="text-gray-300 text-sm leading-relaxed">
+              <span className="text-red-400 font-bold underline">{clientType}</span> shows{' '}
+              <span className="text-red-400 font-bold">bearish sentiment</span> - declining call buying ({formatDifference(callLongDiff)}) signals{' '}
+              <span className="text-red-400 font-bold">weakening bullish sentiment</span>
+            </p>
+          </div>
+        );
+      } else if (callLongDiff >= 0 && putLongDiff < 0) {
+        insights.push(
+          <div key={`${clientType}-put-buy-negative`} className="flex items-start space-x-3">
+            <div className="w-2 h-2 bg-green-400 rounded-full mt-2 flex-shrink-0"></div>
+            <p className="text-gray-300 text-sm leading-relaxed">
+              <span className="text-green-400 font-bold underline">{clientType}</span> shows{' '}
+              <span className="text-green-400 font-bold">bullish sentiment</span> - less put buying ({formatDifference(putLongDiff)}) suggests{' '}
+              <span className="text-green-400 font-bold">reduced bearish sentiment</span>
+            </p>
+          </div>
+        );
+      } else if (callLongDiff < 0 && putLongDiff < 0) {
+        if (Math.abs(callLongDiff) > Math.abs(putLongDiff)) {
+          insights.push(
+            <div key={`${clientType}-call-put-both-neg-mod-bear`} className="flex items-start space-x-3">
+              <div className="w-2 h-2 bg-red-400 rounded-full mt-2 flex-shrink-0 animate-pulse"></div>
+              <p className="text-gray-300 text-sm leading-relaxed">
+                <span className="text-red-400 font-bold underline">{clientType}</span> shows{' '}
+                <span className="text-red-400 font-bold animate-pulse">moderately bearish</span> sentiment - stronger decline in call buying ({formatDifference(callLongDiff)}) vs put buying ({formatDifference(putLongDiff)}) indicates{' '}
+                <span className="text-red-400 font-bold">deeper bearishness</span>
+              </p>
+            </div>
+          );
+        } else if (Math.abs(callLongDiff) < Math.abs(putLongDiff)) {
+          insights.push(
+            <div key={`${clientType}-call-put-both-neg-mild-bear`} className="flex items-start space-x-3">
+              <div className="w-2 h-2 bg-orange-400 rounded-full mt-2 flex-shrink-0"></div>
+              <p className="text-gray-300 text-sm leading-relaxed">
+                <span className="text-orange-400 font-bold underline">{clientType}</span> shows{' '}
+                <span className="text-orange-400 font-bold">mildly bearish</span> sentiment - call buying decline ({formatDifference(callLongDiff)}) less than put buying decline ({formatDifference(putLongDiff)}), suggesting{' '}
+                <span className="text-orange-400 font-bold">mild bearishness</span>
+              </p>
+            </div>
+          );
+        } else {
+          insights.push(
+            <div key={`${clientType}-call-put-both-neg-equal`} className="flex items-start space-x-3">
+              <div className="w-2 h-2 bg-red-400 rounded-full mt-2 flex-shrink-0"></div>
+              <p className="text-gray-300 text-sm leading-relaxed">
+                <span className="text-red-400 font-bold underline">{clientType}</span> shows{' '}
+                <span className="text-red-400 font-bold">moderately bearish</span> sentiment - both call and put buying decreasing equally, indicating{' '}
+                <span className="text-red-400 font-bold">weaker market interest</span>
+              </p>
+            </div>
+          );
+        }
+      }
+      // Call Buy / Call Sell
+      if (callLongDiff < 0 && callShortDiff >= 0) {
+        insights.push(
+          <div key={`${clientType}-call-buy-sell-neg`} className="flex items-start space-x-3">
+            <div className="w-2 h-2 bg-red-400 rounded-full mt-2 flex-shrink-0"></div>
+            <p className="text-gray-300 text-sm leading-relaxed">
+              <span className="text-red-400 font-bold underline">{clientType}</span> shows{' '}
+              <span className="text-red-400 font-bold">bearish activity</span> - declining call buying ({formatDifference(callLongDiff)}) reflects{' '}
+              <span className="text-red-400 font-bold">reduced bullish activity</span>
+            </p>
+          </div>
+        );
+      } else if (callLongDiff >= 0 && callShortDiff < 0) {
+        insights.push(
+          <div key={`${clientType}-call-sell-neg`} className="flex items-start space-x-3">
+            <div className="w-2 h-2 bg-green-400 rounded-full mt-2 flex-shrink-0"></div>
+            <p className="text-gray-300 text-sm leading-relaxed">
+              <span className="text-green-400 font-bold underline">{clientType}</span> shows{' '}
+              <span className="text-green-400 font-bold">bullish sentiment</span> - less call selling ({formatDifference(callShortDiff)}) signals{' '}
+              <span className="text-green-400 font-bold">reduced bearish sentiment</span>
+            </p>
+          </div>
+        );
+      } else if (callLongDiff < 0 && callShortDiff < 0) {
+        if (Math.abs(callLongDiff) > Math.abs(callShortDiff)) {
+          insights.push(
+            <div key={`${clientType}-call-both-neg-strong-bear`} className="flex items-start space-x-3">
+              <div className="w-2 h-2 bg-red-400 rounded-full mt-2 flex-shrink-0 animate-pulse"></div>
+              <p className="text-gray-300 text-sm leading-relaxed">
+                <span className="text-red-400 font-bold underline">{clientType}</span> shows{' '}
+                <span className="text-red-400 font-bold animate-pulse">strongly bearish</span> sentiment - significant drop in call buying ({formatDifference(callLongDiff)}) vs call selling ({formatDifference(callShortDiff)}) shows{' '}
+                <span className="text-red-400 font-bold">stronger bearish sentiment</span>
+              </p>
+            </div>
+          );
+        } else if (Math.abs(callLongDiff) < Math.abs(callShortDiff)) {
+          insights.push(
+            <div key={`${clientType}-call-both-neg-mild-bear`} className="flex items-start space-x-3">
+              <div className="w-2 h-2 bg-orange-400 rounded-full mt-2 flex-shrink-0"></div>
+              <p className="text-gray-300 text-sm leading-relaxed">
+                <span className="text-orange-400 font-bold underline">{clientType}</span> shows{' '}
+                <span className="text-orange-400 font-bold">mildly bearish</span> sentiment - call buying decline ({formatDifference(callLongDiff)}) less than call selling decline ({formatDifference(callShortDiff)}), showing{' '}
+                <span className="text-orange-400 font-bold">some remaining bullishness</span>
+              </p>
+            </div>
+          );
+        } else {
+          insights.push(
+            <div key={`${clientType}-call-both-neg-equal`} className="flex items-start space-x-3">
+              <div className="w-2 h-2 bg-red-400 rounded-full mt-2 flex-shrink-0"></div>
+              <p className="text-gray-300 text-sm leading-relaxed">
+                <span className="text-red-400 font-bold underline">{clientType}</span> shows{' '}
+                <span className="text-red-400 font-bold">moderately bearish</span> sentiment - both call buying and selling decrease equally, signaling{' '}
+                <span className="text-red-400 font-bold">market indecisiveness</span>
+              </p>
+            </div>
+          );
+        }
+      }
+      // Put Sell / Put Buy
+      if (putShortDiff < 0 && putLongDiff >= 0) {
+        insights.push(
+          <div key={`${clientType}-put-sell-neg`} className="flex items-start space-x-3">
+            <div className="w-2 h-2 bg-green-400 rounded-full mt-2 flex-shrink-0"></div>
+            <p className="text-gray-300 text-sm leading-relaxed">
+              <span className="text-green-400 font-bold underline">{clientType}</span> shows{' '}
+              <span className="text-green-400 font-bold">bullish sentiment</span> - fewer puts being sold ({formatDifference(putShortDiff)}) suggests{' '}
+              <span className="text-green-400 font-bold">less bearish market sentiment</span>
+            </p>
+          </div>
+        );
+      } else if (putShortDiff >= 0 && putLongDiff < 0) {
+        insights.push(
+          <div key={`${clientType}-put-buy-sell-neg`} className="flex items-start space-x-3">
+            <div className="w-2 h-2 bg-red-400 rounded-full mt-2 flex-shrink-0"></div>
+            <p className="text-gray-300 text-sm leading-relaxed">
+              <span className="text-red-400 font-bold underline">{clientType}</span> shows{' '}
+              <span className="text-red-400 font-bold">bearish sentiment</span> - reduced put buying ({formatDifference(putLongDiff)}) signals{' '}
+              <span className="text-red-400 font-bold">reduced hedging activity</span>
+            </p>
+          </div>
+        );
+      } else if (putShortDiff < 0 && putLongDiff < 0) {
+        if (Math.abs(putShortDiff) > Math.abs(putLongDiff)) {
+          insights.push(
+            <div key={`${clientType}-put-both-neg-mod-bull`} className="flex items-start space-x-3">
+              <div className="w-2 h-2 bg-green-400 rounded-full mt-2 flex-shrink-0 animate-pulse"></div>
+              <p className="text-gray-300 text-sm leading-relaxed">
+                <span className="text-green-400 font-bold underline">{clientType}</span> shows{' '}
+                <span className="text-green-400 font-bold animate-pulse">moderately bullish</span> sentiment - put selling falls more ({formatDifference(putShortDiff)}) than put buying ({formatDifference(putLongDiff)}), indicating{' '}
+                <span className="text-green-400 font-bold">stronger bullish reversal</span>
+              </p>
+            </div>
+          );
+        } else if (Math.abs(putShortDiff) < Math.abs(putLongDiff)) {
+          insights.push(
+            <div key={`${clientType}-put-both-neg-mild-bull`} className="flex items-start space-x-3">
+              <div className="w-2 h-2 bg-cyan-400 rounded-full mt-2 flex-shrink-0"></div>
+              <p className="text-gray-300 text-sm leading-relaxed">
+                <span className="text-cyan-400 font-bold underline">{clientType}</span> shows{' '}
+                <span className="text-cyan-400 font-bold">mildly bullish</span> sentiment - put selling declines less ({formatDifference(putShortDiff)}) than put buying ({formatDifference(putLongDiff)}), signaling{' '}
+                <span className="text-cyan-400 font-bold">weaker bullish shift</span>
+              </p>
+            </div>
+          );
+        } else {
+          insights.push(
+            <div key={`${clientType}-put-both-neg-equal-bull`} className="flex items-start space-x-3">
+              <div className="w-2 h-2 bg-green-400 rounded-full mt-2 flex-shrink-0"></div>
+              <p className="text-gray-300 text-sm leading-relaxed">
+                <span className="text-green-400 font-bold underline">{clientType}</span> shows{' '}
+                <span className="text-green-400 font-bold">moderately bullish</span> sentiment - both put selling and buying decreasing equally, showing{' '}
+                <span className="text-green-400 font-bold">less bearish activity and potential upside</span>
+              </p>
+            </div>
+          );
+        }
+      }
+      // Put Sell / Call Sell
+      if (putShortDiff < 0 && callShortDiff >= 0) {
+        insights.push(
+          <div key={`${clientType}-put-call-sell-neg`} className="flex items-start space-x-3">
+            <div className="w-2 h-2 bg-green-400 rounded-full mt-2 flex-shrink-0"></div>
+            <p className="text-gray-300 text-sm leading-relaxed">
+              <span className="text-green-400 font-bold underline">{clientType}</span> shows{' '}
+              <span className="text-green-400 font-bold">bullish sentiment</span> - less put selling ({formatDifference(putShortDiff)}) shows{' '}
+              <span className="text-green-400 font-bold">reduced bearish sentiment</span>
+            </p>
+          </div>
+        );
+      } else if (putShortDiff >= 0 && callShortDiff < 0) {
+        insights.push(
+          <div key={`${clientType}-call-sell-put-neg`} className="flex items-start space-x-3">
+            <div className="w-2 h-2 bg-red-400 rounded-full mt-2 flex-shrink-0"></div>
+            <p className="text-gray-300 text-sm leading-relaxed">
+              <span className="text-red-400 font-bold underline">{clientType}</span> shows{' '}
+              <span className="text-red-400 font-bold">bearish sentiment</span> - fewer calls being sold ({formatDifference(callShortDiff)}) signals{' '}
+              <span className="text-red-400 font-bold">reduced bearish sentiment in market</span>
+            </p>
+          </div>
+        );
+      } else if (putShortDiff < 0 && callShortDiff < 0) {
+        if (Math.abs(putShortDiff) > Math.abs(callShortDiff)) {
+          insights.push(
+            <div key={`${clientType}-put-call-sell-both-neg-mod-bull`} className="flex items-start space-x-3">
+              <div className="w-2 h-2 bg-green-400 rounded-full mt-2 flex-shrink-0 animate-pulse"></div>
+              <p className="text-gray-300 text-sm leading-relaxed">
+                <span className="text-green-400 font-bold underline">{clientType}</span> shows{' '}
+                <span className="text-green-400 font-bold animate-pulse">moderately bullish</span> sentiment - put selling declines more ({formatDifference(putShortDiff)}) than call selling ({formatDifference(callShortDiff)}), signaling{' '}
+                <span className="text-green-400 font-bold">greater bullish pressure</span>
+              </p>
+            </div>
+          );
+        } else if (Math.abs(putShortDiff) < Math.abs(callShortDiff)) {
+          insights.push(
+            <div key={`${clientType}-put-call-sell-both-neg-mild-bull`} className="flex items-start space-x-3">
+              <div className="w-2 h-2 bg-cyan-400 rounded-full mt-2 flex-shrink-0"></div>
+              <p className="text-gray-300 text-sm leading-relaxed">
+                <span className="text-cyan-400 font-bold underline">{clientType}</span> shows{' '}
+                <span className="text-cyan-400 font-bold">mildly bullish</span> sentiment - put selling drops less ({formatDifference(putShortDiff)}) than call selling ({formatDifference(callShortDiff)}), indicating{' '}
+                <span className="text-cyan-400 font-bold">weak bullish sentiment</span>
+              </p>
+            </div>
+          );
+        } else {
+          insights.push(
+            <div key={`${clientType}-put-call-sell-both-neg-equal-bull`} className="flex items-start space-x-3">
+              <div className="w-2 h-2 bg-green-400 rounded-full mt-2 flex-shrink-0"></div>
+              <p className="text-gray-300 text-sm leading-relaxed">
+                <span className="text-green-400 font-bold underline">{clientType}</span> shows{' '}
+                <span className="text-green-400 font-bold">moderately bullish</span> sentiment - both put and call selling decrease equally, signaling{' '}
+                <span className="text-green-400 font-bold">less bearish activity and potential upside</span>
+              </p>
+            </div>
+          );
+        }
+      }
+      // Daily Call Buy/Put Buy insights
+      if (callBuyPutBuy > 1.5) {
+        insights.push(
+          <div key={`${clientType}-daily-bullish`} className="flex items-start space-x-3">
+            <div className="w-2 h-2 bg-green-400 rounded-full mt-2 flex-shrink-0 animate-pulse"></div>
+            <p className="text-gray-300 text-sm leading-relaxed">
+              <span className="text-green-400 font-bold underline">{clientType}</span> added{' '}
+              <span className="text-green-400 font-bold">strong bullish positions</span> today with Call/Put ratio of{' '}
+              <span className="text-green-400 font-bold">{formatRatio(callBuyPutBuy)}</span>
+            </p>
+          </div>
+        );
+      } else if (callBuyPutBuy < 0.7) {
+        insights.push(
+          <div key={`${clientType}-daily-bearish`} className="flex items-start space-x-3">
+            <div className="w-2 h-2 bg-red-400 rounded-full mt-2 flex-shrink-0 animate-pulse"></div>
+            <p className="text-gray-300 text-sm leading-relaxed">
+              <span className="text-red-400 font-bold underline">{clientType}</span> added{' '}
+              <span className="text-red-400 font-bold">strong bearish positions</span> today with Call/Put ratio of{' '}
+              <span className="text-red-400 font-bold">{formatRatio(callBuyPutBuy)}</span>
+            </p>
+          </div>
+        );
+      }
+      // Daily position building/unwinding insights
+      if (callLongDiff > 0 && putLongDiff < 0) {
+        insights.push(
+          <div key={`${clientType}-bullish-shift`} className="flex items-start space-x-3">
+            <div className="w-2 h-2 bg-blue-400 rounded-full mt-2 flex-shrink-0"></div>
+            <p className="text-gray-300 text-sm leading-relaxed">
+              <span className="text-blue-400 font-bold underline">{clientType}</span> showed{' '}
+              <span className="text-blue-400 font-bold">bullish shift</span> - added calls ({formatDifference(callLongDiff)}) and reduced puts ({formatDifference(putLongDiff)})
+            </p>
+          </div>
+        );
+      } else if (callLongDiff < 0 && putLongDiff > 0) {
+        insights.push(
+          <div key={`${clientType}-bearish-shift`} className="flex items-start space-x-3">
+            <div className="w-2 h-2 bg-orange-400 rounded-full mt-2 flex-shrink-0"></div>
+            <p className="text-gray-300 text-sm leading-relaxed">
+              <span className="text-orange-400 font-bold underline">{clientType}</span> showed{' '}
+              <span className="text-orange-400 font-bold">bearish shift</span> - reduced calls ({formatDifference(callLongDiff)}) and added puts ({formatDifference(putLongDiff)})
+            </p>
+          </div>
+        );
+      }
+      // Aggressive position changes
+      if (Math.abs(callLongDiff) > 100000 || Math.abs(putLongDiff) > 100000) {
+        insights.push(
+          <div key={`${clientType}-aggressive`} className="flex items-start space-x-3">
+            <div className="w-2 h-2 bg-purple-400 rounded-full mt-2 flex-shrink-0 animate-pulse"></div>
+            <p className="text-gray-300 text-sm leading-relaxed">
+              <span className="text-purple-400 font-bold underline">{clientType}</span> made{' '}
+              <span className="text-purple-400 font-bold">aggressive position changes</span> today with significant OI movements
+            </p>
+          </div>
+        );
+      }
+      // Unwinding insights
+      if (callShortDiff < 0 && putShortDiff < 0) {
+        insights.push(
+          <div key={`${clientType}-unwinding`} className="flex items-start space-x-3">
+            <div className="w-2 h-2 bg-yellow-400 rounded-full mt-2 flex-shrink-0"></div>
+            <p className="text-gray-300 text-sm leading-relaxed">
+              <span className="text-yellow-400 font-bold underline">{clientType}</span> showed{' '}
+              <span className="text-yellow-400 font-bold">position unwinding</span> - reduced both call and put shorts
+            </p>
+          </div>
+        );
+      }
+      if (insights.length > 0) {
+        grouped[clientType] = insights;
+      }
+    });
+    return grouped;
+  };
+
   const COLORS = ['#0ea5e9', '#8b5cf6', '#10b981', '#f59e0b']
 
   const columns = [
@@ -701,6 +1126,8 @@ const PartOIPage = () => {
         formatDifference={formatDifference}
         generateInsights={generateInsights}
         generateDailyChangeInsights={generateDailyChangeInsights}
+        groupedInsights={generateGroupedInsights()}
+        groupedDailyChangeInsights={generateGroupedDailyChangeInsights()}
       />
 
       {/* Data Table */}
