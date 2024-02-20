@@ -5,9 +5,10 @@ import {
   calculateMomentumIndicators,
   getPositionChangeSummary,
   formatPositionChange,
-  getPositionChangeColorClass
+  getPositionChangeColorClass,
+  calculateParticipantBehaviorPatterns
 } from '../utils/correlationHelpers'
-import { TrendingUp, TrendingDown, ArrowUpDown } from 'lucide-react'
+import { TrendingUp, TrendingDown, ArrowUpDown, Users, Activity } from 'lucide-react'
 
 const CorrelationPage = () => {
   const [participantData, setParticipantData] = useState([])
@@ -15,6 +16,7 @@ const CorrelationPage = () => {
   const [loading, setLoading] = useState(true)
   const [advancedData, setAdvancedData] = useState({})
   const [momentumData, setMomentumData] = useState({})
+  const [behaviorPatterns, setBehaviorPatterns] = useState({})
 
   useEffect(() => {
     const fetchData = async () => {
@@ -37,6 +39,9 @@ const CorrelationPage = () => {
           
           const momentum = calculateMomentumIndicators(participantJson)
           setMomentumData(momentum)
+          
+          const patterns = calculateParticipantBehaviorPatterns(participantJson)
+          setBehaviorPatterns(patterns)
         }
         
         setLoading(false)
@@ -45,7 +50,7 @@ const CorrelationPage = () => {
         setLoading(false)
       }
     }
-
+    
     fetchData()
   }, [])
 
@@ -107,6 +112,69 @@ const CorrelationPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Participant Behavior Patterns */}
+      {behaviorPatterns && Object.keys(behaviorPatterns).length > 0 && (
+        <div className="glass-card p-6 border border-indigo-500/20">
+          <h3 className="text-xl font-semibold mb-4 flex items-center">
+            <Users className="h-5 w-5 mr-2 text-indigo-400" />
+            Participant Behavior Patterns
+          </h3>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {['Client', 'DII', 'FII', 'Pro'].map(participant => {
+              const pattern = behaviorPatterns[participant]
+              if (!pattern) return null
+              
+              return (
+                <div key={participant} className="p-4 bg-dark-700 rounded-lg border border-gray-600">
+                  <h4 className="text-lg font-semibold text-white mb-3">{participant}</h4>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Trading Style:</span>
+                      <span className={`font-semibold ${
+                        pattern.tradingStyle === 'Bullish' ? 'text-green-400' : 
+                        pattern.tradingStyle === 'Bearish' ? 'text-red-400' : 'text-gray-400'
+                      }`}>
+                        {pattern.tradingStyle}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Risk Profile:</span>
+                      <span className={`font-semibold ${
+                        pattern.riskProfile === 'High' ? 'text-red-400' : 
+                        pattern.riskProfile === 'Medium' ? 'text-yellow-400' : 'text-green-400'
+                      }`}>
+                        {pattern.riskProfile}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Consistency:</span>
+                      <span className={`font-semibold ${
+                        pattern.consistency === 'Consistent' ? 'text-green-400' : 'text-orange-400'
+                      }`}>
+                        {pattern.consistency}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Net Bias:</span>
+                      <span className={`font-semibold ${getPositionChangeColorClass(pattern.netBias)}`}>
+                        {formatPositionChange(pattern.netBias)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Volatility:</span>
+                      <span className="font-semibold text-white">
+                        {pattern.volatility.toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Position Changes Summary */}
       {advancedData.positionChanges && Object.keys(advancedData.positionChanges).length > 0 && (

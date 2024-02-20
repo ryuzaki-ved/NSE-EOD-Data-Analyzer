@@ -234,44 +234,241 @@ export const calculateLaggedCorrelations = (x, y, maxLag = 5) => {
   return correlations
 }
 
-// Calculate correlation with market indicators
+// Calculate meaningful market correlations with multi-participant sentiment
 export const calculateMarketCorrelations = (participantData, fiiData) => {
-  const marketIndicators = {
-    'FII_Net_Flow': fiiData.map(item => (item.buy_amt_adj || 0) - (item.sell_amt_adj || 0)),
-    'FII_Buy_Amount': fiiData.map(item => item.buy_amt_adj || 0),
-    'FII_Sell_Amount': fiiData.map(item => item.sell_amt_adj || 0),
-    'FII_OI_Amount': fiiData.map(item => item.oi_amt_adj || 0)
-  }
-  
   const participants = ['Client', 'DII', 'FII', 'Pro']
-  const metrics = ['total_long_contracts', 'total_short_contracts']
-  
   const correlations = {}
   
   participants.forEach(participant => {
     correlations[participant] = {}
-    Object.keys(marketIndicators).forEach(indicator => {
-      correlations[participant][indicator] = {}
-      
-      metrics.forEach(metric => {
-        const participantValues = participantData
-          .filter(item => item.client_type === participant)
-          .map(item => item[metric] || 0)
-        
-        // Align data lengths
-        const minLength = Math.min(participantValues.length, marketIndicators[indicator].length)
-        const correlation = calculatePearsonCorrelation(
-          participantValues.slice(0, minLength),
-          marketIndicators[indicator].slice(0, minLength)
-        )
-        
-        correlations[participant][indicator][metric] = correlation
+    
+    // 1. Participant vs Multi-Participant Market Sentiment
+    const participantDataFiltered = participantData.filter(item => item.client_type === participant)
+    const fiiDataFiltered = fiiData.filter(item => item.date)
+    
+    // Align data by date
+    const alignedData = alignDataByDate(participantDataFiltered, fiiDataFiltered)
+    
+    // DEBUG: Log alignedData for the first participant
+    if (participant === 'Client') {
+      console.log('--- Aligned Data for Client ---')
+      console.log(alignedData.slice(0, 5))
+    }
+    
+    if (alignedData.length > 0) {
+      // Calculate net position changes for the specific participant
+      const participantNetPositions = alignedData.map(item => {
+        const participantRecord = item[participant]
+        if (participantRecord) {
+          return (participantRecord.total_long_contracts || 0) - (participantRecord.total_short_contracts || 0)
+        }
+        return 0
       })
-    })
+      
+      // DEBUG: Log participantNetPositions
+      if (participant === 'Client') {
+        console.log('Client Net Positions:', participantNetPositions.slice(0, 10))
+      }
+      
+      // Calculate Multi-Participant Market Sentiment (excluding the current participant)
+      const marketSentiment = alignedData.map(item => {
+        let totalNetPosition = 0
+        let participantCount = 0
+        
+        participants.forEach(p => {
+          if (p !== participant) { // Exclude current participant to avoid self-correlation
+            const record = item[p]
+            if (record) {
+              const netPosition = (record.total_long_contracts || 0) - (record.total_short_contracts || 0)
+              totalNetPosition += netPosition
+              participantCount++
+            }
+          }
+        })
+        
+        // Calculate average net position across other participants
+        const avgNetPosition = participantCount > 0 ? totalNetPosition / participantCount : 0
+        
+        // Convert to sentiment score (-1 to +1)
+        if (avgNetPosition > 100000) return 1      // Strongly bullish
+        if (avgNetPosition > 50000) return 0.75    // Bullish
+        if (avgNetPosition > 10000) return 0.5     // Moderately bullish
+        if (avgNetPosition > -10000) return 0      // Neutral
+        if (avgNetPosition > -50000) return -0.5   // Moderately bearish
+        if (avgNetPosition > -100000) return -0.75 // Bearish
+        return -1                                   // Strongly bearish
+      })
+      
+      // DEBUG: Log marketSentiment
+      if (participant === 'Client') {
+        console.log('Market Sentiment:', marketSentiment.slice(0, 10))
+      }
+      
+      // Calculate correlation between participant net positions and market sentiment
+      const sentimentCorr = calculatePearsonCorrelation(participantNetPositions, marketSentiment)
+      
+      correlations[participant]['Market_Sentiment'] = {
+        correlation: sentimentCorr,
+        interpretation: sentimentCorr > 0.3 ? 'Follows market sentiment' : 
+                       sentimentCorr < -0.3 ? 'Contrarian to market' : 'Independent',
+        avgMarketSentiment: marketSentiment.reduce((sum, val) => sum + val, 0) / marketSentiment.length
+      }
+      
+      // 2. Participant vs Market Volatility (based on FII activity)
+      const fiiActivity = alignedData.map(item => {
+        const fiiRecord = item.fii
+        if (fiiRecord) {
+          return (fiiRecord.buy_amt_adj || 0) + (fiiRecord.sell_amt_adj || 0)
+        }
+        return 0
+      })
+      
+      const volatilityCorr = calculatePearsonCorrelation(participantNetPositions, fiiActivity)
+      
+      correlations[participant]['Market_Volatility'] = {
+        correlation: volatilityCorr,
+        interpretation: volatilityCorr > 0.3 ? 'Increases with market activity' : 
+                       volatilityCorr < -0.3 ? 'Decreases with market activity' : 'Independent'
+      }
+      
+      // 3. Participant vs Market Liquidity (based on FII OI)
+      const marketLiquidity = alignedData.map(item => {
+        const fiiRecord = item.fii
+        if (fiiRecord) {
+          return fiiRecord.oi_amt_adj || 0
+        }
+        return 0
+      })
+      
+      const liquidityCorr = calculatePearsonCorrelation(participantNetPositions, marketLiquidity)
+      
+      correlations[participant]['Market_Liquidity'] = {
+        correlation: liquidityCorr,
+        interpretation: liquidityCorr > 0.3 ? 'Positions increase with liquidity' : 
+                       liquidityCorr < -0.3 ? 'Positions decrease with liquidity' : 'Independent'
+      }
+      
+      // 4. Participant vs Market Consensus (how aligned with other participants)
+      const marketConsensus = alignedData.map(item => {
+        const participantRecord = item[participant]
+        if (!participantRecord) return 0
+        
+        const participantNetPos = (participantRecord.total_long_contracts || 0) - (participantRecord.total_short_contracts || 0)
+        
+        let otherParticipantsNetPos = 0
+        let otherParticipantCount = 0
+        
+        participants.forEach(p => {
+          if (p !== participant) {
+            const record = item[p]
+            if (record) {
+              const netPos = (record.total_long_contracts || 0) - (record.total_short_contracts || 0)
+              otherParticipantsNetPos += netPos
+              otherParticipantCount++
+            }
+          }
+        })
+        
+        if (otherParticipantCount === 0) return 0
+        
+        const avgOtherNetPos = otherParticipantsNetPos / otherParticipantCount
+        
+        // Calculate consensus score (-1 to +1)
+        if (participantNetPos === 0 && avgOtherNetPos === 0) return 0
+        if (participantNetPos === 0 || avgOtherNetPos === 0) return 0
+        
+        const consensus = (participantNetPos * avgOtherNetPos) / (Math.abs(participantNetPos) * Math.abs(avgOtherNetPos))
+        return consensus
+      })
+      
+      // DEBUG: Log marketConsensus
+      if (participant === 'Client') {
+        console.log('Market Consensus:', marketConsensus.slice(0, 10))
+      }
+      
+      const consensusCorr = calculatePearsonCorrelation(participantNetPositions, marketConsensus)
+      
+      correlations[participant]['Market_Consensus'] = {
+        correlation: consensusCorr,
+        interpretation: consensusCorr > 0.3 ? 'High consensus with market' : 
+                       consensusCorr < -0.3 ? 'Low consensus with market' : 'Moderate consensus',
+        avgConsensus: marketConsensus.reduce((sum, val) => sum + val, 0) / marketConsensus.length
+      }
+    }
   })
   
   return correlations
-} 
+}
+
+// Helper function to align participant and market data by date
+const alignDataByDate = (participantData, marketData) => {
+  const dateMap = new Map()
+  
+  // Add participant data
+  participantData.forEach(item => {
+    if (!dateMap.has(item.date)) {
+      dateMap.set(item.date, {})
+    }
+    dateMap.get(item.date)[item.client_type] = item
+  })
+  
+  // Add market data
+  marketData.forEach(item => {
+    if (!dateMap.has(item.date)) {
+      dateMap.set(item.date, {})
+    }
+    dateMap.get(item.date).fii = item
+  })
+  
+  return Array.from(dateMap.entries()).map(([date, data]) => ({ date, ...data }))
+}
+
+// Calculate participant behavior patterns
+export const calculateParticipantBehaviorPatterns = (participantData) => {
+  const participants = ['Client', 'DII', 'FII', 'Pro']
+  const patterns = {}
+  
+  participants.forEach(participant => {
+    const participantDataFiltered = participantData.filter(item => item.client_type === participant)
+    
+    if (participantDataFiltered.length > 0) {
+      // Calculate average position sizes
+      const avgLongPositions = participantDataFiltered.reduce((sum, item) => sum + (item.total_long_contracts || 0), 0) / participantDataFiltered.length
+      const avgShortPositions = participantDataFiltered.reduce((sum, item) => sum + (item.total_short_contracts || 0), 0) / participantDataFiltered.length
+      
+      // Calculate position volatility (standard deviation)
+      const longPositions = participantDataFiltered.map(item => item.total_long_contracts || 0)
+      const shortPositions = participantDataFiltered.map(item => item.total_short_contracts || 0)
+      
+      const longVolatility = calculateStandardDeviation(longPositions)
+      const shortVolatility = calculateStandardDeviation(shortPositions)
+      
+      // Determine trading style
+      const netBias = avgLongPositions - avgShortPositions
+      const volatility = (longVolatility + shortVolatility) / 2
+      
+      patterns[participant] = {
+        avgLongPositions: Math.round(avgLongPositions),
+        avgShortPositions: Math.round(avgShortPositions),
+        netBias: Math.round(netBias),
+        volatility: Math.round(volatility),
+        tradingStyle: netBias > 0 ? 'Bullish' : netBias < 0 ? 'Bearish' : 'Neutral',
+        riskProfile: volatility > 1000000 ? 'High' : volatility > 500000 ? 'Medium' : 'Low',
+        consistency: volatility / Math.max(avgLongPositions, avgShortPositions) < 0.3 ? 'Consistent' : 'Volatile'
+      }
+    }
+  })
+  
+  return patterns
+}
+
+// Calculate standard deviation
+const calculateStandardDeviation = (values) => {
+  const mean = values.reduce((sum, val) => sum + val, 0) / values.length
+  const squaredDiffs = values.map(val => Math.pow(val - mean, 2))
+  const avgSquaredDiff = squaredDiffs.reduce((sum, val) => sum + val, 0) / values.length
+  return Math.sqrt(avgSquaredDiff)
+}
 
 // Calculate position changes (day-over-day differences)
 export const calculatePositionChanges = (data, selectedDate = null) => {
