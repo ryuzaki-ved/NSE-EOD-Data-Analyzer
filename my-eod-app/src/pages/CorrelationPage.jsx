@@ -1,11 +1,20 @@
 import React, { useState, useEffect } from 'react'
 import CorrelationAnalysis from '../components/CorrelationAnalysis'
-import { BarChart3, TrendingUp, Activity } from 'lucide-react'
+import { 
+  calculateAdvancedCorrelations, 
+  calculateMomentumIndicators,
+  getPositionChangeSummary,
+  formatPositionChange,
+  getPositionChangeColorClass
+} from '../utils/correlationHelpers'
+import { TrendingUp, TrendingDown, ArrowUpDown } from 'lucide-react'
 
 const CorrelationPage = () => {
   const [participantData, setParticipantData] = useState([])
   const [fiiData, setFiiData] = useState([])
   const [loading, setLoading] = useState(true)
+  const [advancedData, setAdvancedData] = useState({})
+  const [momentumData, setMomentumData] = useState({})
 
   useEffect(() => {
     const fetchData = async () => {
@@ -20,9 +29,19 @@ const CorrelationPage = () => {
         
         setParticipantData(participantJson)
         setFiiData(fiiJson)
+        
+        // Calculate advanced data for latest date
+        if (participantJson.length > 0) {
+          const advanced = calculateAdvancedCorrelations(participantJson)
+          setAdvancedData(advanced)
+          
+          const momentum = calculateMomentumIndicators(participantJson)
+          setMomentumData(momentum)
+        }
+        
+        setLoading(false)
       } catch (error) {
-        console.error('Error fetching correlation data:', error)
-      } finally {
+        console.error('Error fetching data:', error)
         setLoading(false)
       }
     }
@@ -32,78 +51,163 @@ const CorrelationPage = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-400"></div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500"></div>
       </div>
     )
   }
 
+  const participantRecords = participantData.length
+  const fiiRecords = fiiData.length
+  const tradingDays = new Set(participantData.map(item => item.date)).size
+
   return (
-    <div className="space-y-8 animate-fade-in">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
-        <div>
-          <h1 className="text-3xl font-bold gradient-text mb-2">Correlation Analysis</h1>
-          <p className="text-gray-400">
-            Advanced statistical analysis of relationships between market participants and indicators
-          </p>
-        </div>
-        <div className="flex items-center space-x-2 mt-4 sm:mt-0">
-          <div className="px-3 py-1 bg-blue-500/20 rounded-full text-xs text-blue-400 border border-blue-500/30">
-            ADVANCED ANALYTICS
-          </div>
-        </div>
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="text-center">
+        <h1 className="text-4xl font-bold gradient-text mb-4">Advanced Correlation Analysis</h1>
+        <p className="text-gray-400 text-lg">Comprehensive analysis of market participant relationships and position dynamics</p>
       </div>
 
       {/* Data Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="glass-card p-6 border border-primary-500/20">
+        <div className="glass-card p-6 border border-blue-500/20">
           <div className="flex items-center space-x-3">
-            <div className="p-2 rounded-lg bg-primary-500/20">
-              <BarChart3 className="h-5 w-5 text-primary-400" />
+            <div className="p-2 rounded-lg bg-blue-500/20">
+              <TrendingUp className="h-6 w-6 text-blue-400" />
             </div>
             <div>
-              <div className="text-2xl font-bold text-white">
-                {participantData.filter(item => item.client_type !== 'TOTAL').length}
-              </div>
-              <div className="text-sm text-gray-400">Participant Records</div>
+              <h3 className="text-lg font-semibold text-white">{participantRecords}</h3>
+              <p className="text-gray-400">Participant Records</p>
             </div>
           </div>
         </div>
-
+        
         <div className="glass-card p-6 border border-green-500/20">
           <div className="flex items-center space-x-3">
             <div className="p-2 rounded-lg bg-green-500/20">
-              <TrendingUp className="h-5 w-5 text-green-400" />
+              <TrendingDown className="h-6 w-6 text-green-400" />
             </div>
             <div>
-              <div className="text-2xl font-bold text-white">
-                {fiiData.length}
-              </div>
-              <div className="text-sm text-gray-400">FII Records</div>
+              <h3 className="text-lg font-semibold text-white">{fiiRecords}</h3>
+              <p className="text-gray-400">FII Records</p>
             </div>
           </div>
         </div>
-
+        
         <div className="glass-card p-6 border border-purple-500/20">
           <div className="flex items-center space-x-3">
             <div className="p-2 rounded-lg bg-purple-500/20">
-              <Activity className="h-5 w-5 text-purple-400" />
+              <ArrowUpDown className="h-6 w-6 text-purple-400" />
             </div>
             <div>
-              <div className="text-2xl font-bold text-white">
-                {new Set(participantData.map(item => item.date)).size}
-              </div>
-              <div className="text-sm text-gray-400">Trading Days</div>
+              <h3 className="text-lg font-semibold text-white">{tradingDays}</h3>
+              <p className="text-gray-400">Trading Days</p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Correlation Analysis Component */}
-      <CorrelationAnalysis 
-        participantData={participantData} 
-        fiiData={fiiData} 
-      />
+      {/* Position Changes Summary */}
+      {advancedData.positionChanges && Object.keys(advancedData.positionChanges).length > 0 && (
+        <div className="glass-card p-6 border border-orange-500/20">
+          <h3 className="text-xl font-semibold mb-4 flex items-center">
+            <ArrowUpDown className="h-5 w-5 mr-2 text-orange-400" />
+            Latest Position Changes Summary - {advancedData.previousDate} → {advancedData.currentDate}
+          </h3>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {['Client', 'DII', 'FII', 'Pro'].map(participant => {
+              const summary = getPositionChangeSummary(advancedData.positionChanges, participant)
+              if (!summary) return null
+              
+              return (
+                <div key={participant} className="p-4 bg-dark-700 rounded-lg border border-gray-600">
+                  <h4 className="text-lg font-semibold text-white mb-3">{participant}</h4>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Net Change:</span>
+                      <span className={`font-semibold ${getPositionChangeColorClass(summary.netChange)}`}>
+                        {formatPositionChange(summary.netChange)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Direction:</span>
+                      <span className={`font-semibold ${
+                        summary.direction === 'bullish' ? 'text-green-400' : 
+                        summary.direction === 'bearish' ? 'text-red-400' : 'text-gray-400'
+                      }`}>
+                        {summary.direction.toUpperCase()}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Magnitude:</span>
+                      <span className="font-semibold text-white">
+                        {summary.magnitude.toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Momentum Summary */}
+      {momentumData && Object.keys(momentumData).length > 0 && (
+        <div className="glass-card p-6 border border-purple-500/20">
+          <h3 className="text-xl font-semibold mb-4 flex items-center">
+            <TrendingDown className="h-5 w-5 mr-2 text-purple-400" />
+            Momentum Indicators - {advancedData.currentDate}
+          </h3>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {['Client', 'DII', 'FII', 'Pro'].map(participant => {
+              const momentum = momentumData[participant]
+              if (!momentum) return null
+              
+              return (
+                <div key={participant} className="p-4 bg-dark-700 rounded-lg border border-gray-600">
+                  <h4 className="text-lg font-semibold text-white mb-3">{participant}</h4>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Momentum Score:</span>
+                      <span className={`font-semibold ${
+                        momentum.momentumScore > 0 ? 'text-green-400' : 
+                        momentum.momentumScore < 0 ? 'text-red-400' : 'text-gray-400'
+                      }`}>
+                        {momentum.momentumScore > 0 ? '+' : ''}{momentum.momentumScore.toFixed(1)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Direction:</span>
+                      <span className={`font-semibold ${
+                        momentum.overallDirection === 'bullish' ? 'text-green-400' : 
+                        momentum.overallDirection === 'bearish' ? 'text-red-400' : 'text-gray-400'
+                      }`}>
+                        {momentum.overallDirection.toUpperCase()}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Strength:</span>
+                      <span className={`font-semibold ${
+                        momentum.strength === 'strong' ? 'text-yellow-400' : 
+                        momentum.strength === 'moderate' ? 'text-blue-400' : 'text-gray-400'
+                      }`}>
+                        {momentum.strength.toUpperCase()}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Main Correlation Analysis Component */}
+      <CorrelationAnalysis participantData={participantData} fiiData={fiiData} />
     </div>
   )
 }

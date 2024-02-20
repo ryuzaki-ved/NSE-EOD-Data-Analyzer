@@ -272,3 +272,195 @@ export const calculateMarketCorrelations = (participantData, fiiData) => {
   
   return correlations
 } 
+
+// Calculate position changes (day-over-day differences)
+export const calculatePositionChanges = (data, selectedDate = null) => {
+  const participants = ['Client', 'DII', 'FII', 'Pro']
+  const metrics = [
+    'total_long_contracts',
+    'total_short_contracts',
+    'future_index_long',
+    'future_index_short',
+    'option_index_call_long',
+    'option_index_put_long',
+    'option_index_call_short',
+    'option_index_put_short'
+  ]
+  
+  // If no date selected, use the latest date
+  if (!selectedDate) {
+    const dates = [...new Set(data.map(item => item.date))].sort()
+    selectedDate = dates[dates.length - 1]
+  }
+  
+  // Get available dates and find previous date
+  const dates = [...new Set(data.map(item => item.date))].sort()
+  const currentDateIndex = dates.indexOf(selectedDate)
+  const previousDate = currentDateIndex > 0 ? dates[currentDateIndex - 1] : null
+  
+  if (!previousDate) {
+    return { changes: {}, currentDate: selectedDate, previousDate: null }
+  }
+  
+  const changes = {}
+  
+  participants.forEach(participant => {
+    const currentRecord = data.find(item => item.date === selectedDate && item.client_type === participant)
+    const previousRecord = data.find(item => item.date === previousDate && item.client_type === participant)
+    
+    if (currentRecord && previousRecord) {
+      changes[participant] = {}
+      metrics.forEach(metric => {
+        const currentValue = currentRecord[metric] || 0
+        const previousValue = previousRecord[metric] || 0
+        const change = currentValue - previousValue
+        const changePercent = previousValue !== 0 ? (change / previousValue) * 100 : 0
+        
+        changes[participant][metric] = {
+          current: currentValue,
+          previous: previousValue,
+          change: change,
+          changePercent: changePercent,
+          direction: change > 0 ? 'increase' : change < 0 ? 'decrease' : 'no_change'
+        }
+      })
+    }
+  })
+  
+  return { changes, currentDate: selectedDate, previousDate }
+}
+
+// Calculate advanced correlations including position changes
+export const calculateAdvancedCorrelations = (data, selectedDate = null) => {
+  const participants = ['Client', 'DII', 'FII', 'Pro']
+  const metrics = [
+    'total_long_contracts',
+    'total_short_contracts',
+    'future_index_long',
+    'future_index_short',
+    'option_index_call_long',
+    'option_index_put_long',
+    'option_index_call_short',
+    'option_index_put_short'
+  ]
+  
+  // Get position changes
+  const { changes, currentDate, previousDate } = calculatePositionChanges(data, selectedDate)
+  
+  // Calculate current position similarities
+  const currentSimilarities = calculateParticipantCorrelations(data, selectedDate)
+  
+  // Calculate change similarities
+  const changeSimilarities = {}
+  
+  participants.forEach(participant1 => {
+    changeSimilarities[participant1] = {}
+    participants.forEach(participant2 => {
+      if (participant1 === participant2) {
+        changeSimilarities[participant1][participant2] = { overall: 1 }
+      } else {
+        const participant1Changes = changes[participant1]
+        const participant2Changes = changes[participant2]
+        
+        if (participant1Changes && participant2Changes) {
+          const metricSimilarities = {}
+          metrics.forEach(metric => {
+            const change1 = participant1Changes[metric]?.change || 0
+            const change2 = participant2Changes[metric]?.change || 0
+            metricSimilarities[metric] = calculateValueSimilarity(change1, change2)
+          })
+          
+          const validSimilarities = Object.values(metricSimilarities).filter(sim => sim !== null)
+          const overallSimilarity = validSimilarities.length > 0 
+            ? validSimilarities.reduce((a, b) => a + b, 0) / validSimilarities.length 
+            : null
+          
+          changeSimilarities[participant1][participant2] = {
+            overall: overallSimilarity,
+            metrics: metricSimilarities
+          }
+        } else {
+          changeSimilarities[participant1][participant2] = {
+            overall: null,
+            metrics: {}
+          }
+        }
+      }
+    })
+  })
+  
+  return {
+    currentSimilarities,
+    changeSimilarities,
+    positionChanges: changes,
+    currentDate,
+    previousDate
+  }
+}
+
+// Calculate momentum indicators based on position changes
+export const calculateMomentumIndicators = (data, selectedDate = null) => {
+  const { changes } = calculatePositionChanges(data, selectedDate)
+  const participants = ['Client', 'DII', 'FII', 'Pro']
+  
+  const momentum = {}
+  
+  participants.forEach(participant => {
+    const participantChanges = changes[participant]
+    if (participantChanges) {
+      const totalLongChange = participantChanges['total_long_contracts']?.change || 0
+      const totalShortChange = participantChanges['total_short_contracts']?.change || 0
+      const netPositionChange = totalLongChange - totalShortChange
+      
+      // Calculate momentum score (-100 to +100)
+      const totalPositions = participantChanges['total_long_contracts']?.current + participantChanges['total_short_contracts']?.current
+      const momentumScore = totalPositions > 0 ? (netPositionChange / totalPositions) * 100 : 0
+      
+      momentum[participant] = {
+        netPositionChange,
+        momentumScore,
+        longMomentum: totalLongChange,
+        shortMomentum: totalShortChange,
+        overallDirection: netPositionChange > 0 ? 'bullish' : netPositionChange < 0 ? 'bearish' : 'neutral',
+        strength: Math.abs(momentumScore) > 10 ? 'strong' : Math.abs(momentumScore) > 5 ? 'moderate' : 'weak'
+      }
+    }
+  })
+  
+  return momentum
+}
+
+// Get position change summary for display
+export const getPositionChangeSummary = (changes, participant) => {
+  const participantChanges = changes[participant]
+  if (!participantChanges) return null
+  
+  const totalLongChange = participantChanges['total_long_contracts']?.change || 0
+  const totalShortChange = participantChanges['total_short_contracts']?.change || 0
+  const netChange = totalLongChange - totalShortChange
+  
+  return {
+    netChange,
+    longChange: totalLongChange,
+    shortChange: totalShortChange,
+    direction: netChange > 0 ? 'bullish' : netChange < 0 ? 'bearish' : 'neutral',
+    magnitude: Math.abs(netChange)
+  }
+}
+
+// Format position change for display
+export const formatPositionChange = (change) => {
+  if (change === null || change === undefined) return 'N/A'
+  
+  const sign = change > 0 ? '+' : ''
+  const formatted = Math.abs(change).toLocaleString()
+  return `${sign}${formatted}`
+}
+
+// Get position change color class
+export const getPositionChangeColorClass = (change) => {
+  if (change === null || change === undefined) return 'text-gray-500'
+  if (change > 0) return 'text-green-400'
+  if (change < 0) return 'text-red-400'
+  return 'text-gray-400'
+} 

@@ -20,7 +20,7 @@ import {
 } from '../utils/correlationHelpers'
 import { TrendingUp, BarChart3, Activity, Target, Calendar, Zap, CalendarDays, TrendingDown, ArrowUpDown } from 'lucide-react'
 
-const CorrelationAnalysis = ({ participantData, fiiData }) => {
+const AdvancedCorrelationAnalysis = ({ participantData, fiiData }) => {
   const [participantCorrelations, setParticipantCorrelations] = useState({})
   const [marketCorrelations, setMarketCorrelations] = useState({})
   const [advancedData, setAdvancedData] = useState({})
@@ -95,23 +95,7 @@ const CorrelationAnalysis = ({ participantData, fiiData }) => {
     }))
   }
 
-  // Prepare lagged correlation data (for historical analysis)
-  const prepareLaggedCorrelationData = () => {
-    if (!participantData || participantData.length === 0) return []
-
-    const participant1Data = participantData.filter(item => item.client_type === selectedParticipant)
-    const participant2Data = participantData.filter(item => item.client_type === 'FII')
-
-    if (participant1Data.length === 0 || participant2Data.length === 0) return []
-
-    const values1 = participant1Data.map(item => item[selectedMetric] || 0)
-    const values2 = participant2Data.map(item => item[selectedMetric] || 0)
-
-    return calculateLaggedCorrelations(values1, values2, 5)
-  }
-
   const rollingCorrData = prepareRollingCorrelationData()
-  const laggedCorrData = prepareLaggedCorrelationData()
 
   return (
     <div className="space-y-8 animate-fade-in">
@@ -633,4 +617,4 @@ const CorrelationAnalysis = ({ participantData, fiiData }) => {
   )
 }
 
-export default CorrelationAnalysis 
+export default AdvancedCorrelationAnalysis 
