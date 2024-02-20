@@ -122,8 +122,8 @@ export const getCorrelationColorClass = (correlation) => {
   return 'text-gray-400'
 }
 
-// Calculate cross-correlation between participant types
-export const calculateParticipantCorrelations = (data) => {
+// Calculate cross-correlation between participant types for a single date
+export const calculateParticipantCorrelations = (data, selectedDate = null) => {
   const participants = ['Client', 'DII', 'FII', 'Pro']
   const metrics = [
     'total_long_contracts',
@@ -136,6 +136,15 @@ export const calculateParticipantCorrelations = (data) => {
     'option_index_put_short'
   ]
   
+  // If no date selected, use the latest date
+  if (!selectedDate) {
+    const dates = [...new Set(data.map(item => item.date))].sort()
+    selectedDate = dates[dates.length - 1]
+  }
+  
+  // Filter data for the selected date
+  const dateData = data.filter(item => item.date === selectedDate)
+  
   const correlations = {}
   
   participants.forEach(participant1 => {
@@ -144,28 +153,33 @@ export const calculateParticipantCorrelations = (data) => {
       if (participant1 === participant2) {
         correlations[participant1][participant2] = { overall: 1 }
       } else {
-        const participant1Data = data.filter(item => item.client_type === participant1)
-        const participant2Data = data.filter(item => item.client_type === participant2)
+        const participant1Record = dateData.find(item => item.client_type === participant1)
+        const participant2Record = dateData.find(item => item.client_type === participant2)
         
-        // Align data by date
-        const alignedData = alignDataByDate(participant1Data, participant2Data)
-        
-        const metricCorrelations = {}
-        metrics.forEach(metric => {
-          const values1 = alignedData.map(item => item[participant1]?.[metric] || 0)
-          const values2 = alignedData.map(item => item[participant2]?.[metric] || 0)
-          metricCorrelations[metric] = calculatePearsonCorrelation(values1, values2)
-        })
-        
-        // Calculate overall correlation as average of all metrics
-        const validCorrelations = Object.values(metricCorrelations).filter(corr => corr !== null)
-        const overallCorrelation = validCorrelations.length > 0 
-          ? validCorrelations.reduce((a, b) => a + b, 0) / validCorrelations.length 
-          : null
-        
-        correlations[participant1][participant2] = {
-          overall: overallCorrelation,
-          metrics: metricCorrelations
+        if (participant1Record && participant2Record) {
+          const metricCorrelations = {}
+          metrics.forEach(metric => {
+            const value1 = participant1Record[metric] || 0
+            const value2 = participant2Record[metric] || 0
+            // For single day, we can't calculate correlation, so we'll use ratio comparison
+            metricCorrelations[metric] = calculateValueSimilarity(value1, value2)
+          })
+          
+          // Calculate overall similarity as average of all metrics
+          const validSimilarities = Object.values(metricCorrelations).filter(sim => sim !== null)
+          const overallSimilarity = validSimilarities.length > 0 
+            ? validSimilarities.reduce((a, b) => a + b, 0) / validSimilarities.length 
+            : null
+          
+          correlations[participant1][participant2] = {
+            overall: overallSimilarity,
+            metrics: metricCorrelations
+          }
+        } else {
+          correlations[participant1][participant2] = {
+            overall: null,
+            metrics: {}
+          }
         }
       }
     })
@@ -174,27 +188,33 @@ export const calculateParticipantCorrelations = (data) => {
   return correlations
 }
 
-// Helper function to align data by date
-const alignDataByDate = (data1, data2) => {
-  const dateMap = new Map()
+// Calculate similarity between two values (alternative to correlation for single day)
+const calculateValueSimilarity = (value1, value2) => {
+  if (value1 === 0 && value2 === 0) return 1 // Both zero = perfect similarity
+  if (value1 === 0 || value2 === 0) return 0 // One zero, one non-zero = no similarity
   
-  // Add data1
-  data1.forEach(item => {
-    if (!dateMap.has(item.date)) {
-      dateMap.set(item.date, {})
-    }
-    dateMap.get(item.date)[Object.keys(data1[0]).find(key => key !== 'date' && key !== 'client_type')] = item
-  })
+  const maxValue = Math.max(value1, value2)
+  const minValue = Math.min(value1, value2)
+  const ratio = minValue / maxValue
   
-  // Add data2
-  data2.forEach(item => {
-    if (!dateMap.has(item.date)) {
-      dateMap.set(item.date, {})
-    }
-    dateMap.get(item.date)[Object.keys(data2[0]).find(key => key !== 'date' && key !== 'client_type')] = item
-  })
-  
-  return Array.from(dateMap.entries()).map(([date, data]) => ({ date, ...data }))
+  // Convert ratio to similarity score (0 to 1)
+  return ratio
+}
+
+// Get available dates from the data
+export const getAvailableDates = (data) => {
+  return [...new Set(data.map(item => item.date))].sort()
+}
+
+// Get latest date from the data
+export const getLatestDate = (data) => {
+  const dates = getAvailableDates(data)
+  return dates[dates.length - 1]
+}
+
+// Get participant data for a specific date
+export const getParticipantDataForDate = (data, date) => {
+  return data.filter(item => item.date === date && item.client_type !== 'TOTAL')
 }
 
 // Calculate time-lagged correlations

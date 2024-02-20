@@ -1,122 +1,131 @@
 import React, { useState, useEffect } from 'react'
 import { 
-  calculateParticipantCorrelations,
-  getCorrelationStrength,
-  getCorrelationDirection,
-  formatCorrelation,
-  getCorrelationColorClass
+  calculateParticipantCorrelations, 
+  getCorrelationStrength, 
+  getCorrelationDirection, 
+  formatCorrelation, 
+  getCorrelationColorClass,
+  getAvailableDates,
+  getLatestDate
 } from '../utils/correlationHelpers'
-import { TrendingUp, Activity, Target } from 'lucide-react'
+import { TrendingUp, CalendarDays } from 'lucide-react'
 
-const CorrelationInsights = ({ participantData, fiiData }) => {
-  const [correlations, setCorrelations] = useState({})
+const CorrelationInsights = ({ participantData }) => {
+  const [participantCorrelations, setParticipantCorrelations] = useState({})
+  const [selectedDate, setSelectedDate] = useState('')
+  const [availableDates, setAvailableDates] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     if (participantData && participantData.length > 0) {
-      const corrData = calculateParticipantCorrelations(participantData)
-      setCorrelations(corrData)
+      const dates = getAvailableDates(participantData)
+      setAvailableDates(dates)
+      const latestDate = getLatestDate(participantData)
+      setSelectedDate(latestDate)
       setLoading(false)
     }
   }, [participantData])
+
+  useEffect(() => {
+    if (participantData && participantData.length > 0 && selectedDate) {
+      const correlations = calculateParticipantCorrelations(participantData, selectedDate)
+      setParticipantCorrelations(correlations)
+    }
+  }, [participantData, selectedDate])
 
   if (loading) {
     return (
       <div className="glass-card p-6 border border-blue-500/20">
         <div className="animate-pulse">
-          <div className="h-4 bg-gray-700 rounded w-1/3 mb-4"></div>
-          <div className="space-y-2">
-            <div className="h-3 bg-gray-700 rounded"></div>
-            <div className="h-3 bg-gray-700 rounded w-5/6"></div>
-          </div>
+          <div className="h-4 bg-gray-600 rounded w-3/4 mb-4"></div>
+          <div className="h-3 bg-gray-600 rounded w-1/2 mb-2"></div>
+          <div className="h-3 bg-gray-600 rounded w-2/3"></div>
         </div>
       </div>
     )
   }
 
-  // Get top correlations
-  const getTopCorrelations = () => {
-    const allCorrelations = []
+  // Get top 3 participant similarities
+  const getTopSimilarities = () => {
+    const similarities = []
     const participants = ['Client', 'DII', 'FII', 'Pro']
     
-    participants.forEach(p1 => {
-      participants.forEach(p2 => {
-        if (p1 !== p2) {
-          const corr = correlations[p1]?.[p2]?.overall
-          if (corr !== null && corr !== undefined) {
-            allCorrelations.push({
-              pair: `${p1} ↔ ${p2}`,
-              correlation: corr,
-              strength: getCorrelationStrength(corr),
-              direction: getCorrelationDirection(corr)
+    participants.forEach(participant1 => {
+      participants.forEach(participant2 => {
+        if (participant1 !== participant2) {
+          const similarity = participantCorrelations[participant1]?.[participant2]?.overall
+          if (similarity !== null && similarity !== undefined) {
+            similarities.push({
+              pair: `${participant1} ↔ ${participant2}`,
+              similarity: similarity,
+              strength: getCorrelationStrength(similarity),
+              direction: getCorrelationDirection(similarity)
             })
           }
         }
       })
     })
     
-    return allCorrelations
-      .sort((a, b) => Math.abs(b.correlation) - Math.abs(a.correlation))
+    return similarities
+      .sort((a, b) => b.similarity - a.similarity)
       .slice(0, 3)
   }
 
-  const topCorrelations = getTopCorrelations()
+  const topSimilarities = getTopSimilarities()
 
   return (
-    <div className="glass-card p-6 border border-blue-500/20 bg-gradient-to-br from-blue-900/10 to-purple-900/10">
+    <div className="glass-card p-6 border border-blue-500/20">
       <div className="flex items-center space-x-3 mb-4">
         <div className="p-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500">
           <TrendingUp className="h-5 w-5 text-white" />
         </div>
-        <h3 className="text-xl font-semibold">Correlation Insights</h3>
-        <div className="px-2 py-1 bg-blue-500/20 rounded-full text-xs text-blue-400 border border-blue-500/30">
-          QUICK VIEW
-        </div>
+        <h3 className="text-lg font-semibold text-blue-400">Quick Correlation Insights</h3>
       </div>
 
-      <div className="space-y-4">
-        <div>
-          <h4 className="text-sm font-medium text-gray-300 mb-2 flex items-center">
-            <Target className="h-4 w-4 mr-2 text-blue-400" />
-            Top Participant Correlations
-          </h4>
-          <div className="space-y-2">
-            {topCorrelations.map((corr, index) => (
-              <div key={index} className="flex items-center justify-between p-2 bg-dark-700/50 rounded-lg">
-                <span className="text-sm text-gray-300">{corr.pair}</span>
-                <div className="text-right">
-                  <div className={`text-sm font-semibold ${getCorrelationColorClass(corr.correlation)}`}>
-                    {formatCorrelation(corr.correlation)}
-                  </div>
-                  <div className="text-xs text-gray-500">
-                    {corr.strength} {corr.direction}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+      {/* Date Selection */}
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-300 mb-2">
+          <CalendarDays className="h-4 w-4 inline mr-1" />
+          Date: {selectedDate}
+        </label>
+        <select
+          value={selectedDate}
+          onChange={(e) => setSelectedDate(e.target.value)}
+          className="w-full px-3 py-2 bg-dark-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 text-white text-sm"
+        >
+          {availableDates.map(date => (
+            <option key={date} value={date}>
+              {date} {date === getLatestDate(participantData) ? '(Latest)' : ''}
+            </option>
+          ))}
+        </select>
+      </div>
 
-        <div className="pt-4 border-t border-gray-700">
-          <h4 className="text-sm font-medium text-gray-300 mb-2 flex items-center">
-            <Activity className="h-4 w-4 mr-2 text-purple-400" />
-            Key Insights
-          </h4>
-          <div className="text-xs text-gray-400 space-y-1">
-            <div className="flex items-center space-x-2">
-              <span className="w-2 h-2 bg-green-400 rounded-full"></span>
-              <span>Strong correlations indicate synchronized trading patterns</span>
+      {/* Top Similarities */}
+      <div className="space-y-3">
+        <h4 className="text-sm font-medium text-gray-300">Top Participant Similarities:</h4>
+        {topSimilarities.map((item, index) => (
+          <div key={index} className="flex items-center justify-between p-3 bg-dark-700 rounded-lg">
+            <div className="flex-1">
+              <div className="text-sm font-medium text-white">{item.pair}</div>
+              <div className="text-xs text-gray-400">{item.strength} • {item.direction}</div>
             </div>
-            <div className="flex items-center space-x-2">
-              <span className="w-2 h-2 bg-yellow-400 rounded-full"></span>
-              <span>Negative correlations suggest opposing strategies</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <span className="w-2 h-2 bg-blue-400 rounded-full"></span>
-              <span>Use for portfolio diversification and risk management</span>
+            <div className={`text-sm font-bold ${getCorrelationColorClass(item.similarity)}`}>
+              {formatCorrelation(item.similarity)}
             </div>
           </div>
-        </div>
+        ))}
+      </div>
+
+      {/* Insights */}
+      <div className="mt-4 p-3 bg-blue-500/10 rounded-lg border border-blue-500/20">
+        <h4 className="text-sm font-medium text-blue-400 mb-2">💡 Key Insights:</h4>
+        <ul className="text-xs text-gray-400 space-y-1">
+          <li>• Higher values = More similar trading patterns</li>
+          <li>• Lower values = Different trading strategies</li>
+          <li>• Perfect similarity (1.0) = Identical position ratios</li>
+          <li>• Zero similarity (0.0) = Completely different approaches</li>
+        </ul>
       </div>
     </div>
   )

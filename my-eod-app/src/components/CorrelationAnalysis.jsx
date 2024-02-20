@@ -8,9 +8,12 @@ import {
   getCorrelationStrength,
   getCorrelationDirection,
   formatCorrelation,
-  getCorrelationColorClass
+  getCorrelationColorClass,
+  getAvailableDates,
+  getLatestDate,
+  getParticipantDataForDate
 } from '../utils/correlationHelpers'
-import { TrendingUp, BarChart3, Activity, Target, Calendar, Zap } from 'lucide-react'
+import { TrendingUp, BarChart3, Activity, Target, Calendar, Zap, CalendarDays } from 'lucide-react'
 
 const CorrelationAnalysis = ({ participantData, fiiData }) => {
   const [participantCorrelations, setParticipantCorrelations] = useState({})
@@ -19,13 +22,24 @@ const CorrelationAnalysis = ({ participantData, fiiData }) => {
   const [selectedMetric, setSelectedMetric] = useState('total_long_contracts')
   const [rollingWindow, setRollingWindow] = useState(5)
   const [activeTab, setActiveTab] = useState('participant')
+  const [selectedDate, setSelectedDate] = useState('')
+  const [availableDates, setAvailableDates] = useState([])
 
   useEffect(() => {
     if (participantData && participantData.length > 0) {
-      const correlations = calculateParticipantCorrelations(participantData)
-      setParticipantCorrelations(correlations)
+      const dates = getAvailableDates(participantData)
+      setAvailableDates(dates)
+      const latestDate = getLatestDate(participantData)
+      setSelectedDate(latestDate)
     }
   }, [participantData])
+
+  useEffect(() => {
+    if (participantData && participantData.length > 0 && selectedDate) {
+      const correlations = calculateParticipantCorrelations(participantData, selectedDate)
+      setParticipantCorrelations(correlations)
+    }
+  }, [participantData, selectedDate])
 
   useEffect(() => {
     if (participantData && fiiData && participantData.length > 0 && fiiData.length > 0) {
@@ -46,14 +60,12 @@ const CorrelationAnalysis = ({ participantData, fiiData }) => {
     { key: 'option_index_put_short', label: 'Option Put Short' }
   ]
 
-
-
-  // Prepare rolling correlation data
+  // Prepare rolling correlation data (for historical analysis)
   const prepareRollingCorrelationData = () => {
     if (!participantData || participantData.length === 0) return []
 
     const participant1Data = participantData.filter(item => item.client_type === selectedParticipant)
-    const participant2Data = participantData.filter(item => item.client_type === 'FII') // Compare with FII
+    const participant2Data = participantData.filter(item => item.client_type === 'FII')
 
     if (participant1Data.length === 0 || participant2Data.length === 0) return []
 
@@ -68,7 +80,7 @@ const CorrelationAnalysis = ({ participantData, fiiData }) => {
     }))
   }
 
-  // Prepare lagged correlation data
+  // Prepare lagged correlation data (for historical analysis)
   const prepareLaggedCorrelationData = () => {
     if (!participantData || participantData.length === 0) return []
 
@@ -98,6 +110,36 @@ const CorrelationAnalysis = ({ participantData, fiiData }) => {
         </div>
       </div>
 
+      {/* Date Selection */}
+      <div className="glass-card p-6 border border-blue-500/20">
+        <div className="flex items-center space-x-3 mb-4">
+          <CalendarDays className="h-5 w-5 text-blue-400" />
+          <h3 className="text-lg font-semibold text-blue-400">Select Trading Date</h3>
+        </div>
+        <div className="flex items-center space-x-4">
+          <div className="flex-1">
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Trading Date:
+            </label>
+            <select
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              className="w-full px-3 py-2 bg-dark-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 text-white"
+            >
+              {availableDates.map(date => (
+                <option key={date} value={date}>
+                  {date} {date === getLatestDate(participantData) ? '(Latest)' : ''}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="text-sm text-gray-400">
+            <div>Available Dates: {availableDates.length}</div>
+            <div>Latest: {getLatestDate(participantData)}</div>
+          </div>
+        </div>
+      </div>
+
       {/* Tab Navigation */}
       <div className="flex space-x-1 bg-dark-700 rounded-lg p-1">
         <button
@@ -109,7 +151,7 @@ const CorrelationAnalysis = ({ participantData, fiiData }) => {
           }`}
         >
           <TrendingUp className="h-4 w-4 inline mr-2" />
-          Participant Correlations
+          Participant Similarities
         </button>
         <button
           onClick={() => setActiveTab('market')}
@@ -131,7 +173,7 @@ const CorrelationAnalysis = ({ participantData, fiiData }) => {
           }`}
         >
           <Calendar className="h-4 w-4 inline mr-2" />
-          Rolling Correlations
+          Historical Rolling
         </button>
         <button
           onClick={() => setActiveTab('lagged')}
@@ -142,18 +184,18 @@ const CorrelationAnalysis = ({ participantData, fiiData }) => {
           }`}
         >
           <Zap className="h-4 w-4 inline mr-2" />
-          Lagged Correlations
+          Historical Lagged
         </button>
       </div>
 
-      {/* Participant Correlations Tab */}
+      {/* Participant Similarities Tab */}
       {activeTab === 'participant' && (
         <div className="space-y-6">
-          {/* Correlation Matrix */}
+          {/* Similarity Matrix */}
           <div className="glass-card p-6 border border-primary-500/20">
             <h3 className="text-xl font-semibold mb-4 flex items-center">
               <Target className="h-5 w-5 mr-2 text-primary-400" />
-              Participant Correlation Matrix
+              Participant Similarity Matrix - {selectedDate}
             </h3>
             
             <div className="overflow-x-auto">
@@ -173,14 +215,14 @@ const CorrelationAnalysis = ({ participantData, fiiData }) => {
                     <tr key={participant1} className="border-b border-gray-800 hover:bg-white/5">
                       <td className="py-3 px-4 font-semibold text-primary-400">{participant1}</td>
                       {participants.map(participant2 => {
-                        const correlation = participantCorrelations[participant1]?.[participant2]?.overall
+                        const similarity = participantCorrelations[participant1]?.[participant2]?.overall
                         return (
                           <td key={participant2} className="py-3 px-4 text-center">
-                            <div className={`${getCorrelationColorClass(correlation)}`}>
-                              {formatCorrelation(correlation)}
+                            <div className={`${getCorrelationColorClass(similarity)}`}>
+                              {formatCorrelation(similarity)}
                             </div>
                             <div className="text-xs text-gray-500 mt-1">
-                              {getCorrelationStrength(correlation)}
+                              {similarity ? (similarity * 100).toFixed(1) + '% Similar' : 'N/A'}
                             </div>
                           </td>
                         )
@@ -192,11 +234,11 @@ const CorrelationAnalysis = ({ participantData, fiiData }) => {
             </div>
           </div>
 
-          {/* Detailed Metric Correlations */}
+          {/* Detailed Metric Similarities */}
           <div className="glass-card p-6 border border-cyan-500/20">
             <h3 className="text-xl font-semibold mb-4 flex items-center">
               <Activity className="h-5 w-5 mr-2 text-cyan-400" />
-              Detailed Metric Correlations
+              Detailed Metric Similarities - {selectedDate}
             </h3>
             
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -248,14 +290,14 @@ const CorrelationAnalysis = ({ participantData, fiiData }) => {
                     <tr key={metric.key} className="border-b border-gray-800 hover:bg-white/5">
                       <td className="py-3 px-4 font-semibold text-cyan-400">{metric.label}</td>
                       {participants.filter(p => p !== selectedParticipant).map(participant => {
-                        const correlation = participantCorrelations[selectedParticipant]?.[participant]?.metrics?.[metric.key]
+                        const similarity = participantCorrelations[selectedParticipant]?.[participant]?.metrics?.[metric.key]
                         return (
                           <td key={participant} className="py-3 px-4 text-center">
-                            <div className={`${getCorrelationColorClass(correlation)}`}>
-                              {formatCorrelation(correlation)}
+                            <div className={`${getCorrelationColorClass(similarity)}`}>
+                              {formatCorrelation(similarity)}
                             </div>
                             <div className="text-xs text-gray-500 mt-1">
-                              {getCorrelationDirection(correlation)}
+                              {similarity ? (similarity * 100).toFixed(1) + '% Similar' : 'N/A'}
                             </div>
                           </td>
                         )
@@ -322,7 +364,7 @@ const CorrelationAnalysis = ({ participantData, fiiData }) => {
           <div className="glass-card p-6 border border-purple-500/20">
             <h3 className="text-xl font-semibold mb-4 flex items-center">
               <Calendar className="h-5 w-5 mr-2 text-purple-400" />
-              Rolling Correlation Analysis
+              Historical Rolling Correlation Analysis
             </h3>
             
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
@@ -417,7 +459,7 @@ const CorrelationAnalysis = ({ participantData, fiiData }) => {
         <div className="glass-card p-6 border border-orange-500/20">
           <h3 className="text-xl font-semibold mb-4 flex items-center">
             <Zap className="h-5 w-5 mr-2 text-orange-400" />
-            Time-Lagged Correlation Analysis
+            Historical Time-Lagged Correlation Analysis
           </h3>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
