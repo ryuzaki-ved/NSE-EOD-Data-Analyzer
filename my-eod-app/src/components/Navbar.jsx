@@ -10,6 +10,7 @@ const Navbar = () => {
     { path: '/fii-deriv-stats', label: 'FII Deriv Stats', icon: BarChart3 },
     { path: '/part-oi', label: 'Part OI', icon: PieChart },
     { path: '/part-vol', label: 'Part Vol', icon: Activity },
+    { path: '/correlation', label: 'Correlation', icon: BarChart3 },
   ]
 
   return (

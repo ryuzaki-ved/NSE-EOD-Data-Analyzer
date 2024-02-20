@@ -11,6 +11,7 @@ import FIIPositionTrendChart from '../components/partOI/FIIPositionTrendChart'
 import ClientVsProBarChart from '../components/partOI/ClientVsProBarChart'
 import FutureIndexOIBarChart from '../components/partOI/FutureIndexOIBarChart'
 import OptionIndexOIBarChart from '../components/partOI/OptionIndexOIBarChart'
+import CorrelationInsights from '../components/CorrelationInsights'
 
 const PartOIPage = () => {
   const [data, setData] = useState([])
@@ -1129,6 +1130,27 @@ const PartOIPage = () => {
         groupedInsights={generateGroupedInsights()}
         groupedDailyChangeInsights={generateGroupedDailyChangeInsights()}
       />
+
+      {/* Correlation Insights */}
+      <div className="grid lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2">
+          <CorrelationInsights participantData={data} />
+        </div>
+        <div className="lg:col-span-1">
+          <div className="glass-card p-6 border border-blue-500/20">
+            <h3 className="text-lg font-semibold mb-4 text-blue-400">Correlation Analysis</h3>
+            <p className="text-sm text-gray-400 mb-4">
+              Discover relationships between different market participants and their trading patterns.
+            </p>
+            <a 
+              href="/correlation" 
+              className="inline-flex items-center px-4 py-2 bg-blue-500/20 text-blue-400 rounded-lg hover:bg-blue-500/30 transition-colors"
+            >
+              View Full Analysis
+            </a>
+          </div>
+        </div>
+      </div>
 
       {/* Data Table */}
       <DataTable

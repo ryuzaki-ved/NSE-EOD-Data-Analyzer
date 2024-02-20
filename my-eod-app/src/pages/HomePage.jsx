@@ -1,6 +1,6 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
-import { BarChart3, PieChart, Activity, TrendingUp, ArrowRight } from 'lucide-react'
+import { BarChart3, PieChart, Activity, TrendingUp, ArrowRight, BarChart } from 'lucide-react'
 
 const HomePage = () => {
   const features = [
@@ -24,6 +24,13 @@ const HomePage = () => {
       icon: Activity,
       path: '/part-vol',
       color: 'from-green-500 to-emerald-500'
+    },
+    {
+      title: 'Correlation Analysis',
+      description: 'Advanced statistical analysis of relationships between market participants, including rolling correlations and time-lagged analysis.',
+      icon: BarChart,
+      path: '/correlation',
+      color: 'from-orange-500 to-red-500'
     }
   ]
 
@@ -56,7 +63,7 @@ const HomePage = () => {
       </div>
 
       {/* Features Grid */}
-      <div className="grid md:grid-cols-3 gap-8 mb-16">
+      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
         {features.map((feature, index) => (
           <Link
             key={feature.path}
