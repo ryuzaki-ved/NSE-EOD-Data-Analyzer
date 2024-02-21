@@ -31,6 +31,7 @@ const CorrelationAnalysis = ({ participantData, fiiData }) => {
   const [activeTab, setActiveTab] = useState('participant')
   const [selectedDate, setSelectedDate] = useState('')
   const [availableDates, setAvailableDates] = useState([])
+  const [metricGroup, setMetricGroup] = useState('futures') // NEW
 
   useEffect(() => {
     if (participantData && participantData.length > 0) {
@@ -58,10 +59,10 @@ const CorrelationAnalysis = ({ participantData, fiiData }) => {
 
   useEffect(() => {
     if (participantData && fiiData && participantData.length > 0 && fiiData.length > 0) {
-      const correlations = calculateMarketCorrelations(participantData, fiiData)
+      const correlations = calculateMarketCorrelations(participantData, fiiData, metricGroup)
       setMarketCorrelations(correlations)
     }
-  }, [participantData, fiiData])
+  }, [participantData, fiiData, metricGroup])
 
   const participants = ['Client', 'DII', 'FII', 'Pro']
   const metrics = [
@@ -123,6 +124,22 @@ const CorrelationAnalysis = ({ participantData, fiiData }) => {
         <div className="px-3 py-1 bg-blue-500/20 rounded-full text-xs text-blue-400 border border-blue-500/30">
           ADVANCED ANALYTICS
         </div>
+      </div>
+
+      {/* Metric Group Selector */}
+      <div className="glass-card p-4 border border-blue-500/20 flex flex-col md:flex-row md:items-center md:space-x-6 mb-2">
+        <label className="block text-sm font-medium text-blue-400 mb-2 md:mb-0">Market Correlation Metric Group:</label>
+        <select
+          value={metricGroup}
+          onChange={e => setMetricGroup(e.target.value)}
+          className="w-full md:w-auto px-3 py-2 bg-dark-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 text-white text-sm"
+        >
+          <option value="futures">Futures Only</option>
+          <option value="options">Options Only</option>
+          <option value="futures_options">Futures + Options</option>
+          <option value="all">All (Total Long/Short)</option>
+        </select>
+        <span className="text-xs text-gray-400 mt-2 md:mt-0">(Affects Market Correlations tab only)</span>
       </div>
 
       {/* Date Selection */}
