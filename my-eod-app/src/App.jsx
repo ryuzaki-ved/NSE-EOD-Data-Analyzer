@@ -6,6 +6,7 @@ import FIIDerivStatsPage from './pages/FIIDerivStatsPage'
 import PartOIPage from './pages/PartOIPage'
 import PartVolPage from './pages/PartVolPage'
 import CorrelationPage from './pages/CorrelationPage'
+import AdvancedMathPage from './pages/AdvancedMathPage'
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
           <Route path="/part-oi" element={<PartOIPage />} />
           <Route path="/part-vol" element={<PartVolPage />} />
           <Route path="/correlation" element={<CorrelationPage />} />
+          <Route path="/advanced-math" element={<AdvancedMathPage />} />
         </Routes>
       </main>
     </div>

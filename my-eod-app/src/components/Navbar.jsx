@@ -1,6 +1,6 @@
 import React from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { TrendingUp, BarChart3, PieChart, Activity } from 'lucide-react'
+import { TrendingUp, BarChart3, PieChart, Activity, Brain } from 'lucide-react'
 
 const Navbar = () => {
   const location = useLocation()
@@ -11,6 +11,7 @@ const Navbar = () => {
     { path: '/part-oi', label: 'Part OI', icon: PieChart },
     { path: '/part-vol', label: 'Part Vol', icon: Activity },
     { path: '/correlation', label: 'Correlation', icon: BarChart3 },
+    { path: '/advanced-math', label: 'Advanced Math', icon: Brain },
   ]
 
   return (
