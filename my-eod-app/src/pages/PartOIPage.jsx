@@ -7,7 +7,7 @@ import DeepInsights from '../components/DeepInsightsPartOI'
 import { calculateRatio, getRatioClass, formatRatio, formatIndianNumber, formatDifference } from '../utils/partOIHelpers'
 import LongVsShortTrendChart from '../components/partOI/LongVsShortTrendChart'
 import ClientTypeDistributionPie from '../components/partOI/ClientTypeDistributionPie'
-import FIIPositionTrendChart from '../components/partOI/FIIPositionTrendChart'
+import OptionsLongVsShortChart from '../components/partOI/OptionsLongVsShortChart'
 import ClientVsProBarChart from '../components/partOI/ClientVsProBarChart'
 import FutureIndexOIBarChart from '../components/partOI/FutureIndexOIBarChart'
 import OptionIndexOIBarChart from '../components/partOI/OptionIndexOIBarChart'
@@ -60,10 +60,20 @@ const PartOIPage = () => {
       if (existingDate) {
         existingDate[item.client_type + '_long'] = item.total_long_contracts
         existingDate[item.client_type + '_short'] = item.total_short_contracts
+        // Add option index data for the new chart
+        existingDate[item.client_type + '_option_index_call_long'] = item.option_index_call_long
+        existingDate[item.client_type + '_option_index_put_long'] = item.option_index_put_long
+        existingDate[item.client_type + '_option_index_call_short'] = item.option_index_call_short
+        existingDate[item.client_type + '_option_index_put_short'] = item.option_index_put_short
       } else {
         const dateEntry = { date: item.date }
         dateEntry[item.client_type + '_long'] = item.total_long_contracts
         dateEntry[item.client_type + '_short'] = item.total_short_contracts
+        // Add option index data for the new chart
+        dateEntry[item.client_type + '_option_index_call_long'] = item.option_index_call_long
+        dateEntry[item.client_type + '_option_index_put_long'] = item.option_index_put_long
+        dateEntry[item.client_type + '_option_index_call_short'] = item.option_index_call_short
+        dateEntry[item.client_type + '_option_index_put_short'] = item.option_index_put_short
         acc.push(dateEntry)
       }
     }
@@ -1106,7 +1116,7 @@ const PartOIPage = () => {
       </div>
 
       <div className="grid lg:grid-cols-2 gap-8">
-        <FIIPositionTrendChart chartData={chartData} />
+        <OptionsLongVsShortChart chartData={chartData} />
         <ClientVsProBarChart chartData={chartData} />
       </div>
 
