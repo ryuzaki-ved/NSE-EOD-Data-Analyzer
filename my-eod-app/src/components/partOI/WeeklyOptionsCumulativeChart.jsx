@@ -77,6 +77,20 @@ const WeeklyOptionsCumulativeChart = ({ chartData }) => {
 
     if (!fridayData) return []
 
+    // Find the previous day (Thursday) data for Friday calculation
+    const fridayDate = new Date(fridayData.date.split('-').reverse().join('-'))
+    const previousDayDate = new Date(fridayDate)
+    previousDayDate.setDate(fridayDate.getDate() - 1)
+    
+    const previousDayStr = previousDayDate.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    }).split('/').reverse().join('-')
+    
+    const previousDayData = chartData.find(item => item.date === previousDayStr)
+
+    // Calculate Friday's change from previous day
     const fridayCallLong = fridayData[`${selectedParticipant}_option_index_call_long`] || 0
     const fridayPutShort = fridayData[`${selectedParticipant}_option_index_put_short`] || 0
     const fridayPutLong = fridayData[`${selectedParticipant}_option_index_put_long`] || 0
@@ -85,7 +99,18 @@ const WeeklyOptionsCumulativeChart = ({ chartData }) => {
     const fridayOptionLong = fridayCallLong + fridayPutShort
     const fridayOptionShort = fridayPutLong + fridayCallShort
 
-    // Calculate cumulative changes from Friday
+    const prevCallLong = previousDayData ? (previousDayData[`${selectedParticipant}_option_index_call_long`] || 0) : 0
+    const prevPutShort = previousDayData ? (previousDayData[`${selectedParticipant}_option_index_put_short`] || 0) : 0
+    const prevPutLong = previousDayData ? (previousDayData[`${selectedParticipant}_option_index_put_long`] || 0) : 0
+    const prevCallShort = previousDayData ? (previousDayData[`${selectedParticipant}_option_index_call_short`] || 0) : 0
+
+    const prevOptionLong = prevCallLong + prevPutShort
+    const prevOptionShort = prevPutLong + prevCallShort
+
+    // Friday's change from previous day
+    const fridayOptionLongChange = fridayOptionLong - prevOptionLong
+    const fridayOptionShortChange = fridayOptionShort - prevOptionShort
+
     return filteredData.map(item => {
       const callLong = item[`${selectedParticipant}_option_index_call_long`] || 0
       const putShort = item[`${selectedParticipant}_option_index_put_short`] || 0
@@ -95,11 +120,27 @@ const WeeklyOptionsCumulativeChart = ({ chartData }) => {
       const currentOptionLong = callLong + putShort
       const currentOptionShort = putLong + callShort
 
-      return {
-        date: item.date,
-        optionLongChange: currentOptionLong - fridayOptionLong,
-        optionShortChange: currentOptionShort - fridayOptionShort,
-        isFriday: new Date(item.date.split('-').reverse().join('-')).getDay() === 5
+      const isFriday = new Date(item.date.split('-').reverse().join('-')).getDay() === 5
+
+      if (isFriday) {
+        // Friday shows the change from previous day
+        return {
+          date: item.date,
+          optionLongChange: fridayOptionLongChange,
+          optionShortChange: fridayOptionShortChange,
+          isFriday: true
+        }
+      } else {
+        // Other days show cumulative change from Friday baseline
+        const dayOptionLongChange = currentOptionLong - fridayOptionLong
+        const dayOptionShortChange = currentOptionShort - fridayOptionShort
+
+        return {
+          date: item.date,
+          optionLongChange: fridayOptionLongChange + dayOptionLongChange,
+          optionShortChange: fridayOptionShortChange + dayOptionShortChange,
+          isFriday: false
+        }
       }
     })
   }, [chartData, selectedParticipant, startDate, endDate])
