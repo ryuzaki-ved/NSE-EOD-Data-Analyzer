@@ -8,7 +8,7 @@ import { calculateRatio, getRatioClass, formatRatio, formatIndianNumber, formatD
 import LongVsShortTrendChart from '../components/partOI/LongVsShortTrendChart'
 import ClientTypeDistributionPie from '../components/partOI/ClientTypeDistributionPie'
 import OptionsLongVsShortChart from '../components/partOI/OptionsLongVsShortChart'
-import ClientVsProBarChart from '../components/partOI/ClientVsProBarChart'
+import WeeklyOptionsCumulativeChart from '../components/partOI/WeeklyOptionsCumulativeChart'
 import FutureIndexOIBarChart from '../components/partOI/FutureIndexOIBarChart'
 import OptionIndexOIBarChart from '../components/partOI/OptionIndexOIBarChart'
 import CorrelationInsights from '../components/CorrelationInsights'
@@ -1117,7 +1117,7 @@ const PartOIPage = () => {
 
       <div className="grid lg:grid-cols-2 gap-8">
         <OptionsLongVsShortChart chartData={chartData} />
-        <ClientVsProBarChart chartData={chartData} />
+        <WeeklyOptionsCumulativeChart chartData={chartData} />
       </div>
 
       {/* Participant Comparison Charts */}
