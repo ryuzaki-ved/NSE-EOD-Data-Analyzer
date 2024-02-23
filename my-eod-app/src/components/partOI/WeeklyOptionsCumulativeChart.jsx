@@ -5,6 +5,7 @@ const WeeklyOptionsCumulativeChart = ({ chartData }) => {
   const [selectedParticipant, setSelectedParticipant] = useState('FII')
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
+  const [showDetailed, setShowDetailed] = useState(false)
 
   // Get unique participants from chart data
   const participants = useMemo(() => {
@@ -112,6 +113,12 @@ const WeeklyOptionsCumulativeChart = ({ chartData }) => {
     const fridayOptionLongChange = fridayOptionLong - prevOptionLong
     const fridayOptionShortChange = fridayOptionShort - prevOptionShort
 
+    // Calculate individual Friday changes
+    const fridayCallLongChange = fridayData[`${selectedParticipant}_option_index_call_long`] - (prevCallLong || 0)
+    const fridayPutLongChange = fridayData[`${selectedParticipant}_option_index_put_long`] - (prevPutLong || 0)
+    const fridayCallShortChange = fridayData[`${selectedParticipant}_option_index_call_short`] - (prevCallShort || 0)
+    const fridayPutShortChange = fridayData[`${selectedParticipant}_option_index_put_short`] - (prevPutShort || 0)
+
     // Debug logging
     console.log('Friday date:', fridayData.date)
     console.log('Previous day string:', previousDayStr)
@@ -137,17 +144,29 @@ const WeeklyOptionsCumulativeChart = ({ chartData }) => {
           date: item.date,
           optionLongChange: fridayOptionLongChange,
           optionShortChange: fridayOptionShortChange,
+          callLongChange: fridayCallLongChange,
+          putLongChange: fridayPutLongChange,
+          callShortChange: fridayCallShortChange,
+          putShortChange: fridayPutShortChange,
           isFriday: true
         }
       } else {
         // Other days show cumulative change from Friday baseline
         const dayOptionLongChange = currentOptionLong - fridayOptionLong
         const dayOptionShortChange = currentOptionShort - fridayOptionShort
+        const dayCallLongChange = callLong - fridayData[`${selectedParticipant}_option_index_call_long`]
+        const dayPutLongChange = putLong - fridayData[`${selectedParticipant}_option_index_put_long`]
+        const dayCallShortChange = callShort - fridayData[`${selectedParticipant}_option_index_call_short`]
+        const dayPutShortChange = putShort - fridayData[`${selectedParticipant}_option_index_put_short`]
 
         return {
           date: item.date,
           optionLongChange: fridayOptionLongChange + dayOptionLongChange,
           optionShortChange: fridayOptionShortChange + dayOptionShortChange,
+          callLongChange: fridayCallLongChange + dayCallLongChange,
+          putLongChange: fridayPutLongChange + dayPutLongChange,
+          callShortChange: fridayCallShortChange + dayCallShortChange,
+          putShortChange: fridayPutShortChange + dayPutShortChange,
           isFriday: false
         }
       }
@@ -180,91 +199,137 @@ const WeeklyOptionsCumulativeChart = ({ chartData }) => {
           </p>
         </div>
         
-        <div className="flex flex-col sm:flex-row gap-4">
-          <select
-            value={selectedParticipant}
-            onChange={(e) => setSelectedParticipant(e.target.value)}
-            className="px-3 py-2 bg-dark-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 text-sm"
-          >
-            {participants.map(participant => (
-              <option key={participant} value={participant}>{participant}</option>
-            ))}
-          </select>
-          
-          <select
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-            className="px-3 py-2 bg-dark-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 text-sm"
-          >
-            <option value="">Select Start Date (Friday)</option>
-            {availableFridays.map(friday => (
-              <option key={friday} value={friday}>{friday}</option>
-            ))}
-          </select>
-          
-          <select
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-            className="px-3 py-2 bg-dark-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 text-sm"
-          >
-            <option value="">Select End Date</option>
-            {chartData
-              .filter(item => {
-                if (!startDate) return true
-                const itemDate = new Date(item.date.split('-').reverse().join('-'))
-                const start = new Date(startDate.split('-').reverse().join('-'))
-                return itemDate >= start
-              })
-              .map(item => item.date)
-              .sort((a, b) => {
-                const dateA = new Date(a.split('-').reverse().join('-'))
-                const dateB = new Date(b.split('-').reverse().join('-'))
-                return dateA - dateB
-              })
-              .map(date => (
-                <option key={date} value={date}>{date}</option>
-              ))
-            }
-          </select>
-        </div>
+                 <div className="flex flex-col sm:flex-row gap-4">
+           <select
+             value={selectedParticipant}
+             onChange={(e) => setSelectedParticipant(e.target.value)}
+             className="px-3 py-2 bg-dark-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 text-sm"
+           >
+             {participants.map(participant => (
+               <option key={participant} value={participant}>{participant}</option>
+             ))}
+           </select>
+           
+           <select
+             value={startDate}
+             onChange={(e) => setStartDate(e.target.value)}
+             className="px-3 py-2 bg-dark-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 text-sm"
+           >
+             <option value="">Select Start Date (Friday)</option>
+             {availableFridays.map(friday => (
+               <option key={friday} value={friday}>{friday}</option>
+             ))}
+           </select>
+           
+           <select
+             value={endDate}
+             onChange={(e) => setEndDate(e.target.value)}
+             className="px-3 py-2 bg-dark-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 text-sm"
+           >
+             <option value="">Select End Date</option>
+             {chartData
+               .filter(item => {
+                 if (!startDate) return true
+                 const itemDate = new Date(item.date.split('-').reverse().join('-'))
+                 const start = new Date(startDate.split('-').reverse().join('-'))
+                 return itemDate >= start
+               })
+               .map(item => item.date)
+               .sort((a, b) => {
+                 const dateA = new Date(a.split('-').reverse().join('-'))
+                 const dateB = new Date(b.split('-').reverse().join('-'))
+                 return dateA - dateB
+               })
+               .map(date => (
+                 <option key={date} value={date}>{date}</option>
+               ))
+             }
+           </select>
+
+           <button
+             onClick={() => setShowDetailed(!showDetailed)}
+             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+               showDetailed 
+                 ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                 : 'bg-gray-600 text-gray-200 hover:bg-gray-700'
+             }`}
+           >
+             {showDetailed ? 'Hide Detailed' : 'See Detailed'}
+           </button>
+         </div>
       </div>
 
-      <ResponsiveContainer width="100%" height={300}>
-        <LineChart data={cumulativeData}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-          <XAxis dataKey="date" stroke="#9ca3af" />
-          <YAxis stroke="#9ca3af" />
-          <Tooltip
-            contentStyle={{
-              backgroundColor: '#1f2937',
-              border: '1px solid #374151',
-              borderRadius: '8px',
-              color: '#e2e8f0',
-            }}
-            formatter={(value, name) => [
-              value.toLocaleString(),
-              name === 'optionLongChange' ? 'Option Long Change' : 'Option Short Change'
-            ]}
-          />
-          <Legend />
-          <Line
-            type="monotone"
-            dataKey="optionLongChange"
-            stroke="#10b981"
-            strokeWidth={3}
-            dot={{ fill: '#10b981', strokeWidth: 2, r: 4 }}
-            name="Option Long Change"
-          />
-          <Line
-            type="monotone"
-            dataKey="optionShortChange"
-            stroke="#ef4444"
-            strokeWidth={3}
-            dot={{ fill: '#ef4444', strokeWidth: 2, r: 4 }}
-            name="Option Short Change"
-          />
-        </LineChart>
-      </ResponsiveContainer>
+             <ResponsiveContainer width="100%" height={300}>
+         <LineChart data={cumulativeData}>
+           <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+           <XAxis dataKey="date" stroke="#9ca3af" />
+           <YAxis stroke="#9ca3af" />
+           <Tooltip
+             contentStyle={{
+               backgroundColor: '#1f2937',
+               border: '1px solid #374151',
+               borderRadius: '8px',
+               color: '#e2e8f0',
+             }}
+           />
+           <Legend />
+           {!showDetailed ? (
+             <>
+               <Line
+                 type="monotone"
+                 dataKey="optionLongChange"
+                 stroke="#10b981"
+                 strokeWidth={3}
+                 dot={{ fill: '#10b981', strokeWidth: 2, r: 4 }}
+                 name="Option Long Change"
+               />
+               <Line
+                 type="monotone"
+                 dataKey="optionShortChange"
+                 stroke="#ef4444"
+                 strokeWidth={3}
+                 dot={{ fill: '#ef4444', strokeWidth: 2, r: 4 }}
+                 name="Option Short Change"
+               />
+             </>
+           ) : (
+             <>
+               <Line
+                 type="monotone"
+                 dataKey="callLongChange"
+                 stroke="#3b82f6"
+                 strokeWidth={2}
+                 dot={{ fill: '#3b82f6', strokeWidth: 2, r: 3 }}
+                 name="Call Long Change"
+               />
+               <Line
+                 type="monotone"
+                 dataKey="putLongChange"
+                 stroke="#8b5cf6"
+                 strokeWidth={2}
+                 dot={{ fill: '#8b5cf6', strokeWidth: 2, r: 3 }}
+                 name="Put Long Change"
+               />
+               <Line
+                 type="monotone"
+                 dataKey="callShortChange"
+                 stroke="#f59e0b"
+                 strokeWidth={2}
+                 dot={{ fill: '#f59e0b', strokeWidth: 2, r: 3 }}
+                 name="Call Short Change"
+               />
+               <Line
+                 type="monotone"
+                 dataKey="putShortChange"
+                 stroke="#ec4899"
+                 strokeWidth={2}
+                 dot={{ fill: '#ec4899', strokeWidth: 2, r: 3 }}
+                 name="Put Short Change"
+               />
+             </>
+           )}
+         </LineChart>
+       </ResponsiveContainer>
     </div>
   )
 }
