@@ -82,12 +82,13 @@ const WeeklyOptionsCumulativeChart = ({ chartData }) => {
     const previousDayDate = new Date(fridayDate)
     previousDayDate.setDate(fridayDate.getDate() - 1)
     
-    const previousDayStr = previousDayDate.toLocaleDateString('en-GB', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    }).split('/').reverse().join('-')
+    // Format the previous day in the same format as the data (DD-MMM-YYYY)
+    const day = previousDayDate.getDate().toString().padStart(2, '0')
+    const month = previousDayDate.toLocaleDateString('en-US', { month: 'short' })
+    const year = previousDayDate.getFullYear()
+    const previousDayStr = `${day}-${month}-${year}`
     
+    // Look for previous day data in the entire dataset, not just filtered data
     const previousDayData = chartData.find(item => item.date === previousDayStr)
 
     // Calculate Friday's change from previous day
@@ -110,6 +111,14 @@ const WeeklyOptionsCumulativeChart = ({ chartData }) => {
     // Friday's change from previous day
     const fridayOptionLongChange = fridayOptionLong - prevOptionLong
     const fridayOptionShortChange = fridayOptionShort - prevOptionShort
+
+    // Debug logging
+    console.log('Friday date:', fridayData.date)
+    console.log('Previous day string:', previousDayStr)
+    console.log('Previous day data found:', !!previousDayData)
+    console.log('Friday Option Long:', fridayOptionLong)
+    console.log('Previous Option Long:', prevOptionLong)
+    console.log('Friday Option Long Change:', fridayOptionLongChange)
 
     return filteredData.map(item => {
       const callLong = item[`${selectedParticipant}_option_index_call_long`] || 0
