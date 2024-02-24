@@ -1,6 +1,7 @@
 import React from 'react'
 import { Routes, Route } from 'react-router-dom'
 import Navbar from './components/Navbar'
+import PageTransition from './components/PageTransition'
 import HomePage from './pages/HomePage'
 import FIIDerivStatsPage from './pages/FIIDerivStatsPage'
 import PartOIPage from './pages/PartOIPage'
@@ -14,12 +15,36 @@ function App() {
       <Navbar />
       <main className="container mx-auto px-4 py-8">
         <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/fii-deriv-stats" element={<FIIDerivStatsPage />} />
-          <Route path="/part-oi" element={<PartOIPage />} />
-          <Route path="/part-vol" element={<PartVolPage />} />
-          <Route path="/correlation" element={<CorrelationPage />} />
-          <Route path="/advanced-math" element={<AdvancedMathPage />} />
+          <Route path="/" element={
+            <PageTransition>
+              <HomePage />
+            </PageTransition>
+          } />
+          <Route path="/fii-deriv-stats" element={
+            <PageTransition>
+              <FIIDerivStatsPage />
+            </PageTransition>
+          } />
+          <Route path="/part-oi" element={
+            <PageTransition>
+              <PartOIPage />
+            </PageTransition>
+          } />
+          <Route path="/part-vol" element={
+            <PageTransition>
+              <PartVolPage />
+            </PageTransition>
+          } />
+          <Route path="/correlation" element={
+            <PageTransition>
+              <CorrelationPage />
+            </PageTransition>
+          } />
+          <Route path="/advanced-math" element={
+            <PageTransition>
+              <AdvancedMathPage />
+            </PageTransition>
+          } />
         </Routes>
       </main>
     </div>

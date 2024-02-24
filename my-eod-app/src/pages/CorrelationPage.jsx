@@ -57,7 +57,10 @@ const CorrelationPage = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500"></div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <div className="text-blue-400 text-lg animate-pulse-slow">Loading Correlation Analysis...</div>
+        </div>
       </div>
     )
   }
@@ -67,18 +70,18 @@ const CorrelationPage = () => {
   const tradingDays = new Set(participantData.map(item => item.date)).size
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 animate-page-enter">
       {/* Header */}
-      <div className="text-center">
-        <h1 className="text-4xl font-bold gradient-text mb-4">Advanced Correlation Analysis</h1>
-        <p className="text-gray-400 text-lg">Comprehensive analysis of market participant relationships and position dynamics</p>
+      <div className="text-center animate-fade-in-up">
+        <h1 className="text-4xl font-bold gradient-text mb-4 animate-scale-in">Advanced Correlation Analysis</h1>
+        <p className="text-gray-400 text-lg animate-fade-in-up" style={{ animationDelay: '0.2s' }}>Comprehensive analysis of market participant relationships and position dynamics</p>
       </div>
 
       {/* Data Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="glass-card p-6 border border-blue-500/20">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-stagger">
+        <div className="glass-card p-6 border border-blue-500/20 hover-lift">
           <div className="flex items-center space-x-3">
-            <div className="p-2 rounded-lg bg-blue-500/20">
+            <div className="p-2 rounded-lg bg-blue-500/20 animate-float">
               <TrendingUp className="h-6 w-6 text-blue-400" />
             </div>
             <div>
@@ -88,9 +91,9 @@ const CorrelationPage = () => {
           </div>
         </div>
         
-        <div className="glass-card p-6 border border-green-500/20">
+        <div className="glass-card p-6 border border-green-500/20 hover-lift">
           <div className="flex items-center space-x-3">
-            <div className="p-2 rounded-lg bg-green-500/20">
+            <div className="p-2 rounded-lg bg-green-500/20 animate-float" style={{ animationDelay: '0.2s' }}>
               <TrendingDown className="h-6 w-6 text-green-400" />
             </div>
             <div>
@@ -100,9 +103,9 @@ const CorrelationPage = () => {
           </div>
         </div>
         
-        <div className="glass-card p-6 border border-purple-500/20">
+        <div className="glass-card p-6 border border-purple-500/20 hover-lift">
           <div className="flex items-center space-x-3">
-            <div className="p-2 rounded-lg bg-purple-500/20">
+            <div className="p-2 rounded-lg bg-purple-500/20 animate-float" style={{ animationDelay: '0.4s' }}>
               <ArrowUpDown className="h-6 w-6 text-purple-400" />
             </div>
             <div>
@@ -115,19 +118,19 @@ const CorrelationPage = () => {
 
       {/* Participant Behavior Patterns */}
       {behaviorPatterns && Object.keys(behaviorPatterns).length > 0 && (
-        <div className="glass-card p-6 border border-indigo-500/20">
-          <h3 className="text-xl font-semibold mb-4 flex items-center">
-            <Users className="h-5 w-5 mr-2 text-indigo-400" />
+        <div className="glass-card p-6 border border-indigo-500/20 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
+          <h3 className="text-xl font-semibold mb-4 flex items-center animate-slide-in-left">
+            <Users className="h-5 w-5 mr-2 text-indigo-400 animate-float" />
             Participant Behavior Patterns
           </h3>
           
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {['Client', 'DII', 'FII', 'Pro'].map(participant => {
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-stagger">
+            {['Client', 'DII', 'FII', 'Pro'].map((participant, index) => {
               const pattern = behaviorPatterns[participant]
               if (!pattern) return null
               
               return (
-                <div key={participant} className="p-4 bg-dark-700 rounded-lg border border-gray-600">
+                <div key={participant} className="p-4 bg-dark-700 rounded-lg border border-gray-600 hover-lift" style={{ animationDelay: `${0.4 + index * 0.1}s` }}>
                   <h4 className="text-lg font-semibold text-white mb-3">{participant}</h4>
                   <div className="space-y-2">
                     <div className="flex justify-between">
@@ -178,19 +181,19 @@ const CorrelationPage = () => {
 
       {/* Position Changes Summary */}
       {advancedData.positionChanges && Object.keys(advancedData.positionChanges).length > 0 && (
-        <div className="glass-card p-6 border border-orange-500/20">
-          <h3 className="text-xl font-semibold mb-4 flex items-center">
-            <ArrowUpDown className="h-5 w-5 mr-2 text-orange-400" />
+        <div className="glass-card p-6 border border-orange-500/20 animate-fade-in-up" style={{ animationDelay: '0.5s' }}>
+          <h3 className="text-xl font-semibold mb-4 flex items-center animate-slide-in-left">
+            <ArrowUpDown className="h-5 w-5 mr-2 text-orange-400 animate-float" />
             Latest Position Changes Summary - {advancedData.previousDate} → {advancedData.currentDate}
           </h3>
           
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {['Client', 'DII', 'FII', 'Pro'].map(participant => {
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-stagger">
+            {['Client', 'DII', 'FII', 'Pro'].map((participant, index) => {
               const summary = getPositionChangeSummary(advancedData.positionChanges, participant)
               if (!summary) return null
               
               return (
-                <div key={participant} className="p-4 bg-dark-700 rounded-lg border border-gray-600">
+                <div key={participant} className="p-4 bg-dark-700 rounded-lg border border-gray-600 hover-lift" style={{ animationDelay: `${0.6 + index * 0.1}s` }}>
                   <h4 className="text-lg font-semibold text-white mb-3">{participant}</h4>
                   <div className="space-y-2">
                     <div className="flex justify-between">
@@ -224,19 +227,19 @@ const CorrelationPage = () => {
 
       {/* Momentum Summary */}
       {momentumData && Object.keys(momentumData).length > 0 && (
-        <div className="glass-card p-6 border border-purple-500/20">
-          <h3 className="text-xl font-semibold mb-4 flex items-center">
-            <TrendingDown className="h-5 w-5 mr-2 text-purple-400" />
+        <div className="glass-card p-6 border border-purple-500/20 animate-fade-in-up" style={{ animationDelay: '0.7s' }}>
+          <h3 className="text-xl font-semibold mb-4 flex items-center animate-slide-in-left">
+            <TrendingDown className="h-5 w-5 mr-2 text-purple-400 animate-float" />
             Momentum Indicators - {advancedData.currentDate}
           </h3>
           
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {['Client', 'DII', 'FII', 'Pro'].map(participant => {
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-stagger">
+            {['Client', 'DII', 'FII', 'Pro'].map((participant, index) => {
               const momentum = momentumData[participant]
               if (!momentum) return null
               
               return (
-                <div key={participant} className="p-4 bg-dark-700 rounded-lg border border-gray-600">
+                <div key={participant} className="p-4 bg-dark-700 rounded-lg border border-gray-600 hover-lift" style={{ animationDelay: `${0.8 + index * 0.1}s` }}>
                   <h4 className="text-lg font-semibold text-white mb-3">{participant}</h4>
                   <div className="space-y-2">
                     <div className="flex justify-between">
@@ -275,7 +278,9 @@ const CorrelationPage = () => {
       )}
 
       {/* Main Correlation Analysis Component */}
-      <CorrelationAnalysis participantData={participantData} fiiData={fiiData} />
+      <div className="animate-fade-in-up" style={{ animationDelay: '0.9s' }}>
+        <CorrelationAnalysis participantData={participantData} fiiData={fiiData} />
+      </div>
     </div>
   )
 }
