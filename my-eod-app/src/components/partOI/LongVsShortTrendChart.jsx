@@ -2,8 +2,8 @@ import React from 'react'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 
 const LongVsShortTrendChart = ({ chartData }) => (
-  <div className="glass-card p-6">
-    <h3 className="text-xl font-semibold mb-4">Long vs Short Positions Trend</h3>
+  <div className="chart-card">
+    <h3>Long vs Short Positions Trend</h3>
     <ResponsiveContainer width="100%" height={300}>
       <AreaChart data={chartData}>
         <CartesianGrid strokeDasharray="3 3" stroke="#374151" />

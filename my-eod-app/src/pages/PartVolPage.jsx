@@ -252,7 +252,7 @@ const PartVolPage = () => {
       </div>
 
       {/* Charts */}
-      <div className="grid lg:grid-cols-2 gap-8">
+      <div className="grid lg:grid-cols-2 gap-6">
         <div className="glass-card p-6">
           <h3 className="text-xl font-semibold mb-4">Daily Total Volume Trend</h3>
           <ResponsiveContainer width="100%" height={300}>
@@ -321,7 +321,7 @@ const PartVolPage = () => {
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-8">
+      <div className="grid lg:grid-cols-2 gap-6">
         <div className="glass-card p-6">
           <h3 className="text-xl font-semibold mb-4">Client Type Volume Comparison</h3>
           <ResponsiveContainer width="100%" height={300}>

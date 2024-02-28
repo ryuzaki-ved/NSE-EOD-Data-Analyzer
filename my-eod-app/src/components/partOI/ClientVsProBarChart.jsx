@@ -2,8 +2,8 @@ import React from 'react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 
 const ClientVsProBarChart = ({ chartData }) => (
-  <div className="glass-card p-6">
-    <h3 className="text-xl font-semibold mb-4">Client vs Pro Comparison</h3>
+  <div className="chart-card">
+    <h3>Client vs Pro Comparison</h3>
     <ResponsiveContainer width="100%" height={300}>
       <BarChart data={chartData}>
         <CartesianGrid strokeDasharray="3 3" stroke="#374151" />

@@ -33,6 +33,8 @@
 @layer components {
   .glass-card {
     @apply bg-white/5 backdrop-blur-lg border border-white/10 rounded-xl shadow-2xl;
+    height: fit-content;
+    min-height: 100%;
   }
   
   .gradient-text {
@@ -45,6 +47,26 @@
   
   .metric-card {
     @apply glass-card p-4 text-center hover:bg-white/10 transition-all duration-300;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  
+  .chart-card {
+    @apply glass-card p-6;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+  
+  .chart-card h3 {
+    @apply text-xl font-semibold mb-4;
+    flex-shrink: 0;
+  }
+  
+  .chart-card .recharts-wrapper {
+    flex: 1;
+    min-height: 300px;
   }
   
   .nav-link {
@@ -289,6 +311,29 @@ body::before {
   max-width: 100%;
   padding-left: 1rem;
   padding-right: 1rem;
+}
+
+/* Ensure chart grids align properly */
+.grid {
+  align-items: stretch;
+}
+
+/* Ensure chart cards have consistent height */
+.chart-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.chart-card > div:last-child {
+  flex: 1;
+  min-height: 300px;
+}
+
+/* Improve spacing for metric cards */
+.metric-card {
+  height: 100%;
+  min-height: 120px;
 }
 
 @media (min-width: 640px) {

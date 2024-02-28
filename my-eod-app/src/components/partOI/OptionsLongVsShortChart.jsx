@@ -37,10 +37,10 @@ const OptionsLongVsShortChart = ({ chartData }) => {
   }, [chartData, selectedParticipant])
 
   return (
-    <div className="glass-card p-6">
+    <div className="chart-card">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
         <div>
-          <h3 className="text-xl font-semibold">Options Long vs Short</h3>
+          <h3>Options Long vs Short</h3>
           <p className="text-sm text-gray-400 mt-1">
             Option Long = Call Long + Put Short | Option Short = Put Long + Call Short
           </p>

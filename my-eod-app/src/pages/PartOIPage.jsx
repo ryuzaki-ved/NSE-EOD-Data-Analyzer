@@ -1110,18 +1110,18 @@ const PartOIPage = () => {
       </div>
 
       {/* Charts */}
-      <div className="grid lg:grid-cols-2 gap-8">
+      <div className="grid lg:grid-cols-2 gap-6">
         <LongVsShortTrendChart chartData={chartData} />
         <ClientTypeDistributionPie clientDistribution={clientDistribution} COLORS={COLORS} />
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-8">
+      <div className="grid lg:grid-cols-2 gap-6">
         <OptionsLongVsShortChart chartData={chartData} />
         <WeeklyOptionsCumulativeChart chartData={chartData} />
       </div>
 
       {/* Participant Comparison Charts */}
-      <div className="grid lg:grid-cols-2 gap-8">
+      <div className="grid lg:grid-cols-2 gap-6">
         <FutureIndexOIBarChart clientDistribution={clientDistribution} data={data} latestDate={latestDate} />
         <OptionIndexOIBarChart clientDistribution={clientDistribution} data={data} latestDate={latestDate} />
       </div>
@@ -1142,7 +1142,7 @@ const PartOIPage = () => {
       />
 
       {/* Correlation Insights */}
-      <div className="grid lg:grid-cols-3 gap-8">
+      <div className="grid lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
           <CorrelationInsights participantData={data} />
         </div>
