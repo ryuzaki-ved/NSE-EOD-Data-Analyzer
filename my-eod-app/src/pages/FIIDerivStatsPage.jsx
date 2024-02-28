@@ -127,6 +127,18 @@ const FIIDerivStatsPage = () => {
 
   const COLORS = ['#0ea5e9', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#06b6d4', '#84cc16', '#f97316']
 
+  // Color mapping for different indices
+  const getIndexColor = (instrument) => {
+    const colorMap = {
+      'NIFTY': 'from-blue-500/20 to-cyan-500/20 border-blue-500/30',
+      'BANKNIFTY': 'from-purple-500/20 to-pink-500/20 border-purple-500/30',
+      'FINNIFTY': 'from-green-500/20 to-emerald-500/20 border-green-500/30',
+      'MIDCPNIFTY': 'from-orange-500/20 to-red-500/20 border-orange-500/30',
+      'NIFTYNXT50': 'from-indigo-500/20 to-blue-500/20 border-indigo-500/30'
+    }
+    return colorMap[instrument] || 'from-gray-500/20 to-gray-600/20 border-gray-500/30'
+  }
+
   const columns = [
     { key: 'date', label: 'Date' },
     { key: 'instrument', label: 'Instrument' },
@@ -374,12 +386,16 @@ const FIIDerivStatsPage = () => {
                 const buyStrike = roundToFifty(data.buy_str_act || 0)
                 const sellStrike = roundToFifty(data.sell_str_act || 0)
                 
-                                 return (
-                   <div key={instrument} className="glass-card p-4 border border-gray-600 hover-lift" style={{ animationDelay: `${index * 0.1}s` }}>
-                    <div className="flex items-center justify-between mb-3">
-                      <h5 className="text-lg font-semibold text-white">{instrumentName}</h5>
-                      <div className="w-3 h-3 rounded-full bg-primary-400 animate-pulse-slow"></div>
-                    </div>
+                                                  return (
+                   <div key={instrument} className={`glass-card p-4 border bg-gradient-to-br ${getIndexColor(instrumentName)} hover-lift`} style={{ animationDelay: `${index * 0.1}s` }}>
+                     <div className="flex items-center justify-between mb-3">
+                       <h5 className="text-lg font-semibold text-white">{instrumentName}</h5>
+                       <div className={`w-3 h-3 rounded-full ${instrumentName === 'NIFTY' ? 'bg-blue-400' : 
+                         instrumentName === 'BANKNIFTY' ? 'bg-purple-400' : 
+                         instrumentName === 'FINNIFTY' ? 'bg-green-400' : 
+                         instrumentName === 'MIDCPNIFTY' ? 'bg-orange-400' : 
+                         'bg-indigo-400'} animate-pulse-slow`}></div>
+                     </div>
                     
                     <div className="space-y-3 text-sm">
                       <div className="flex justify-between items-center">
@@ -430,7 +446,7 @@ const FIIDerivStatsPage = () => {
                         </div>
                         <div className="flex justify-between text-xs">
                           <span className="text-gray-400">OI Amount:</span>
-                          <span className="text-blue-400">
+                          <span className="text-cyan-400 font-semibold">
                             {formatAmountInCrores(data.oi_amt_adj || 0)}
                           </span>
                         </div>
@@ -500,13 +516,13 @@ const FIIDerivStatsPage = () => {
                 <div className="space-y-6">
                   <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 animate-stagger">
                     {sentimentData.map(({ instrument, latestData, buyDiff, sellDiff, oiDiff }, index) => (
-                                             <div key={instrument} className="glass-card p-4 border border-gray-600 hover-lift" style={{ animationDelay: `${0.4 + index * 0.1}s` }}>
-                        <div className="flex items-center justify-between mb-3">
-                          <h5 className="text-lg font-semibold text-white">{instrument}</h5>
-                          <div className={`w-2 h-2 rounded-full ${
-                            buyDiff > sellDiff ? 'bg-green-400' : 'bg-red-400'
-                          } animate-pulse-slow`}></div>
-                        </div>
+                                                                    <div key={instrument} className={`glass-card p-4 border bg-gradient-to-br ${getIndexColor(instrument)} hover-lift`} style={{ animationDelay: `${0.4 + index * 0.1}s` }}>
+                         <div className="flex items-center justify-between mb-3">
+                           <h5 className="text-lg font-semibold text-white">{instrument}</h5>
+                           <div className={`w-2 h-2 rounded-full ${
+                             buyDiff > sellDiff ? 'bg-green-400' : 'bg-red-400'
+                           } animate-pulse-slow`}></div>
+                         </div>
                         
                         <div className="space-y-3 text-sm">
                           <div className="flex justify-between">
@@ -523,7 +539,7 @@ const FIIDerivStatsPage = () => {
                           </div>
                           <div className="flex justify-between">
                             <span className="text-gray-400">OI Amount:</span>
-                            <span className="text-blue-400">
+                            <span className="text-cyan-400 font-semibold">
                               {formatAmountInCrores(latestData.oi_amt_adj)}
                             </span>
                           </div>
@@ -545,7 +561,7 @@ const FIIDerivStatsPage = () => {
                               </div>
                               <div className="flex justify-between text-xs">
                                 <span className="text-gray-400">OI:</span>
-                                <span className={oiDiff >= 0 ? 'text-blue-400' : 'text-red-400'}>
+                                <span className={oiDiff >= 0 ? 'text-cyan-400 font-semibold' : 'text-red-400 font-semibold'}>
                                   {oiDiff >= 0 ? '+' : ''}{formatAmountInCrores(oiDiff)}
                                 </span>
                               </div>
