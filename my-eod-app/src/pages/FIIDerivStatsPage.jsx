@@ -64,9 +64,16 @@ const FIIDerivStatsPage = () => {
     return itemDate > latestDateObj ? item.date : latest
   }, data[0].date) : ''
 
+  // Get latest data for all index options
+  const indexOptions = ['NIFTY OPTIONS', 'BANKNIFTY OPTIONS', 'FINNIFTY OPTIONS', 'MIDCPNIFTY OPTIONS', 'NIFTYNXT50 OPTIONS']
   const latestIndexOptionsData = data.find(item => 
     item.date === latestDate && item.instrument === 'INDEX OPTIONS'
   )
+  
+  const latestOptionsData = indexOptions.map(option => ({
+    instrument: option,
+    data: data.find(item => item.date === latestDate && item.instrument === option)
+  }))
 
   // Prepare chart data
   const chartData = data.reduce((acc, item) => {
@@ -342,112 +349,218 @@ const FIIDerivStatsPage = () => {
           </div>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-8">
-          {/* Strike Activity Analysis */}
-          <div className="glass-card p-6 border border-primary-500/20">
-            <div className="flex items-center space-x-2 mb-4">
-              <Target className="h-5 w-5 text-primary-400" />
-              <h4 className="text-xl font-semibold">Strike Activity Analysis (NIFTY)</h4>
+        <div className="space-y-8 animate-stagger">
+          {/* Strike Activity Analysis for All Index Options */}
+          <div className="glass-card p-6 border border-primary-500/20 animate-fade-in-up">
+            <div className="flex items-center space-x-2 mb-6">
+              <Target className="h-6 w-6 text-primary-400" />
+              <h4 className="text-2xl font-semibold">Strike Activity Analysis</h4>
+              <div className="px-3 py-1 bg-primary-500/20 rounded-full text-xs text-primary-400 border border-primary-500/30">
+                ALL INDICES
+              </div>
             </div>
-            {latestIndexOptionsData ? (
-              <div className="space-y-4 text-sm">
-                <p className="text-gray-300">
-                  <span className="text-primary-400 font-medium">Latest Data:</span> {latestDate}
-                </p>
-                <p className="text-gray-300">
-                  FII have Options activity near{' '}
-                  <span className="text-green-400 font-bold">
-                    {formatIndianNumber(Math.round(latestIndexOptionsData.buy_str_act || 0))}
-                  </span>{' '}
-                  for buying and{' '}
-                  <span className="text-red-400 font-bold">
-                    {formatIndianNumber(Math.round(latestIndexOptionsData.sell_str_act || 0))}
-                  </span>{' '}
-                  for selling.
-                </p>
-                <div className="border-t border-gray-700 pt-3">
-                  <p className="text-gray-300 mb-3">
-                    The strikes traded around for:
-                  </p>
-                  <div className="space-y-2 ml-4">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-green-400 font-bold text-lg">BUY:</span>
-                      <span className="text-green-400 font-bold text-lg">
-                        {formatIndianNumber(roundToFifty(latestIndexOptionsData.buy_str_act || 0))}
-                      </span>
+            
+            <div className="mb-4">
+              <p className="text-gray-300 text-sm">
+                <span className="text-primary-400 font-medium">Latest Data:</span> {latestDate}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 animate-stagger">
+              {latestOptionsData.map(({ instrument, data }, index) => {
+                if (!data) return null
+                
+                const instrumentName = instrument.replace(' OPTIONS', '')
+                const buyStrike = roundToFifty(data.buy_str_act || 0)
+                const sellStrike = roundToFifty(data.sell_str_act || 0)
+                
+                                 return (
+                   <div key={instrument} className="glass-card p-4 border border-gray-600 hover-lift" style={{ animationDelay: `${index * 0.1}s` }}>
+                    <div className="flex items-center justify-between mb-3">
+                      <h5 className="text-lg font-semibold text-white">{instrumentName}</h5>
+                      <div className="w-3 h-3 rounded-full bg-primary-400 animate-pulse-slow"></div>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <span className="text-red-400 font-bold text-lg">SELL:</span>
-                      <span className="text-red-400 font-bold text-lg">
-                        {formatIndianNumber(roundToFifty(latestIndexOptionsData.sell_str_act || 0))}
-                      </span>
+                    
+                    <div className="space-y-3 text-sm">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-400">Buy Activity:</span>
+                        <span className="text-green-400 font-bold">
+                          {formatIndianNumber(Math.round(data.buy_str_act || 0))}
+                        </span>
+                      </div>
+                      
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-400">Sell Activity:</span>
+                        <span className="text-red-400 font-bold">
+                          {formatIndianNumber(Math.round(data.sell_str_act || 0))}
+                        </span>
+                      </div>
+                      
+                      <div className="border-t border-gray-700 pt-3">
+                        <p className="text-gray-400 text-xs mb-2">Key Strikes:</p>
+                        <div className="space-y-1">
+                          <div className="flex justify-between">
+                            <span className="text-green-400 text-xs">BUY:</span>
+                            <span className="text-green-400 font-bold text-sm">
+                              {formatIndianNumber(buyStrike)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-red-400 text-xs">SELL:</span>
+                            <span className="text-red-400 font-bold text-sm">
+                              {formatIndianNumber(sellStrike)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Additional metrics */}
+                      <div className="border-t border-gray-700 pt-3">
+                        <div className="flex justify-between text-xs">
+                          <span className="text-gray-400">Buy Amount:</span>
+                          <span className="text-green-400">
+                            {formatAmountInCrores(data.buy_amt_adj || 0)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-xs">
+                          <span className="text-gray-400">Sell Amount:</span>
+                          <span className="text-red-400">
+                            {formatAmountInCrores(data.sell_amt_adj || 0)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-xs">
+                          <span className="text-gray-400">OI Amount:</span>
+                          <span className="text-blue-400">
+                            {formatAmountInCrores(data.oi_amt_adj || 0)}
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
+                )
+              })}
+            </div>
+            
+            {latestOptionsData.every(({ data }) => !data) && (
+              <div className="text-center py-8">
+                <p className="text-gray-400 text-sm">No recent index options data available</p>
               </div>
-            ) : (
-              <p className="text-gray-400 text-sm">No recent INDEX OPTIONS data available</p>
             )}
           </div>
 
-          {/* Enhanced Market Sentiment */}
-          <div className="glass-card p-6 border border-purple-500/20">
-            <h4 className="text-xl font-semibold text-purple-400 mb-4">Market Sentiment (NIFTY)</h4>
+          {/* Enhanced Market Sentiment for All Indices */}
+          <div className="glass-card p-6 border border-purple-500/20 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
+            <div className="flex items-center space-x-2 mb-6">
+              <div className="p-2 rounded-lg bg-purple-500/20">
+                <TrendingUp className="h-5 w-5 text-purple-400" />
+              </div>
+              <h4 className="text-2xl font-semibold text-purple-400">Market Sentiment Analysis</h4>
+              <div className="px-3 py-1 bg-purple-500/20 rounded-full text-xs text-purple-400 border border-purple-500/30">
+                DAY-OVER-DAY
+              </div>
+            </div>
+            
             {(() => {
-              // Get latest and previous day data for NIFTY OPTIONS
+              // Get latest and previous day data for all index options
               const sortedDates = [...new Set(data.map(item => item.date))].sort((a, b) => {
                 const dateA = new Date(a.split('-').reverse().join('-'))
                 const dateB = new Date(b.split('-').reverse().join('-'))
                 return dateB - dateA
               })
               
-              const latestNiftyData = data.find(item => 
-                item.date === sortedDates[0] && item.instrument === 'NIFTY OPTIONS'
-              )
-              const previousNiftyData = data.find(item => 
-                item.date === sortedDates[1] && item.instrument === 'NIFTY OPTIONS'
-              )
-              
-              if (!latestNiftyData || !previousNiftyData) {
+              if (sortedDates.length < 2) {
                 return <p className="text-gray-400 text-sm">Insufficient data for comparison</p>
               }
               
-              const buyDiff = (latestNiftyData.buy_amt_adj || 0) - (previousNiftyData.buy_amt_adj || 0)
-              const sellDiff = (latestNiftyData.sell_amt_adj || 0) - (previousNiftyData.sell_amt_adj || 0)
+              const sentimentData = indexOptions.map(option => {
+                const latestData = data.find(item => 
+                  item.date === sortedDates[0] && item.instrument === option
+                )
+                const previousData = data.find(item => 
+                  item.date === sortedDates[1] && item.instrument === option
+                )
+                
+                if (!latestData || !previousData) return null
+                
+                const buyDiff = (latestData.buy_amt_adj || 0) - (previousData.buy_amt_adj || 0)
+                const sellDiff = (latestData.sell_amt_adj || 0) - (previousData.sell_amt_adj || 0)
+                const oiDiff = (latestData.oi_amt_adj || 0) - (previousData.oi_amt_adj || 0)
+                
+                return {
+                  instrument: option.replace(' OPTIONS', ''),
+                  latestData,
+                  previousData,
+                  buyDiff,
+                  sellDiff,
+                  oiDiff
+                }
+              }).filter(Boolean)
               
               return (
-                <div className="space-y-4 text-sm text-gray-300">
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span>Latest Buy Amount:</span>
-                      <span className="text-green-400">
-                        {formatAmountInCrores(latestNiftyData.buy_amt_adj)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Latest Sell Amount:</span>
-                      <span className="text-red-400">
-                        {formatAmountInCrores(latestNiftyData.sell_amt_adj)}
-                      </span>
-                    </div>
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 animate-stagger">
+                    {sentimentData.map(({ instrument, latestData, buyDiff, sellDiff, oiDiff }, index) => (
+                                             <div key={instrument} className="glass-card p-4 border border-gray-600 hover-lift" style={{ animationDelay: `${0.4 + index * 0.1}s` }}>
+                        <div className="flex items-center justify-between mb-3">
+                          <h5 className="text-lg font-semibold text-white">{instrument}</h5>
+                          <div className={`w-2 h-2 rounded-full ${
+                            buyDiff > sellDiff ? 'bg-green-400' : 'bg-red-400'
+                          } animate-pulse-slow`}></div>
+                        </div>
+                        
+                        <div className="space-y-3 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-gray-400">Buy Amount:</span>
+                            <span className="text-green-400">
+                              {formatAmountInCrores(latestData.buy_amt_adj)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-400">Sell Amount:</span>
+                            <span className="text-red-400">
+                              {formatAmountInCrores(latestData.sell_amt_adj)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-400">OI Amount:</span>
+                            <span className="text-blue-400">
+                              {formatAmountInCrores(latestData.oi_amt_adj)}
+                            </span>
+                          </div>
+                          
+                          <div className="border-t border-gray-700 pt-3">
+                            <p className="text-gray-400 text-xs mb-2">Day-over-Day Change:</p>
+                            <div className="space-y-1">
+                              <div className="flex justify-between text-xs">
+                                <span className="text-gray-400">Buy:</span>
+                                <span className={buyDiff >= 0 ? 'text-green-400' : 'text-red-400'}>
+                                  {buyDiff >= 0 ? '+' : ''}{formatAmountInCrores(buyDiff)}
+                                </span>
+                              </div>
+                              <div className="flex justify-between text-xs">
+                                <span className="text-gray-400">Sell:</span>
+                                <span className={sellDiff >= 0 ? 'text-green-400' : 'text-red-400'}>
+                                  {sellDiff >= 0 ? '+' : ''}{formatAmountInCrores(sellDiff)}
+                                </span>
+                              </div>
+                              <div className="flex justify-between text-xs">
+                                <span className="text-gray-400">OI:</span>
+                                <span className={oiDiff >= 0 ? 'text-blue-400' : 'text-red-400'}>
+                                  {oiDiff >= 0 ? '+' : ''}{formatAmountInCrores(oiDiff)}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                   
-                  <div className="border-t border-gray-700 pt-3">
-                    <p className="text-gray-300 mb-2">
-                      <span className="font-medium">Day-over-Day Change:</span>
-                    </p>
-                    <p className="text-gray-300">
-                      The trading activity{' '}
-                      <span className={buyDiff >= 0 ? 'text-green-400 font-bold' : 'text-red-400 font-bold'}>
-                        {buyDiff >= 0 ? 'increased' : 'decreased'}
-                      </span>
-                      {' '}by {formatAmountInCrores(Math.abs(buyDiff))} for buying contracts and trading activity{' '}
-                      <span className={sellDiff >= 0 ? 'text-green-400 font-bold' : 'text-red-400 font-bold'}>
-                        {sellDiff >= 0 ? 'increased' : 'decreased'}
-                      </span>
-                      {' '}by {formatAmountInCrores(Math.abs(sellDiff))} for selling contracts.
-                    </p>
-                  </div>
+                  {sentimentData.length === 0 && (
+                    <div className="text-center py-8">
+                      <p className="text-gray-400 text-sm">Insufficient data for sentiment analysis</p>
+                    </div>
+                  )}
                 </div>
               )
             })()}
