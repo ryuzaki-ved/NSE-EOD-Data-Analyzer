@@ -255,7 +255,7 @@ const PartVolPage = () => {
       <div className="grid lg:grid-cols-2 gap-6">
         <div className="glass-card p-6">
           <h3 className="text-xl font-semibold mb-4">Daily Total Volume Trend</h3>
-          <ResponsiveContainer width="100%" height={300}>
+          <ResponsiveContainer width="100%" height={350}>
             <AreaChart data={dailyVolumeData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
               <XAxis dataKey="date" stroke="#9ca3af" />
@@ -293,7 +293,7 @@ const PartVolPage = () => {
 
         <div className="glass-card p-6">
           <h3 className="text-xl font-semibold mb-4">Client Type Volume Distribution</h3>
-          <ResponsiveContainer width="100%" height={300}>
+          <ResponsiveContainer width="100%" height={350}>
             <PieChart>
               <Pie
                 data={volumeDistribution}
@@ -324,7 +324,7 @@ const PartVolPage = () => {
       <div className="grid lg:grid-cols-2 gap-6">
         <div className="glass-card p-6">
           <h3 className="text-xl font-semibold mb-4">Client Type Volume Comparison</h3>
-          <ResponsiveContainer width="100%" height={300}>
+          <ResponsiveContainer width="100%" height={350}>
             <BarChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
               <XAxis dataKey="date" stroke="#9ca3af" />
@@ -348,7 +348,7 @@ const PartVolPage = () => {
 
         <div className="glass-card p-6">
           <h3 className="text-xl font-semibold mb-4">FII Volume Trend</h3>
-          <ResponsiveContainer width="100%" height={300}>
+          <ResponsiveContainer width="100%" height={350}>
             <LineChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
               <XAxis dataKey="date" stroke="#9ca3af" />

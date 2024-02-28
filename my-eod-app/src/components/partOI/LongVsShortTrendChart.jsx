@@ -4,7 +4,7 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 const LongVsShortTrendChart = ({ chartData }) => (
   <div className="chart-card">
     <h3>Long vs Short Positions Trend</h3>
-    <ResponsiveContainer width="100%" height={300}>
+    <ResponsiveContainer width="100%" height={350}>
       <AreaChart data={chartData}>
         <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
         <XAxis dataKey="date" stroke="#9ca3af" />

@@ -53,20 +53,24 @@
   }
   
   .chart-card {
-    @apply glass-card p-6;
+    @apply glass-card p-8;
     display: flex;
     flex-direction: column;
     height: 100%;
   }
   
   .chart-card h3 {
-    @apply text-xl font-semibold mb-4;
+    @apply text-xl font-semibold mb-6;
     flex-shrink: 0;
   }
   
   .chart-card .recharts-wrapper {
     flex: 1;
-    min-height: 300px;
+    min-height: 350px;
+  }
+  
+  .chart-card p {
+    @apply mb-4;
   }
   
   .nav-link {
@@ -327,7 +331,16 @@ body::before {
 
 .chart-card > div:last-child {
   flex: 1;
-  min-height: 300px;
+  min-height: 350px;
+}
+
+/* Improve spacing for chart content */
+.chart-card .recharts-legend-wrapper {
+  margin-top: 16px;
+}
+
+.chart-card .recharts-tooltip-wrapper {
+  margin-top: 8px;
 }
 
 /* Improve spacing for metric cards */

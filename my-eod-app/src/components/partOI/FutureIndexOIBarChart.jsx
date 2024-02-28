@@ -11,7 +11,7 @@ const FutureIndexOIBarChart = ({ clientDistribution, data, latestDate }) => {
   return (
     <div className="glass-card p-6">
       <h3 className="text-xl font-semibold mb-4">Future Index OI by Participant</h3>
-      <ResponsiveContainer width="100%" height={300}>
+      <ResponsiveContainer width="100%" height={350}>
         <BarChart data={chartData}>
           <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
           <XAxis dataKey="name" stroke="#9ca3af" />

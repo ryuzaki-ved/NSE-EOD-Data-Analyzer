@@ -4,7 +4,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 const ClientVsProBarChart = ({ chartData }) => (
   <div className="chart-card">
     <h3>Client vs Pro Comparison</h3>
-    <ResponsiveContainer width="100%" height={300}>
+    <ResponsiveContainer width="100%" height={350}>
       <BarChart data={chartData}>
         <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
         <XAxis dataKey="date" stroke="#9ca3af" />

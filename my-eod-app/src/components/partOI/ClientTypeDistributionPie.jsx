@@ -4,7 +4,7 @@ import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
 const ClientTypeDistributionPie = ({ clientDistribution, COLORS }) => (
   <div className="glass-card p-6">
     <h3 className="text-xl font-semibold mb-4">Client Type Distribution (Latest)</h3>
-    <ResponsiveContainer width="100%" height={300}>
+    <ResponsiveContainer width="100%" height={350}>
       <PieChart>
         <Pie
           data={clientDistribution}

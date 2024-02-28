@@ -259,7 +259,7 @@ const WeeklyOptionsCumulativeChart = ({ chartData }) => {
          </div>
       </div>
 
-             <ResponsiveContainer width="100%" height={300}>
+             <ResponsiveContainer width="100%" height={350}>
          <LineChart data={cumulativeData}>
            <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
            <XAxis dataKey="date" stroke="#9ca3af" />

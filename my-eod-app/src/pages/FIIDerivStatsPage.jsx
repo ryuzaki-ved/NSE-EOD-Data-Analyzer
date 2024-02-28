@@ -233,7 +233,7 @@ const FIIDerivStatsPage = () => {
       <div className="grid lg:grid-cols-2 gap-6">
         <div className="glass-card p-6">
           <h3 className="text-xl font-semibold mb-4">Daily Buy vs Sell Trend</h3>
-          <ResponsiveContainer width="100%" height={300}>
+          <ResponsiveContainer width="100%" height={350}>
             <AreaChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
               <XAxis dataKey="date" stroke="#9ca3af" />
@@ -270,7 +270,7 @@ const FIIDerivStatsPage = () => {
 
         <div className="glass-card p-6">
           <h3 className="text-xl font-semibold mb-4">Open Interest Trend</h3>
-          <ResponsiveContainer width="100%" height={300}>
+          <ResponsiveContainer width="100%" height={350}>
             <LineChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
               <XAxis dataKey="date" stroke="#9ca3af" />
@@ -298,7 +298,7 @@ const FIIDerivStatsPage = () => {
 
       <div className="glass-card p-6">
         <h3 className="text-xl font-semibold mb-4">Daily Net Flow</h3>
-        <ResponsiveContainer width="100%" height={300}>
+        <ResponsiveContainer width="100%" height={350}>
           <BarChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
             <XAxis dataKey="date" stroke="#9ca3af" />
