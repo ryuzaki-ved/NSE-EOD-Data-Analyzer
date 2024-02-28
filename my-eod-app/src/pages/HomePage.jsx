@@ -47,7 +47,7 @@ const HomePage = () => {
         <div className="flex items-center justify-center space-x-4 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
           <div className="flex items-center space-x-2 text-primary-400 animate-pulse-slow">
             <TrendingUp className="h-5 w-5" />
-            <span>Real-time Insights</span>
+            <span>EOD Insights</span>
           </div>
           <div className="w-2 h-2 bg-primary-400 rounded-full animate-pulse-slow"></div>
           <div className="flex items-center space-x-2 text-primary-400 animate-pulse-slow" style={{ animationDelay: '0.5s' }}>
@@ -104,7 +104,7 @@ const HomePage = () => {
             <div className="text-sm text-gray-400">Instruments</div>
           </div>
           <div className="metric-card hover-lift">
-            <div className="text-3xl font-bold text-cyan-400 mb-2 animate-pulse-slow" style={{ animationDelay: '1.5s' }}>Real-time</div>
+            <div className="text-3xl font-bold text-cyan-400 mb-2 animate-pulse-slow" style={{ animationDelay: '1.5s' }}>EOD-based</div>
             <div className="text-sm text-gray-400">Analytics</div>
           </div>
         </div>
