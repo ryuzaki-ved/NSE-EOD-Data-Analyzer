@@ -8,6 +8,8 @@ const FIIDerivStatsPage = () => {
   const [data, setData] = useState([])
   const [loading, setLoading] = useState(true)
   const [selectedInstrument, setSelectedInstrument] = useState('ALL')
+  const [selectedDate, setSelectedDate] = useState('')
+  const [previousDate, setPreviousDate] = useState('')
 
   // Helper function to format numbers with Indian comma system
   const formatIndianNumber = (num) => {
@@ -37,6 +39,22 @@ const FIIDerivStatsPage = () => {
     fetchData()
   }, [])
 
+  // Set default selected dates when data is loaded
+  useEffect(() => {
+    if (data.length > 0 && !selectedDate) {
+      const dates = [...new Set(data.map(item => item.date))].sort((a, b) => {
+        const dateA = new Date(a.split('-').reverse().join('-'))
+        const dateB = new Date(b.split('-').reverse().join('-'))
+        return dateB - dateA
+      })
+      
+      if (dates.length > 0) {
+        setSelectedDate(dates[0])
+        setPreviousDate(dates.length > 1 ? dates[1] : dates[0])
+      }
+    }
+  }, [data, selectedDate])
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -57,22 +75,40 @@ const FIIDerivStatsPage = () => {
   // Helper function to round to nearest 50
   const roundToFifty = (value) => Math.round(value / 50) * 50
 
-  // Get most recent date data for Deep Data section
-  const latestDate = data.length > 0 ? data.reduce((latest, item) => {
-    const itemDate = new Date(item.date.split('-').reverse().join('-'))
-    const latestDateObj = new Date(latest.split('-').reverse().join('-'))
-    return itemDate > latestDateObj ? item.date : latest
-  }, data[0].date) : ''
+  // Helper function to generate insights based on OI changes
+  const generateInsight = (latestData, previousData) => {
+    if (!latestData || !previousData) return "Insufficient data for analysis"
+    
+    const oiContractDiff = (latestData.oi_contracts_adj || 0) - (previousData.oi_contracts_adj || 0)
+    const oiAmountDiff = (latestData.oi_amt_adj || 0) - (previousData.oi_amt_adj || 0)
+    
+    if (oiContractDiff > 0) {
+      return `Added ${formatIndianNumber(Math.abs(oiContractDiff))} contracts worth ${formatAmountInCrores(Math.abs(oiAmountDiff))}`
+    } else if (oiContractDiff < 0) {
+      return `Reduced ${formatIndianNumber(Math.abs(oiContractDiff))} contracts worth ${formatAmountInCrores(Math.abs(oiAmountDiff))}`
+    } else {
+      return "No change in open interest"
+    }
+  }
+
+  // Get available dates and set default selected dates
+  const availableDates = [...new Set(data.map(item => item.date))].sort((a, b) => {
+    const dateA = new Date(a.split('-').reverse().join('-'))
+    const dateB = new Date(b.split('-').reverse().join('-'))
+    return dateB - dateA
+  })
+
+
 
   // Get latest data for all index options
   const indexOptions = ['NIFTY OPTIONS', 'BANKNIFTY OPTIONS', 'FINNIFTY OPTIONS', 'MIDCPNIFTY OPTIONS', 'NIFTYNXT50 OPTIONS']
   const latestIndexOptionsData = data.find(item => 
-    item.date === latestDate && item.instrument === 'INDEX OPTIONS'
+    item.date === selectedDate && item.instrument === 'INDEX OPTIONS'
   )
   
   const latestOptionsData = indexOptions.map(option => ({
     instrument: option,
-    data: data.find(item => item.date === latestDate && item.instrument === option)
+    data: data.find(item => item.date === selectedDate && item.instrument === option)
   }))
 
   // Prepare chart data
@@ -94,7 +130,7 @@ const FIIDerivStatsPage = () => {
   }, [])
 
   // Instrument-wise data for pie chart
-  const latestDateData = data.filter(item => item.date === latestDate)
+  const latestDateData = data.filter(item => item.date === selectedDate)
   
   const mainFuturesOIData = latestDateData
     .filter(item => item.instrument.includes('FUTURES') && !item.instrument.includes('STOCK') && item.instrument !== 'INDEX FUTURES')
@@ -374,7 +410,7 @@ const FIIDerivStatsPage = () => {
             
             <div className="mb-4">
               <p className="text-gray-300 text-sm">
-                <span className="text-primary-400 font-medium">Latest Data:</span> {latestDate}
+                <span className="text-primary-400 font-medium">Selected Date:</span> {selectedDate}
               </p>
             </div>
 
@@ -473,34 +509,61 @@ const FIIDerivStatsPage = () => {
 
           {/* Enhanced Market Sentiment for All Indices */}
           <div className="glass-card p-6 border border-purple-500/20 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
-            <div className="flex items-center space-x-2 mb-6">
-              <div className="p-2 rounded-lg bg-purple-500/20">
-                <TrendingUp className="h-5 w-5 text-purple-400" />
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center space-x-2">
+                <div className="p-2 rounded-lg bg-purple-500/20">
+                  <TrendingUp className="h-5 w-5 text-purple-400" />
+                </div>
+                <h4 className="text-2xl font-semibold text-purple-400">Market Sentiment Analysis</h4>
+                <div className="px-3 py-1 bg-purple-500/20 rounded-full text-xs text-purple-400 border border-purple-500/30">
+                  DAY-OVER-DAY
+                </div>
               </div>
-              <h4 className="text-2xl font-semibold text-purple-400">Market Sentiment Analysis</h4>
-              <div className="px-3 py-1 bg-purple-500/20 rounded-full text-xs text-purple-400 border border-purple-500/30">
-                DAY-OVER-DAY
+              
+              {/* Date Selection Dropdowns */}
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2">
+                  <label className="text-sm text-gray-400">Latest:</label>
+                  <select
+                    value={selectedDate}
+                    onChange={(e) => {
+                      setSelectedDate(e.target.value)
+                      const currentIndex = availableDates.indexOf(e.target.value)
+                      setPreviousDate(availableDates[currentIndex + 1] || availableDates[currentIndex])
+                    }}
+                    className="px-3 py-1 bg-dark-700 border border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-purple-500"
+                  >
+                    {availableDates.map(date => (
+                      <option key={date} value={date}>{date}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <label className="text-sm text-gray-400">Previous:</label>
+                  <select
+                    value={previousDate}
+                    onChange={(e) => setPreviousDate(e.target.value)}
+                    className="px-3 py-1 bg-dark-700 border border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-purple-500"
+                  >
+                    {availableDates.map(date => (
+                      <option key={date} value={date}>{date}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
             </div>
             
             {(() => {
-              // Get latest and previous day data for all index options
-              const sortedDates = [...new Set(data.map(item => item.date))].sort((a, b) => {
-                const dateA = new Date(a.split('-').reverse().join('-'))
-                const dateB = new Date(b.split('-').reverse().join('-'))
-                return dateB - dateA
-              })
-              
-              if (sortedDates.length < 2) {
+              if (availableDates.length < 2) {
                 return <p className="text-gray-400 text-sm">Insufficient data for comparison</p>
               }
               
               const sentimentData = indexOptions.map(option => {
                 const latestData = data.find(item => 
-                  item.date === sortedDates[0] && item.instrument === option
+                  item.date === selectedDate && item.instrument === option
                 )
                 const previousData = data.find(item => 
-                  item.date === sortedDates[1] && item.instrument === option
+                  item.date === previousDate && item.instrument === option
                 )
                 
                 if (!latestData || !previousData) return null
@@ -522,7 +585,7 @@ const FIIDerivStatsPage = () => {
               return (
                 <div className="space-y-6">
                   <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 animate-stagger">
-                    {sentimentData.map(({ instrument, latestData, buyDiff, sellDiff, oiDiff }, index) => (
+                    {sentimentData.map(({ instrument, latestData, previousData, buyDiff, sellDiff, oiDiff }, index) => (
                                                                     <div key={instrument} className={`glass-card p-4 border ${getIndexColor(instrument)} hover-lift`} style={{ animationDelay: `${0.4 + index * 0.1}s` }}>
                          <div className="flex items-center justify-between mb-3">
                            <div className="flex items-center space-x-2">
@@ -558,29 +621,39 @@ const FIIDerivStatsPage = () => {
                             </span>
                           </div>
                           
-                          <div className="border-t border-gray-700 pt-3">
-                            <p className="text-gray-400 text-xs mb-2">Day-over-Day Change:</p>
-                            <div className="space-y-1">
-                              <div className="flex justify-between text-xs">
-                                <span className="text-gray-400">Buy:</span>
-                                <span className={buyDiff >= 0 ? 'text-green-400' : 'text-red-400'}>
-                                  {buyDiff >= 0 ? '+' : ''}{formatAmountInCrores(buyDiff)}
-                                </span>
-                              </div>
-                              <div className="flex justify-between text-xs">
-                                <span className="text-gray-400">Sell:</span>
-                                <span className={sellDiff >= 0 ? 'text-green-400' : 'text-red-400'}>
-                                  {sellDiff >= 0 ? '+' : ''}{formatAmountInCrores(sellDiff)}
-                                </span>
-                              </div>
-                              <div className="flex justify-between text-xs">
-                                <span className="text-gray-400">OI:</span>
-                                <span className={oiDiff >= 0 ? 'text-cyan-400 font-semibold' : 'text-red-400 font-semibold'}>
-                                  {oiDiff >= 0 ? '+' : ''}{formatAmountInCrores(oiDiff)}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
+                                                     <div className="border-t border-gray-700 pt-3">
+                             <p className="text-gray-400 text-xs mb-2">Day-over-Day Change:</p>
+                             <div className="space-y-1">
+                               <div className="flex justify-between text-xs">
+                                 <span className="text-gray-400">Buy:</span>
+                                 <span className={buyDiff >= 0 ? 'text-green-400' : 'text-red-400'}>
+                                   {buyDiff >= 0 ? '+' : ''}{formatAmountInCrores(buyDiff)}
+                                 </span>
+                               </div>
+                               <div className="flex justify-between text-xs">
+                                 <span className="text-gray-400">Sell:</span>
+                                 <span className={sellDiff >= 0 ? 'text-green-400' : 'text-red-400'}>
+                                   {sellDiff >= 0 ? '+' : ''}{formatAmountInCrores(sellDiff)}
+                                 </span>
+                               </div>
+                               <div className="flex justify-between text-xs">
+                                 <span className="text-gray-400">OI:</span>
+                                 <span className={oiDiff >= 0 ? 'text-cyan-400 font-semibold' : 'text-red-400 font-semibold'}>
+                                   {oiDiff >= 0 ? '+' : ''}{formatAmountInCrores(oiDiff)}
+                                 </span>
+                               </div>
+                             </div>
+                           </div>
+                           
+                           {/* Market Insight */}
+                           <div className="border-t border-gray-700 pt-3">
+                             <p className="text-gray-400 text-xs mb-2">Market Insight:</p>
+                             <div className="bg-dark-800/50 rounded-lg p-2">
+                               <p className="text-xs text-gray-300 leading-relaxed">
+                                 {generateInsight(latestData, previousData)}
+                               </p>
+                             </div>
+                           </div>
                         </div>
                       </div>
                     ))}
