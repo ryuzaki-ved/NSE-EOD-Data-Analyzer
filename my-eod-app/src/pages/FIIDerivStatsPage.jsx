@@ -127,16 +127,16 @@ const FIIDerivStatsPage = () => {
 
   const COLORS = ['#0ea5e9', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#06b6d4', '#84cc16', '#f97316']
 
-  // Color mapping for different indices
+  // Color mapping for different indices - subtle backgrounds with colored borders
   const getIndexColor = (instrument) => {
     const colorMap = {
-      'NIFTY': 'from-blue-500/20 to-cyan-500/20 border-blue-500/30',
-      'BANKNIFTY': 'from-purple-500/20 to-pink-500/20 border-purple-500/30',
-      'FINNIFTY': 'from-green-500/20 to-emerald-500/20 border-green-500/30',
-      'MIDCPNIFTY': 'from-orange-500/20 to-red-500/20 border-orange-500/30',
-      'NIFTYNXT50': 'from-indigo-500/20 to-blue-500/20 border-indigo-500/30'
+      'NIFTY': 'bg-dark-700/80 border-blue-500/40',
+      'BANKNIFTY': 'bg-dark-700/80 border-purple-500/40',
+      'FINNIFTY': 'bg-dark-700/80 border-green-500/40',
+      'MIDCPNIFTY': 'bg-dark-700/80 border-orange-500/40',
+      'NIFTYNXT50': 'bg-dark-700/80 border-indigo-500/40'
     }
-    return colorMap[instrument] || 'from-gray-500/20 to-gray-600/20 border-gray-500/30'
+    return colorMap[instrument] || 'bg-dark-700/80 border-gray-500/40'
   }
 
   const columns = [
@@ -387,9 +387,16 @@ const FIIDerivStatsPage = () => {
                 const sellStrike = roundToFifty(data.sell_str_act || 0)
                 
                                                   return (
-                   <div key={instrument} className={`glass-card p-4 border bg-gradient-to-br ${getIndexColor(instrumentName)} hover-lift`} style={{ animationDelay: `${index * 0.1}s` }}>
+                   <div key={instrument} className={`glass-card p-4 border ${getIndexColor(instrumentName)} hover-lift`} style={{ animationDelay: `${index * 0.1}s` }}>
                      <div className="flex items-center justify-between mb-3">
-                       <h5 className="text-lg font-semibold text-white">{instrumentName}</h5>
+                       <div className="flex items-center space-x-2">
+                         <div className={`w-1 h-6 rounded-full ${instrumentName === 'NIFTY' ? 'bg-blue-400' : 
+                           instrumentName === 'BANKNIFTY' ? 'bg-purple-400' : 
+                           instrumentName === 'FINNIFTY' ? 'bg-green-400' : 
+                           instrumentName === 'MIDCPNIFTY' ? 'bg-orange-400' : 
+                           'bg-indigo-400'}`}></div>
+                         <h5 className="text-lg font-semibold text-white">{instrumentName}</h5>
+                       </div>
                        <div className={`w-3 h-3 rounded-full ${instrumentName === 'NIFTY' ? 'bg-blue-400' : 
                          instrumentName === 'BANKNIFTY' ? 'bg-purple-400' : 
                          instrumentName === 'FINNIFTY' ? 'bg-green-400' : 
@@ -516,9 +523,16 @@ const FIIDerivStatsPage = () => {
                 <div className="space-y-6">
                   <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 animate-stagger">
                     {sentimentData.map(({ instrument, latestData, buyDiff, sellDiff, oiDiff }, index) => (
-                                                                    <div key={instrument} className={`glass-card p-4 border bg-gradient-to-br ${getIndexColor(instrument)} hover-lift`} style={{ animationDelay: `${0.4 + index * 0.1}s` }}>
+                                                                    <div key={instrument} className={`glass-card p-4 border ${getIndexColor(instrument)} hover-lift`} style={{ animationDelay: `${0.4 + index * 0.1}s` }}>
                          <div className="flex items-center justify-between mb-3">
-                           <h5 className="text-lg font-semibold text-white">{instrument}</h5>
+                           <div className="flex items-center space-x-2">
+                             <div className={`w-1 h-6 rounded-full ${instrument === 'NIFTY' ? 'bg-blue-400' : 
+                               instrument === 'BANKNIFTY' ? 'bg-purple-400' : 
+                               instrument === 'FINNIFTY' ? 'bg-green-400' : 
+                               instrument === 'MIDCPNIFTY' ? 'bg-orange-400' : 
+                               'bg-indigo-400'}`}></div>
+                             <h5 className="text-lg font-semibold text-white">{instrument}</h5>
+                           </div>
                            <div className={`w-2 h-2 rounded-full ${
                              buyDiff > sellDiff ? 'bg-green-400' : 'bg-red-400'
                            } animate-pulse-slow`}></div>
