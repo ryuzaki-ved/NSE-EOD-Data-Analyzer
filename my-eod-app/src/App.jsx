@@ -11,9 +11,9 @@ import AdvancedMathPage from './pages/AdvancedMathPage'
 
 function App() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-dark-900 via-dark-800 to-dark-900">
+    <div className="min-h-screen flex flex-col relative">
       <Navbar />
-      <main className="container mx-auto px-4 py-8">
+      <main className="flex-1 container mx-auto px-4 py-8 relative z-10">
         <Routes>
           <Route path="/" element={
             <PageTransition>
