@@ -1139,6 +1139,7 @@ const PartOIPage = () => {
         generateDailyChangeInsights={generateDailyChangeInsights}
         groupedInsights={generateGroupedInsights()}
         groupedDailyChangeInsights={generateGroupedDailyChangeInsights()}
+        data={data}
       />
 
       {/* Correlation Insights */}
