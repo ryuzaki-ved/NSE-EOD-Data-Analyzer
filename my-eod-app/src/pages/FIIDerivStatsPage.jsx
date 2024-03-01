@@ -230,9 +230,9 @@ const FIIDerivStatsPage = () => {
       </div>
 
       {/* Charts */}
-      <div className="grid lg:grid-cols-2 gap-6">
-        <div className="glass-card p-6">
-          <h3 className="text-xl font-semibold mb-4">Daily Buy vs Sell Trend</h3>
+      <div className="grid lg:grid-cols-2 gap-8">
+        <div className="chart-card">
+          <h3>Daily Buy vs Sell Trend</h3>
           <ResponsiveContainer width="100%" height={350}>
             <AreaChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
@@ -268,8 +268,8 @@ const FIIDerivStatsPage = () => {
           </ResponsiveContainer>
         </div>
 
-        <div className="glass-card p-6">
-          <h3 className="text-xl font-semibold mb-4">Open Interest Trend</h3>
+        <div className="chart-card">
+          <h3>Open Interest Trend</h3>
           <ResponsiveContainer width="100%" height={350}>
             <LineChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
@@ -296,8 +296,8 @@ const FIIDerivStatsPage = () => {
         </div>
       </div>
 
-      <div className="glass-card p-6">
-        <h3 className="text-xl font-semibold mb-4">Daily Net Flow</h3>
+      <div className="chart-card">
+        <h3>Daily Net Flow</h3>
         <ResponsiveContainer width="100%" height={350}>
           <BarChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
@@ -325,9 +325,9 @@ const FIIDerivStatsPage = () => {
       </div>
 
       {/* Instrument Distribution Charts */}
-      <div className="grid lg:grid-cols-2 gap-6">
-        <div className="glass-card p-6">
-          <h3 className="text-xl font-semibold mb-4">Index Futures OI Distribution</h3>
+      <div className="grid lg:grid-cols-2 gap-8">
+        <div className="chart-card">
+          <h3>Index Futures OI Distribution</h3>
           <ResponsiveContainer width="100%" height={350}>
             <PieChart>
               <Pie

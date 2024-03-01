@@ -190,7 +190,7 @@ const WeeklyOptionsCumulativeChart = ({ chartData }) => {
   }, [chartData])
 
   return (
-    <div className="glass-card p-6">
+    <div className="chart-card">
       <div className="flex flex-col space-y-4 mb-4">
         <div>
           <h3 className="text-xl font-semibold">Weekly Options Cumulative Change</h3>

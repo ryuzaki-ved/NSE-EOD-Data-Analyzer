@@ -317,6 +317,36 @@ body::before {
   padding-right: 1rem;
 }
 
+/* Increase chart card width and improve grid layouts */
+.chart-card {
+  width: 100%;
+  min-width: 0;
+}
+
+/* Ensure better grid spacing and width utilization */
+.grid {
+  align-items: stretch;
+  width: 100%;
+}
+
+/* Improve responsive grid layouts */
+@media (min-width: 1024px) {
+  .lg\\:grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem;
+  }
+  
+  .lg\\:grid-cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.5rem;
+  }
+  
+  .lg\\:grid-cols-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1.5rem;
+  }
+}
+
 /* Ensure chart grids align properly */
 .grid {
   align-items: stretch;
@@ -363,12 +393,18 @@ body::before {
 
 @media (min-width: 1024px) {
   .container {
-    max-width: 1024px;
+    max-width: 1200px;
   }
 }
 
 @media (min-width: 1280px) {
   .container {
-    max-width: 1280px;
+    max-width: 1400px;
+  }
+}
+
+@media (min-width: 1536px) {
+  .container {
+    max-width: 1600px;
   }
 }

@@ -252,9 +252,9 @@ const PartVolPage = () => {
       </div>
 
       {/* Charts */}
-      <div className="grid lg:grid-cols-2 gap-6">
-        <div className="glass-card p-6">
-          <h3 className="text-xl font-semibold mb-4">Daily Total Volume Trend</h3>
+      <div className="grid lg:grid-cols-2 gap-8">
+        <div className="chart-card">
+          <h3>Daily Total Volume Trend</h3>
           <ResponsiveContainer width="100%" height={350}>
             <AreaChart data={dailyVolumeData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
@@ -291,8 +291,8 @@ const PartVolPage = () => {
           </ResponsiveContainer>
         </div>
 
-        <div className="glass-card p-6">
-          <h3 className="text-xl font-semibold mb-4">Client Type Volume Distribution</h3>
+        <div className="chart-card">
+          <h3>Client Type Volume Distribution</h3>
           <ResponsiveContainer width="100%" height={350}>
             <PieChart>
               <Pie
@@ -321,9 +321,9 @@ const PartVolPage = () => {
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-6">
-        <div className="glass-card p-6">
-          <h3 className="text-xl font-semibold mb-4">Client Type Volume Comparison</h3>
+      <div className="grid lg:grid-cols-2 gap-8">
+        <div className="chart-card">
+          <h3>Client Type Volume Comparison</h3>
           <ResponsiveContainer width="100%" height={350}>
             <BarChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
@@ -346,8 +346,8 @@ const PartVolPage = () => {
           </ResponsiveContainer>
         </div>
 
-        <div className="glass-card p-6">
-          <h3 className="text-xl font-semibold mb-4">FII Volume Trend</h3>
+        <div className="chart-card">
+          <h3>FII Volume Trend</h3>
           <ResponsiveContainer width="100%" height={350}>
             <LineChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#374151" />

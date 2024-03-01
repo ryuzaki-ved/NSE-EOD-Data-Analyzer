@@ -63,7 +63,7 @@ const HomePage = () => {
       </div>
 
       {/* Features Grid */}
-      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16 animate-stagger">
+      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16 animate-stagger">
         {features.map((feature, index) => (
           <Link
             key={feature.path}
