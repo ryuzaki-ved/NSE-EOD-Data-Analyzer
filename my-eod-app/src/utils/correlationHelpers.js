@@ -180,6 +180,9 @@ export const calculateParticipantCorrelations = (data, selectedDate = null, inst
         
         if (participant1Record && participant2Record) {
           const metricCorrelations = {}
+          const changeMetricCorrelations = {}
+          
+          // Calculate current day similarities
           metrics.forEach(metric => {
             const value1 = participant1Record[metric] || 0
             const value2 = participant2Record[metric] || 0
@@ -187,15 +190,47 @@ export const calculateParticipantCorrelations = (data, selectedDate = null, inst
             metricCorrelations[metric] = calculateValueSimilarity(value1, value2)
           })
           
+          // Calculate day-over-day change similarities
+          const dates = [...new Set(data.map(item => item.date))].sort()
+          const currentDateIndex = dates.indexOf(selectedDate)
+          const previousDate = currentDateIndex > 0 ? dates[currentDateIndex - 1] : null
+          
+          if (previousDate) {
+            const participant1Previous = data.find(item => item.date === previousDate && item.client_type === participant1)
+            const participant2Previous = data.find(item => item.date === previousDate && item.client_type === participant2)
+            
+            if (participant1Previous && participant2Previous) {
+              metrics.forEach(metric => {
+                const currentValue1 = participant1Record[metric] || 0
+                const currentValue2 = participant2Record[metric] || 0
+                const previousValue1 = participant1Previous[metric] || 0
+                const previousValue2 = participant2Previous[metric] || 0
+                
+                const change1 = currentValue1 - previousValue1
+                const change2 = currentValue2 - previousValue2
+                
+                changeMetricCorrelations[metric] = calculateValueSimilarity(change1, change2)
+              })
+            }
+          }
+          
           // Calculate overall similarity as average of all metrics
           const validSimilarities = Object.values(metricCorrelations).filter(sim => sim !== null)
           const overallSimilarity = validSimilarities.length > 0 
             ? validSimilarities.reduce((a, b) => a + b, 0) / validSimilarities.length 
             : null
           
+          // Calculate overall change similarity
+          const validChangeSimilarities = Object.values(changeMetricCorrelations).filter(sim => sim !== null)
+          const changeOverallSimilarity = validChangeSimilarities.length > 0 
+            ? validChangeSimilarities.reduce((a, b) => a + b, 0) / validChangeSimilarities.length 
+            : null
+          
           correlations[participant1][participant2] = {
             overall: overallSimilarity,
-            metrics: metricCorrelations
+            changeOverall: changeOverallSimilarity,
+            metrics: metricCorrelations,
+            changeMetrics: changeMetricCorrelations
           }
         } else {
           correlations[participant1][participant2] = {

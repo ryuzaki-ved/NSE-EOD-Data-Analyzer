@@ -55,12 +55,16 @@ const CorrelationInsights = ({ participantData }) => {
       participants.forEach(participant2 => {
         if (participant1 !== participant2) {
           const similarity = participantCorrelations[participant1]?.[participant2]?.overall
+          const changeSimilarity = participantCorrelations[participant1]?.[participant2]?.changeOverall
           if (similarity !== null && similarity !== undefined) {
             similarities.push({
               pair: `${participant1} ↔ ${participant2}`,
               similarity: similarity,
+              changeSimilarity: changeSimilarity,
               strength: getCorrelationStrength(similarity),
-              direction: getCorrelationDirection(similarity)
+              changeStrength: changeSimilarity ? getCorrelationStrength(changeSimilarity) : null,
+              direction: getCorrelationDirection(similarity),
+              changeDirection: changeSimilarity ? getCorrelationDirection(changeSimilarity) : null
             })
           }
         }
@@ -122,21 +126,32 @@ const CorrelationInsights = ({ participantData }) => {
         </div>
       </div>
 
-      {/* Top Similarities */}
-      <div className="space-y-3">
-        <h4 className="text-sm font-medium text-gray-300">Top Participant Similarities:</h4>
-        {topSimilarities.map((item, index) => (
-          <div key={index} className="flex items-center justify-between p-3 bg-dark-700 rounded-lg">
-            <div className="flex-1">
-              <div className="text-sm font-medium text-white">{item.pair}</div>
-              <div className="text-xs text-gray-400">{item.strength} • {item.direction}</div>
-            </div>
-            <div className={`text-sm font-bold ${getCorrelationColorClass(item.similarity)}`}>
-              {formatCorrelation(item.similarity)}
-            </div>
-          </div>
-        ))}
-      </div>
+             {/* Top Similarities */}
+       <div className="space-y-3">
+         <h4 className="text-sm font-medium text-gray-300">Top Participant Similarities:</h4>
+         {topSimilarities.map((item, index) => (
+           <div key={index} className="flex items-center justify-between p-3 bg-dark-700 rounded-lg">
+             <div className="flex-1">
+               <div className="text-sm font-medium text-white">{item.pair}</div>
+               <div className="text-xs text-gray-400">{item.strength} • {item.direction}</div>
+             </div>
+             <div className="flex items-center space-x-4">
+               <div className="text-center">
+                 <div className="text-xs text-gray-400 mb-1">Current</div>
+                 <div className={`text-sm font-bold ${getCorrelationColorClass(item.similarity)}`}>
+                   {formatCorrelation(item.similarity)}
+                 </div>
+               </div>
+               <div className="text-center">
+                 <div className="text-xs text-gray-400 mb-1">Day Change</div>
+                 <div className={`text-sm font-bold ${item.changeSimilarity ? getCorrelationColorClass(item.changeSimilarity) : 'text-gray-500'}`}>
+                   {item.changeSimilarity ? formatCorrelation(item.changeSimilarity) : 'N/A'}
+                 </div>
+               </div>
+             </div>
+           </div>
+         ))}
+       </div>
 
       {/* Insights */}
       <div className="mt-4 p-3 bg-blue-500/10 rounded-lg border border-blue-500/20">
