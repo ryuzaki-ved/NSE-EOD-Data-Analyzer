@@ -123,18 +123,40 @@ export const getCorrelationColorClass = (correlation) => {
 }
 
 // Calculate cross-correlation between participant types for a single date
-export const calculateParticipantCorrelations = (data, selectedDate = null) => {
+export const calculateParticipantCorrelations = (data, selectedDate = null, instrumentType = 'current') => {
   const participants = ['Client', 'DII', 'FII', 'Pro']
-  const metrics = [
-    'total_long_contracts',
-    'total_short_contracts',
-    'future_index_long',
-    'future_index_short',
-    'option_index_call_long',
-    'option_index_put_long',
-    'option_index_call_short',
-    'option_index_put_short'
-  ]
+  
+  // Define metrics based on instrument type
+  let metrics = []
+  switch (instrumentType) {
+    case 'options':
+      metrics = [
+        'option_index_call_long',
+        'option_index_put_long',
+        'option_index_call_short',
+        'option_index_put_short'
+      ]
+      break
+    case 'futures':
+      metrics = [
+        'future_index_long',
+        'future_index_short'
+      ]
+      break
+    case 'current':
+    default:
+      metrics = [
+        'total_long_contracts',
+        'total_short_contracts',
+        'future_index_long',
+        'future_index_short',
+        'option_index_call_long',
+        'option_index_put_long',
+        'option_index_call_short',
+        'option_index_put_short'
+      ]
+      break
+  }
   
   // If no date selected, use the latest date
   if (!selectedDate) {

@@ -8,12 +8,13 @@ import {
   getAvailableDates,
   getLatestDate
 } from '../utils/correlationHelpers'
-import { TrendingUp, CalendarDays } from 'lucide-react'
+import { TrendingUp, CalendarDays, Filter } from 'lucide-react'
 
 const CorrelationInsights = ({ participantData }) => {
   const [participantCorrelations, setParticipantCorrelations] = useState({})
   const [selectedDate, setSelectedDate] = useState('')
   const [availableDates, setAvailableDates] = useState([])
+  const [selectedInstrument, setSelectedInstrument] = useState('current')
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -28,10 +29,10 @@ const CorrelationInsights = ({ participantData }) => {
 
   useEffect(() => {
     if (participantData && participantData.length > 0 && selectedDate) {
-      const correlations = calculateParticipantCorrelations(participantData, selectedDate)
+      const correlations = calculateParticipantCorrelations(participantData, selectedDate, selectedInstrument)
       setParticipantCorrelations(correlations)
     }
-  }, [participantData, selectedDate])
+  }, [participantData, selectedDate, selectedInstrument])
 
   if (loading) {
     return (
@@ -82,23 +83,43 @@ const CorrelationInsights = ({ participantData }) => {
         <h3 className="text-lg font-semibold text-blue-400">Quick Correlation Insights</h3>
       </div>
 
-      {/* Date Selection */}
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-300 mb-2">
-          <CalendarDays className="h-4 w-4 inline mr-1" />
-          Date: {selectedDate}
-        </label>
-        <select
-          value={selectedDate}
-          onChange={(e) => setSelectedDate(e.target.value)}
-          className="w-full px-3 py-2 bg-dark-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 text-white text-sm"
-        >
-          {availableDates.map(date => (
-            <option key={date} value={date}>
-              {date} {date === getLatestDate(participantData) ? '(Latest)' : ''}
-            </option>
-          ))}
-        </select>
+      {/* Date and Instrument Selection */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        {/* Date Selection */}
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-2">
+            <CalendarDays className="h-4 w-4 inline mr-1" />
+            Date: {selectedDate}
+          </label>
+          <select
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            className="w-full px-3 py-2 bg-dark-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 text-white text-sm"
+          >
+            {availableDates.map(date => (
+              <option key={date} value={date}>
+                {date} {date === getLatestDate(participantData) ? '(Latest)' : ''}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Instrument Type Selection */}
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-2">
+            <Filter className="h-4 w-4 inline mr-1" />
+            Instrument Type
+          </label>
+          <select
+            value={selectedInstrument}
+            onChange={(e) => setSelectedInstrument(e.target.value)}
+            className="w-full px-3 py-2 bg-dark-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 text-white text-sm"
+          >
+            <option value="current">Current (All Instruments)</option>
+            <option value="options">Options Only</option>
+            <option value="futures">Futures Only</option>
+          </select>
+        </div>
       </div>
 
       {/* Top Similarities */}
