@@ -315,148 +315,156 @@ const DeepInsights = ({
              sentimentIcon = <TrendingUp className="h-5 w-5 text-emerald-500" />
            }
 
-           return (
+                       return (
              <div>
-               {/* Overall Sentiment Score */}
-               <div className="mb-6">
-                 <div className="flex items-center justify-between mb-4">
-                   <h5 className="text-lg font-semibold text-white">Overall Market Sentiment</h5>
-                   <div className="flex items-center space-x-2">
-                     {sentimentIcon}
-                     <span className={`text-lg font-bold ${sentimentColor}`}>
-                       {sentimentCategory}
-                     </span>
-                   </div>
-                 </div>
-                 
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                   <div className="glass-card p-4">
-                     <div className="text-center">
-                       <div className="text-2xl font-bold text-primary-400">
-                         {sentimentScore.toFixed(2)}
-                       </div>
-                       <div className="text-sm text-gray-400">Sentiment Score</div>
-                     </div>
-                   </div>
-                   <div className="glass-card p-4">
-                     <div className="text-center">
-                       <div className="text-2xl font-bold text-green-400">
-                         {grandTotal.toLocaleString('en-IN')}
-                       </div>
-                       <div className="text-sm text-gray-400">Total Positions</div>
-                     </div>
-                   </div>
-                 </div>
-               </div>
-
-               {/* Participant Breakdown */}
+               {/* Individual Participant Analysis Section */}
                <div className="space-y-4">
-                 <h5 className="text-lg font-semibold text-white">Participant Sentiment Breakdown</h5>
-                 
-                 {Object.keys(participantPercentages).map(participant => {
-                   const percentages = participantPercentages[participant]
-                   const totals = participantTotals[participant]
+                 {/* Overall Market Sentiment Header/Summary */}
+                 <div className="bg-gradient-to-r from-purple-900/30 to-blue-900/30 border border-purple-500/40 rounded-lg p-4 backdrop-blur-sm">
+                   <div className="flex items-center justify-between mb-4">
+                     <h5 className="text-lg font-semibold text-white">Overall Market Sentiment</h5>
+                     <div className="flex items-center space-x-2">
+                       {sentimentIcon}
+                       <span className={`text-lg font-bold ${sentimentColor}`}>
+                         {sentimentCategory}
+                       </span>
+                     </div>
+                   </div>
                    
-                   const participantScore = (
-                     percentages.callLong + 
-                     percentages.putShort - 
-                     percentages.callShort - 
-                     percentages.putLong
-                   ).toFixed(2)
-
-                   let participantSentiment = ''
-                   let participantColor = ''
-
-                   if (participantScore <= -10) {
-                     participantSentiment = 'Bearish'
-                     participantColor = 'text-red-400'
-                   } else if (participantScore <= -5) {
-                     participantSentiment = 'Slightly Bearish'
-                     participantColor = 'text-orange-400'
-                   } else if (participantScore >= -5 && participantScore <= 5) {
-                     participantSentiment = 'Neutral'
-                     participantColor = 'text-gray-400'
-                   } else if (participantScore <= 10) {
-                     participantSentiment = 'Slightly Bullish'
-                     participantColor = 'text-blue-400'
-                   } else {
-                     participantSentiment = 'Bullish'
-                     participantColor = 'text-green-400'
-                   }
-
-                   return (
-                     <div key={participant} className="glass-card p-4">
-                       <div className="flex items-center justify-between mb-3">
-                         <h6 className="text-lg font-semibold text-white">{participant}</h6>
-                         <div className="flex items-center space-x-2">
-                           <span className={`text-sm font-medium ${participantColor}`}>
-                             {participantSentiment}
-                           </span>
-                           <span className="text-sm text-gray-400">
-                             ({participantScore})
-                           </span>
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                     <div className="bg-white/5 rounded-lg p-3">
+                       <div className="text-center">
+                         <div className="text-2xl font-bold text-primary-400">
+                           {sentimentScore.toFixed(2)}
                          </div>
-                       </div>
-                       
-                       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
-                         <div className="text-center">
-                           <div className="text-green-400 font-semibold">
-                             {percentages.callLong.toFixed(1)}%
-                           </div>
-                           <div className="text-gray-400">Call Long</div>
-                           <div className="text-xs text-gray-500">
-                             {totals.callLong.toLocaleString('en-IN')}
-                           </div>
-                         </div>
-                         <div className="text-center">
-                           <div className="text-purple-400 font-semibold">
-                             {percentages.putLong.toFixed(1)}%
-                           </div>
-                           <div className="text-gray-400">Put Long</div>
-                           <div className="text-xs text-gray-500">
-                             {totals.putLong.toLocaleString('en-IN')}
-                           </div>
-                         </div>
-                         <div className="text-center">
-                           <div className="text-red-400 font-semibold">
-                             {percentages.callShort.toFixed(1)}%
-                           </div>
-                           <div className="text-gray-400">Call Short</div>
-                           <div className="text-xs text-gray-500">
-                             {totals.callShort.toLocaleString('en-IN')}
-                           </div>
-                         </div>
-                         <div className="text-center">
-                           <div className="text-blue-400 font-semibold">
-                             {percentages.putShort.toFixed(1)}%
-                           </div>
-                           <div className="text-gray-400">Put Short</div>
-                           <div className="text-xs text-gray-500">
-                             {totals.putShort.toLocaleString('en-IN')}
-                           </div>
-                         </div>
+                         <div className="text-sm text-gray-400">Sentiment Score</div>
                        </div>
                      </div>
-                   )
-                 })}
-               </div>
+                     <div className="bg-white/5 rounded-lg p-3">
+                       <div className="text-center">
+                         <div className="text-2xl font-bold text-green-400">
+                           {grandTotal.toLocaleString('en-IN')}
+                         </div>
+                         <div className="text-sm text-gray-400">Total Positions</div>
+                       </div>
+                     </div>
+                   </div>
+                 </div>
+                 
+                 {/* Individual Participant Breakdowns */}
+                 <div className="mt-6">
+                   <div className="flex items-center space-x-2 mb-4">
+                     <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
+                     <h5 className="text-lg font-semibold text-purple-400">Individual Participant Analysis</h5>
+                   </div>
+                   
+                   <div className="space-y-4">
+                     {Object.keys(participantPercentages).map(participant => {
+                       const percentages = participantPercentages[participant]
+                       const totals = participantTotals[participant]
+                       
+                       const participantScore = (
+                         percentages.callLong + 
+                         percentages.putShort - 
+                         percentages.callShort - 
+                         percentages.putLong
+                       ).toFixed(2)
 
-               {/* Sentiment Explanation */}
-               <div className="mt-6 p-4 bg-gradient-to-r from-purple-500/10 to-blue-500/10 rounded-lg border border-purple-500/20">
-                 <h6 className="text-sm font-semibold text-purple-400 mb-2">How to Read Sentiment:</h6>
-                 <ul className="text-xs text-gray-300 space-y-1">
-                   <li>• <span className="text-green-400">Call Long + Put Short</span> = Bullish positions (positive score)</li>
-                   <li>• <span className="text-red-400">Call Short + Put Long</span> = Bearish positions (negative score)</li>
-                   <li>• Higher positive score = More bullish sentiment</li>
-                   <li>• Lower negative score = More bearish sentiment</li>
-                 </ul>
+                       let participantSentiment = ''
+                       let participantColor = ''
+
+                       if (participantScore <= -10) {
+                         participantSentiment = 'Bearish'
+                         participantColor = 'text-red-400'
+                       } else if (participantScore <= -5) {
+                         participantSentiment = 'Slightly Bearish'
+                         participantColor = 'text-orange-400'
+                       } else if (participantScore >= -5 && participantScore <= 5) {
+                         participantSentiment = 'Neutral'
+                         participantColor = 'text-gray-400'
+                       } else if (participantScore <= 10) {
+                         participantSentiment = 'Slightly Bullish'
+                         participantColor = 'text-blue-400'
+                       } else {
+                         participantSentiment = 'Bullish'
+                         participantColor = 'text-green-400'
+                       }
+
+                       return (
+                         <div key={participant} className="bg-gradient-to-r from-purple-900/20 to-blue-900/20 border border-purple-500/30 rounded-lg p-4 backdrop-blur-sm">
+                           <div className="flex items-center justify-between mb-3">
+                             <h6 className="text-lg font-semibold text-white">{participant}</h6>
+                             <div className="flex items-center space-x-2">
+                               <span className={`text-sm font-medium ${participantColor}`}>
+                                 {participantSentiment}
+                               </span>
+                               <span className="text-sm text-gray-400">
+                                 ({participantScore})
+                               </span>
+                             </div>
+                           </div>
+                           
+                           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                             <div className="text-center">
+                               <div className="text-green-400 font-semibold">
+                                 {percentages.callLong.toFixed(1)}%
+                               </div>
+                               <div className="text-gray-400">Call Long</div>
+                               <div className="text-xs text-gray-500">
+                                 {totals.callLong.toLocaleString('en-IN')}
+                               </div>
+                             </div>
+                             <div className="text-center">
+                               <div className="text-purple-400 font-semibold">
+                                 {percentages.putLong.toFixed(1)}%
+                               </div>
+                               <div className="text-gray-400">Put Long</div>
+                               <div className="text-xs text-gray-500">
+                                 {totals.putLong.toLocaleString('en-IN')}
+                               </div>
+                             </div>
+                             <div className="text-center">
+                               <div className="text-red-400 font-semibold">
+                                 {percentages.callShort.toFixed(1)}%
+                               </div>
+                               <div className="text-gray-400">Call Short</div>
+                               <div className="text-xs text-gray-500">
+                                 {totals.callShort.toLocaleString('en-IN')}
+                               </div>
+                             </div>
+                             <div className="text-center">
+                               <div className="text-blue-400 font-semibold">
+                                 {percentages.putShort.toFixed(1)}%
+                               </div>
+                               <div className="text-gray-400">Put Short</div>
+                               <div className="text-xs text-gray-500">
+                                 {totals.putShort.toLocaleString('en-IN')}
+                               </div>
+                             </div>
+                           </div>
+                         </div>
+                       )
+                     })}
+                   </div>
+                 </div>
+
+                 {/* Sentiment Explanation */}
+                 <div className="mt-6 p-4 bg-gradient-to-r from-purple-500/10 to-blue-500/10 rounded-lg border border-purple-500/20">
+                   <h6 className="text-sm font-semibold text-purple-400 mb-2">How to Read Sentiment:</h6>
+                   <ul className="text-xs text-gray-300 space-y-1">
+                     <li>• <span className="text-green-400">Call Long + Put Short</span> = Bullish positions (positive score)</li>
+                     <li>• <span className="text-red-400">Call Short + Put Long</span> = Bearish positions (negative score)</li>
+                     <li>• Higher positive score = More bullish sentiment</li>
+                     <li>• Lower negative score = More bearish sentiment</li>
+                   </ul>
+                 </div>
                </div>
              </div>
            )
          })()}
        </div>
-    </div>
-  )
-}
+     </div>
+   )
+ }
 
-export default DeepInsights 
+ export default DeepInsights 
