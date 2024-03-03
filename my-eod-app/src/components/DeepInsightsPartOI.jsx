@@ -756,30 +756,35 @@ const DeepInsights = ({
                        positionChanges[positionType].total = totalChange
                      })
 
-                     // Calculate participant percentages for each position type
+                     // Calculate participant percentages for each position type (preserving signs)
                      const participantPercentages = {}
                      positionTypes.forEach(positionType => {
                        participantPercentages[positionType] = {}
                        const total = positionChanges[positionType].total
                        
                        participants.forEach(participant => {
-                         const change = Math.abs(positionChanges[positionType][participant])
+                         const change = positionChanges[positionType][participant]
+                         // Preserve the sign of the change when calculating percentage
                          participantPercentages[positionType][participant] = total > 0 ? (change / total) * 100 : 0
                        })
                      })
 
-                     // Calculate participant-wise sentiment scores
+                     // Calculate participant-wise sentiment scores (with proper sign handling)
                      const participantScores = {}
                      participants.forEach(participant => {
                        let score = 0
                        
-                       // Add positive values (Call Long and Put Short)
+                       // Call Long: positive contribution (keep sign as is)
                        score += participantPercentages['Call Long'][participant]
+                       
+                       // Put Short: positive contribution (keep sign as is)
                        score += participantPercentages['Put Short'][participant]
                        
-                       // Subtract negative values (Put Long and Call Short) - multiply by -1
-                       score -= participantPercentages['Put Long'][participant]
+                       // Call Short: negative contribution (multiply by -1)
                        score -= participantPercentages['Call Short'][participant]
+                       
+                       // Put Long: negative contribution (multiply by -1)
+                       score -= participantPercentages['Put Long'][participant]
                        
                        participantScores[participant] = score
                      })
@@ -882,8 +887,8 @@ const DeepInsights = ({
                                      Score Breakdown:
                                    </div>
                                    <div className="text-xs text-gray-300 space-y-1 mt-1">
-                                     <div>Call Long: +{participantPercentages['Call Long'][participant].toFixed(1)}%</div>
-                                     <div>Put Short: +{participantPercentages['Put Short'][participant].toFixed(1)}%</div>
+                                     <div>Call Long: {participantPercentages['Call Long'][participant] >= 0 ? '+' : ''}{participantPercentages['Call Long'][participant].toFixed(1)}%</div>
+                                     <div>Put Short: {participantPercentages['Put Short'][participant] >= 0 ? '+' : ''}{participantPercentages['Put Short'][participant].toFixed(1)}%</div>
                                      <div>Call Short: -{participantPercentages['Call Short'][participant].toFixed(1)}%</div>
                                      <div>Put Long: -{participantPercentages['Put Long'][participant].toFixed(1)}%</div>
                                    </div>
