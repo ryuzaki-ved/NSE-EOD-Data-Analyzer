@@ -448,23 +448,471 @@ const DeepInsights = ({
                    </div>
                  </div>
 
-                 {/* Sentiment Explanation */}
-                 <div className="mt-6 p-4 bg-gradient-to-r from-purple-500/10 to-blue-500/10 rounded-lg border border-purple-500/20">
-                   <h6 className="text-sm font-semibold text-purple-400 mb-2">How to Read Sentiment:</h6>
-                   <ul className="text-xs text-gray-300 space-y-1">
-                     <li>• <span className="text-green-400">Call Long + Put Short</span> = Bullish positions (positive score)</li>
-                     <li>• <span className="text-red-400">Call Short + Put Long</span> = Bearish positions (negative score)</li>
-                     <li>• Higher positive score = More bullish sentiment</li>
-                     <li>• Lower negative score = More bearish sentiment</li>
-                   </ul>
+                                   {/* Sentiment Explanation */}
+                  <div className="mt-6 p-4 bg-gradient-to-r from-purple-500/10 to-blue-500/10 rounded-lg border border-purple-500/20">
+                    <h6 className="text-sm font-semibold text-purple-400 mb-2">How to Read Sentiment:</h6>
+                    <ul className="text-xs text-gray-300 space-y-1">
+                      <li>• <span className="text-green-400">Call Long + Put Short</span> = Bullish positions (positive score)</li>
+                      <li>• <span className="text-red-400">Call Short + Put Long</span> = Bearish positions (negative score)</li>
+                      <li>• Higher positive score = More bullish sentiment</li>
+                      <li>• Lower negative score = More bearish sentiment</li>
+                    </ul>
+                  </div>
+                </div>
+
+                {/* Day Change Score Section */}
+                <div className="mt-8 pt-6 border-t border-purple-500/20">
+                  <div className="flex items-center space-x-2 mb-4">
+                    <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
+                    <h5 className="text-lg font-semibold text-purple-400">Day Change Score</h5>
+                  </div>
+                  
+                  {(() => {
+                    // Calculate day change sentiment data
+                    if (!data || !latestDate || !previousDate) return <div className="text-gray-400">No data available</div>
+
+                    const latestData = data.filter(item => item.date === latestDate)
+                    const previousData = data.filter(item => item.date === previousDate)
+                    
+                    if (latestData.length === 0 || previousData.length === 0) return <div className="text-gray-400">No data available</div>
+
+                    // Calculate day changes for all index options positions
+                    let totalCallLongChange = 0
+                    let totalPutLongChange = 0
+                    let totalCallShortChange = 0
+                    let totalPutShortChange = 0
+
+                    // Participant-wise day changes
+                    const participantDayChanges = {
+                      Client: { callLong: 0, putLong: 0, callShort: 0, putShort: 0 },
+                      FII: { callLong: 0, putLong: 0, callShort: 0, putShort: 0 },
+                      DII: { callLong: 0, putLong: 0, callShort: 0, putShort: 0 },
+                      Pro: { callLong: 0, putLong: 0, callShort: 0, putShort: 0 }
+                    }
+
+                    // Calculate changes for each participant
+                    Object.keys(participantDayChanges).forEach(participant => {
+                      const latest = latestData.find(item => item.client_type === participant) || {}
+                      const previous = previousData.find(item => item.client_type === participant) || {}
+
+                      const callLongChange = (latest.option_index_call_long || 0) - (previous.option_index_call_long || 0)
+                      const putLongChange = (latest.option_index_put_long || 0) - (previous.option_index_put_long || 0)
+                      const callShortChange = (latest.option_index_call_short || 0) - (previous.option_index_call_short || 0)
+                      const putShortChange = (latest.option_index_put_short || 0) - (previous.option_index_put_short || 0)
+
+                      participantDayChanges[participant] = {
+                        callLong: callLongChange,
+                        putLong: putLongChange,
+                        callShort: callShortChange,
+                        putShort: putShortChange
+                      }
+
+                      totalCallLongChange += callLongChange
+                      totalPutLongChange += putLongChange
+                      totalCallShortChange += callShortChange
+                      totalPutShortChange += putShortChange
+                    })
+
+                    const grandTotalChange = Math.abs(totalCallLongChange) + Math.abs(totalPutLongChange) + Math.abs(totalCallShortChange) + Math.abs(totalPutShortChange)
+
+                    // Calculate participant percentages based on absolute changes
+                    const participantChangePercentages = {}
+                    Object.keys(participantDayChanges).forEach(participant => {
+                      const changes = participantDayChanges[participant]
+                      participantChangePercentages[participant] = {
+                        callLong: grandTotalChange > 0 ? (Math.abs(changes.callLong) / grandTotalChange) * 100 : 0,
+                        putLong: grandTotalChange > 0 ? (Math.abs(changes.putLong) / grandTotalChange) * 100 : 0,
+                        callShort: grandTotalChange > 0 ? (Math.abs(changes.callShort) / grandTotalChange) * 100 : 0,
+                        putShort: grandTotalChange > 0 ? (Math.abs(changes.putShort) / grandTotalChange) * 100 : 0
+                      }
+                    })
+
+                    // Calculate day change sentiment score
+                    let dayChangeScore = 0
+                    Object.keys(participantChangePercentages).forEach(participant => {
+                      const percentages = participantChangePercentages[participant]
+                      const changes = participantDayChanges[participant]
+                      
+                      // Add positive values (bullish changes)
+                      if (changes.callLong > 0) dayChangeScore += percentages.callLong
+                      if (changes.putShort > 0) dayChangeScore += percentages.putShort
+                      
+                      // Subtract negative values (bearish changes)
+                      if (changes.callShort > 0) dayChangeScore -= percentages.callShort
+                      if (changes.putLong > 0) dayChangeScore -= percentages.putLong
+                    })
+
+                    // Determine day change sentiment category
+                    let dayChangeCategory = ''
+                    let dayChangeColor = ''
+                    let dayChangeIcon = null
+
+                    if (dayChangeScore <= -30) {
+                      dayChangeCategory = 'Highly Bearish'
+                      dayChangeColor = 'text-red-500'
+                      dayChangeIcon = <TrendingDown className="h-5 w-5 text-red-500" />
+                    } else if (dayChangeScore <= -10) {
+                      dayChangeCategory = 'Bearish'
+                      dayChangeColor = 'text-orange-500'
+                      dayChangeIcon = <TrendingDown className="h-5 w-5 text-orange-500" />
+                    } else if (dayChangeScore <= -5) {
+                      dayChangeCategory = 'Slightly Bearish'
+                      dayChangeColor = 'text-yellow-500'
+                      dayChangeIcon = <TrendingDown className="h-5 w-5 text-yellow-500" />
+                    } else if (dayChangeScore >= -5 && dayChangeScore <= 5) {
+                      dayChangeCategory = 'Neutral'
+                      dayChangeColor = 'text-gray-400'
+                      dayChangeIcon = <Minus className="h-5 w-5 text-gray-400" />
+                    } else if (dayChangeScore <= 10) {
+                      dayChangeCategory = 'Slightly Bullish'
+                      dayChangeColor = 'text-blue-500'
+                      dayChangeIcon = <TrendingUp className="h-5 w-5 text-blue-500" />
+                    } else if (dayChangeScore <= 30) {
+                      dayChangeCategory = 'Bullish'
+                      dayChangeColor = 'text-green-500'
+                      dayChangeIcon = <TrendingUp className="h-5 w-5 text-green-500" />
+                    } else {
+                      dayChangeCategory = 'Highly Bullish'
+                      dayChangeColor = 'text-emerald-500'
+                      dayChangeIcon = <TrendingUp className="h-5 w-5 text-emerald-500" />
+                    }
+
+                    return (
+                      <div className="space-y-4">
+                        {/* Overall Day Change Sentiment Header/Summary */}
+                        <div className="bg-gradient-to-r from-purple-900/30 to-blue-900/30 border border-purple-500/40 rounded-lg p-4 backdrop-blur-sm">
+                          <div className="flex items-center justify-between mb-4">
+                            <h6 className="text-lg font-semibold text-white">Day Change Market Sentiment</h6>
+                            <div className="flex items-center space-x-2">
+                              {dayChangeIcon}
+                              <span className={`text-lg font-bold ${dayChangeColor}`}>
+                                {dayChangeCategory}
+                              </span>
+                            </div>
+                          </div>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="bg-white/5 rounded-lg p-3">
+                              <div className="text-center">
+                                <div className="text-2xl font-bold text-primary-400">
+                                  {dayChangeScore.toFixed(2)}
+                                </div>
+                                <div className="text-sm text-gray-400">Day Change Score</div>
+                              </div>
+                            </div>
+                            <div className="bg-white/5 rounded-lg p-3">
+                              <div className="text-center">
+                                <div className="text-2xl font-bold text-green-400">
+                                  {grandTotalChange.toLocaleString('en-IN')}
+                                </div>
+                                <div className="text-sm text-gray-400">Total Position Changes</div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Individual Participant Day Changes */}
+                        <div className="space-y-4">
+                          {Object.keys(participantDayChanges).map(participant => {
+                            const changes = participantDayChanges[participant]
+                            const percentages = participantChangePercentages[participant]
+                            
+                            const participantDayScore = (
+                              (changes.callLong > 0 ? percentages.callLong : 0) +
+                              (changes.putShort > 0 ? percentages.putShort : 0) -
+                              (changes.callShort > 0 ? percentages.callShort : 0) -
+                              (changes.putLong > 0 ? percentages.putLong : 0)
+                            ).toFixed(2)
+
+                            let participantDaySentiment = ''
+                            let participantDayColor = ''
+
+                            if (participantDayScore <= -10) {
+                              participantDaySentiment = 'Bearish'
+                              participantDayColor = 'text-red-400'
+                            } else if (participantDayScore <= -5) {
+                              participantDaySentiment = 'Slightly Bearish'
+                              participantDayColor = 'text-orange-400'
+                            } else if (participantDayScore >= -5 && participantDayScore <= 5) {
+                              participantDaySentiment = 'Neutral'
+                              participantDayColor = 'text-gray-400'
+                            } else if (participantDayScore <= 10) {
+                              participantDaySentiment = 'Slightly Bullish'
+                              participantDayColor = 'text-blue-400'
+                            } else {
+                              participantDaySentiment = 'Bullish'
+                              participantDayColor = 'text-green-400'
+                            }
+
+                            return (
+                              <div key={participant} className="bg-gradient-to-r from-purple-900/20 to-blue-900/20 border border-purple-500/30 rounded-lg p-4 backdrop-blur-sm">
+                                <div className="flex items-center justify-between mb-3">
+                                  <h6 className="text-lg font-semibold text-white">{participant}</h6>
+                                  <div className="flex items-center space-x-2">
+                                    <span className={`text-sm font-medium ${participantDayColor}`}>
+                                      {participantDaySentiment}
+                                    </span>
+                                    <span className="text-sm text-gray-400">
+                                      ({participantDayScore})
+                                    </span>
+                                  </div>
+                                </div>
+                                
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                                  <div className="text-center">
+                                    <div className={`font-semibold ${changes.callLong >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                      {changes.callLong >= 0 ? '+' : ''}{changes.callLong.toLocaleString('en-IN')}
+                                    </div>
+                                    <div className="text-gray-400">Call Long Change</div>
+                                    <div className="text-xs text-gray-500">
+                                      {percentages.callLong.toFixed(1)}%
+                                    </div>
+                                  </div>
+                                  <div className="text-center">
+                                    <div className={`font-semibold ${changes.putLong >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                      {changes.putLong >= 0 ? '+' : ''}{changes.putLong.toLocaleString('en-IN')}
+                                    </div>
+                                    <div className="text-gray-400">Put Long Change</div>
+                                    <div className="text-xs text-gray-500">
+                                      {percentages.putLong.toFixed(1)}%
+                                    </div>
+                                  </div>
+                                  <div className="text-center">
+                                    <div className={`font-semibold ${changes.callShort >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                      {changes.callShort >= 0 ? '+' : ''}{changes.callShort.toLocaleString('en-IN')}
+                                    </div>
+                                    <div className="text-gray-400">Call Short Change</div>
+                                    <div className="text-xs text-gray-500">
+                                      {percentages.callShort.toFixed(1)}%
+                                    </div>
+                                  </div>
+                                  <div className="text-center">
+                                    <div className={`font-semibold ${changes.putShort >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                      {changes.putShort >= 0 ? '+' : ''}{changes.putShort.toLocaleString('en-IN')}
+                                    </div>
+                                    <div className="text-gray-400">Put Short Change</div>
+                                    <div className="text-xs text-gray-500">
+                                      {percentages.putShort.toFixed(1)}%
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            )
+                          })}
+                                                 </div>
+                       </div>
+                     )
+                   })()}
+                 </div>
+
+                 {/* Changed Contracts Mapping Section */}
+                 <div className="mt-8 pt-6 border-t border-purple-500/20">
+                   <div className="flex items-center space-x-2 mb-4">
+                     <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
+                     <h5 className="text-lg font-semibold text-purple-400">Changed Contracts Mapping</h5>
+                   </div>
+                   
+                   {(() => {
+                     // Calculate changed contracts mapping data
+                     if (!data || !latestDate || !previousDate) return <div className="text-gray-400">No data available</div>
+
+                     const latestData = data.filter(item => item.date === latestDate)
+                     const previousData = data.filter(item => item.date === previousDate)
+                     
+                     if (latestData.length === 0 || previousData.length === 0) return <div className="text-gray-400">No data available</div>
+
+                     // Calculate day changes for each position type across all participants
+                     const positionTypes = ['Call Long', 'Put Long', 'Call Short', 'Put Short']
+                     const participants = ['Client', 'FII', 'DII', 'Pro']
+                     
+                     const positionChanges = {
+                       'Call Long': {},
+                       'Put Long': {},
+                       'Call Short': {},
+                       'Put Short': {}
+                     }
+
+                     // Calculate changes for each position type
+                     positionTypes.forEach(positionType => {
+                       const fieldMap = {
+                         'Call Long': 'option_index_call_long',
+                         'Put Long': 'option_index_put_long',
+                         'Call Short': 'option_index_call_short',
+                         'Put Short': 'option_index_put_short'
+                       }
+                       
+                       const field = fieldMap[positionType]
+                       let totalChange = 0
+                       
+                       participants.forEach(participant => {
+                         const latest = latestData.find(item => item.client_type === participant) || {}
+                         const previous = previousData.find(item => item.client_type === participant) || {}
+                         
+                         const change = (latest[field] || 0) - (previous[field] || 0)
+                         positionChanges[positionType][participant] = change
+                         totalChange += Math.abs(change)
+                       })
+                       
+                       positionChanges[positionType].total = totalChange
+                     })
+
+                     // Calculate participant percentages for each position type
+                     const participantPercentages = {}
+                     positionTypes.forEach(positionType => {
+                       participantPercentages[positionType] = {}
+                       const total = positionChanges[positionType].total
+                       
+                       participants.forEach(participant => {
+                         const change = Math.abs(positionChanges[positionType][participant])
+                         participantPercentages[positionType][participant] = total > 0 ? (change / total) * 100 : 0
+                       })
+                     })
+
+                     // Calculate participant-wise sentiment scores
+                     const participantScores = {}
+                     participants.forEach(participant => {
+                       let score = 0
+                       
+                       // Add positive values (Call Long and Put Short)
+                       score += participantPercentages['Call Long'][participant]
+                       score += participantPercentages['Put Short'][participant]
+                       
+                       // Subtract negative values (Put Long and Call Short) - multiply by -1
+                       score -= participantPercentages['Put Long'][participant]
+                       score -= participantPercentages['Call Short'][participant]
+                       
+                       participantScores[participant] = score
+                     })
+
+                     return (
+                       <div className="space-y-6">
+                         {/* Position-wise Changes Table */}
+                         <div className="bg-gradient-to-r from-purple-900/20 to-blue-900/20 border border-purple-500/30 rounded-lg p-4 backdrop-blur-sm">
+                           <h6 className="text-lg font-semibold text-white mb-4">Position-wise Day Changes</h6>
+                           
+                           <div className="overflow-x-auto">
+                             <table className="w-full text-sm">
+                               <thead>
+                                 <tr className="border-b border-purple-500/30">
+                                   <th className="text-left py-2 px-3 text-purple-400 font-semibold">Position Type</th>
+                                   {participants.map(participant => (
+                                     <th key={participant} className="text-center py-2 px-3 text-purple-400 font-semibold">
+                                       {participant}
+                                     </th>
+                                   ))}
+                                   <th className="text-center py-2 px-3 text-purple-400 font-semibold">Total Changes</th>
+                                 </tr>
+                               </thead>
+                               <tbody>
+                                 {positionTypes.map(positionType => (
+                                   <tr key={positionType} className="border-b border-purple-500/20">
+                                     <td className="py-3 px-3 text-white font-medium">{positionType}</td>
+                                     {participants.map(participant => {
+                                       const change = positionChanges[positionType][participant]
+                                       const percentage = participantPercentages[positionType][participant]
+                                       return (
+                                         <td key={participant} className="text-center py-3 px-3">
+                                           <div className={`font-semibold ${change >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                             {change >= 0 ? '+' : ''}{change.toLocaleString('en-IN')}
+                                           </div>
+                                           <div className="text-xs text-gray-400">
+                                             {percentage.toFixed(1)}%
+                                           </div>
+                                         </td>
+                                       )
+                                     })}
+                                     <td className="text-center py-3 px-3">
+                                       <div className="font-semibold text-cyan-400">
+                                         {positionChanges[positionType].total.toLocaleString('en-IN')}
+                                       </div>
+                                     </td>
+                                   </tr>
+                                 ))}
+                               </tbody>
+                             </table>
+                           </div>
+                         </div>
+
+                         {/* Participant-wise Sentiment Scores */}
+                         <div className="bg-gradient-to-r from-purple-900/20 to-blue-900/20 border border-purple-500/30 rounded-lg p-4 backdrop-blur-sm">
+                           <h6 className="text-lg font-semibold text-white mb-4">Participant Sentiment Scores</h6>
+                           
+                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                             {participants.map(participant => {
+                               const score = participantScores[participant]
+                               let sentiment = ''
+                               let color = ''
+                               let icon = null
+
+                               if (score <= -10) {
+                                 sentiment = 'Bearish'
+                                 color = 'text-red-400'
+                                 icon = <TrendingDown className="h-4 w-4 text-red-400" />
+                               } else if (score <= -5) {
+                                 sentiment = 'Slightly Bearish'
+                                 color = 'text-orange-400'
+                                 icon = <TrendingDown className="h-4 w-4 text-orange-400" />
+                               } else if (score >= -5 && score <= 5) {
+                                 sentiment = 'Neutral'
+                                 color = 'text-gray-400'
+                                 icon = <Minus className="h-4 w-4 text-gray-400" />
+                               } else if (score <= 10) {
+                                 sentiment = 'Slightly Bullish'
+                                 color = 'text-blue-400'
+                                 icon = <TrendingUp className="h-4 w-4 text-blue-400" />
+                               } else {
+                                 sentiment = 'Bullish'
+                                 color = 'text-green-400'
+                                 icon = <TrendingUp className="h-4 w-4 text-green-400" />
+                               }
+
+                               return (
+                                 <div key={participant} className="bg-white/5 rounded-lg p-4 text-center">
+                                   <div className="flex items-center justify-center space-x-2 mb-2">
+                                     {icon}
+                                     <h6 className="text-lg font-semibold text-white">{participant}</h6>
+                                   </div>
+                                   <div className={`text-2xl font-bold ${color} mb-1`}>
+                                     {score.toFixed(2)}
+                                   </div>
+                                   <div className={`text-sm font-medium ${color}`}>
+                                     {sentiment}
+                                   </div>
+                                   <div className="text-xs text-gray-400 mt-2">
+                                     Score Breakdown:
+                                   </div>
+                                   <div className="text-xs text-gray-300 space-y-1 mt-1">
+                                     <div>Call Long: +{participantPercentages['Call Long'][participant].toFixed(1)}%</div>
+                                     <div>Put Short: +{participantPercentages['Put Short'][participant].toFixed(1)}%</div>
+                                     <div>Call Short: -{participantPercentages['Call Short'][participant].toFixed(1)}%</div>
+                                     <div>Put Long: -{participantPercentages['Put Long'][participant].toFixed(1)}%</div>
+                                   </div>
+                                 </div>
+                               )
+                             })}
+                           </div>
+                         </div>
+
+                         {/* Calculation Explanation */}
+                         <div className="p-4 bg-gradient-to-r from-purple-500/10 to-blue-500/10 rounded-lg border border-purple-500/20">
+                           <h6 className="text-sm font-semibold text-purple-400 mb-2">Score Calculation:</h6>
+                           <ul className="text-xs text-gray-300 space-y-1">
+                             <li>• <span className="text-green-400">Call Long % + Put Short %</span> = Bullish contribution (positive)</li>
+                             <li>• <span className="text-red-400">Call Short % + Put Long %</span> = Bearish contribution (negative)</li>
+                             <li>• Final Score = Bullish - Bearish contributions</li>
+                             <li>• Higher positive score = More bullish sentiment in position changes</li>
+                           </ul>
+                         </div>
+                       </div>
+                     )
+                   })()}
                  </div>
                </div>
-             </div>
-           )
-         })()}
+             )
+           })()}
+         </div>
        </div>
-     </div>
-   )
- }
+     )
+   }
 
  export default DeepInsights 
