@@ -87,30 +87,30 @@ const PartVolPage = () => {
           // Apply conditional adjustments based on OI differences
           // Call Long OI
           if (callLongOiDiff >= 0) {
-            adjustedCallLongVol += callLongOiDiff
+            adjustedCallLongVol -= callLongOiDiff
           } else {
-            adjustedCallShortVol += Math.abs(callLongOiDiff)
+            adjustedCallShortVol -= Math.abs(callLongOiDiff)
           }
           
           // Put Long OI
           if (putLongOiDiff >= 0) {
-            adjustedPutLongVol += putLongOiDiff
+            adjustedPutLongVol -= putLongOiDiff
           } else {
-            adjustedPutShortVol += Math.abs(putLongOiDiff)
+            adjustedPutShortVol -= Math.abs(putLongOiDiff)
           }
           
           // Call Short OI
           if (callShortOiDiff >= 0) {
-            adjustedCallShortVol += callShortOiDiff
+            adjustedCallShortVol -= callShortOiDiff
           } else {
-            adjustedCallLongVol += Math.abs(callShortOiDiff)
+            adjustedCallLongVol -= Math.abs(callShortOiDiff)
           }
           
           // Put Short OI
           if (putShortOiDiff >= 0) {
-            adjustedPutShortVol += putShortOiDiff
+            adjustedPutShortVol -= putShortOiDiff
           } else {
-            adjustedPutLongVol += Math.abs(putShortOiDiff)
+            adjustedPutLongVol -= Math.abs(putShortOiDiff)
           }
           
           processedData.push({

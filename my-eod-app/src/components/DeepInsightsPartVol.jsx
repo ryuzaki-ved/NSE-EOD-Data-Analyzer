@@ -84,7 +84,7 @@ const DeepInsightsPartVol = ({ data, latestDate, previousDate }) => {
         </div>
         
         <div className="mt-4 text-xs text-gray-400">
-          <p>* Values are adjusted based on OI changes: Positive OI changes add to same category, Negative OI changes add to opposite category</p>
+          <p>* Values are adjusted based on OI changes: Positive OI changes subtract from same category, Negative OI changes subtract from opposite category</p>
         </div>
       </div>
     </div>
