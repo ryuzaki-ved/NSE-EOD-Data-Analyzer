@@ -135,7 +135,7 @@ const CorrelationInsights = ({ participantData }) => {
                <div className="text-sm font-medium text-white">{item.pair}</div>
                <div className="text-xs text-gray-400">{item.strength} • {item.direction}</div>
              </div>
-             <div className="flex items-center space-x-4">
+             <div className="flex items-center space-x-8">
                <div className="text-center">
                  <div className="text-xs text-gray-400 mb-1">Current</div>
                  <div className={`text-sm font-bold ${getCorrelationColorClass(item.similarity)}`}>
