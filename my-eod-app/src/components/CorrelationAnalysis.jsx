@@ -38,6 +38,8 @@ const CorrelationAnalysis = ({ participantData, fiiData }) => {
       const dates = getAvailableDates(participantData)
       setAvailableDates(dates)
       const latestDate = getLatestDate(participantData)
+      console.log('CorrelationAnalysis - Available dates:', dates)
+      console.log('CorrelationAnalysis - Latest date:', latestDate)
       setSelectedDate(latestDate)
     }
   }, [participantData])

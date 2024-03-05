@@ -15,6 +15,27 @@ def export_table_to_json(table_name, conn, output_path):
     for row in rows:
         data.append(dict(zip(column_names, row)))
 
+    # Sort data by date in ascending order (oldest to newest)
+    if data and 'date' in data[0]:
+        def parse_date(date_str):
+            # Convert DD-MM-YYYY to YYYY-MM-DD for proper sorting
+            if date_str and '-' in date_str:
+                parts = date_str.split('-')
+                if len(parts) == 3:
+                    day, month, year = parts
+                    # Handle month names (Aug, Jul, etc.)
+                    month_map = {
+                        'Jan': '01', 'Feb': '02', 'Mar': '03', 'Apr': '04',
+                        'May': '05', 'Jun': '06', 'Jul': '07', 'Aug': '08',
+                        'Sep': '09', 'Oct': '10', 'Nov': '11', 'Dec': '12'
+                    }
+                    if month in month_map:
+                        month = month_map[month]
+                    return f"{year}-{month}-{day}"
+            return date_str
+        
+        data.sort(key=lambda x: parse_date(x.get('date', '')), reverse=False)
+
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     with open(output_path, 'w') as f:
         json.dump(data, f, indent=4)

@@ -160,7 +160,7 @@ export const calculateParticipantCorrelations = (data, selectedDate = null, inst
   
   // If no date selected, use the latest date
   if (!selectedDate) {
-    const dates = [...new Set(data.map(item => item.date))].sort()
+    const dates = getAvailableDates(data)
     selectedDate = dates[dates.length - 1]
   }
   
@@ -191,7 +191,7 @@ export const calculateParticipantCorrelations = (data, selectedDate = null, inst
           })
           
           // Calculate day-over-day change similarities
-          const dates = [...new Set(data.map(item => item.date))].sort()
+          const dates = getAvailableDates(data)
           const currentDateIndex = dates.indexOf(selectedDate)
           const previousDate = currentDateIndex > 0 ? dates[currentDateIndex - 1] : null
           
@@ -260,7 +260,14 @@ const calculateValueSimilarity = (value1, value2) => {
 
 // Get available dates from the data
 export const getAvailableDates = (data) => {
-  return [...new Set(data.map(item => item.date))].sort()
+  return [...new Set(data.map(item => item.date))].sort((a, b) => {
+    // Convert DD-MM-YYYY to YYYY-MM-DD for proper date comparison
+    const [dayA, monthA, yearA] = a.split('-')
+    const [dayB, monthB, yearB] = b.split('-')
+    const dateA = new Date(`${yearA}-${monthA}-${dayA}`)
+    const dateB = new Date(`${yearB}-${monthB}-${dayB}`)
+    return dateA - dateB // Ascending order for getAvailableDates
+  })
 }
 
 // Get latest date from the data
@@ -529,14 +536,18 @@ export const calculatePositionChanges = (data, selectedDate = null) => {
   
   // If no date selected, use the latest date
   if (!selectedDate) {
-    const dates = [...new Set(data.map(item => item.date))].sort()
+    const dates = getAvailableDates(data)
     selectedDate = dates[dates.length - 1]
   }
   
   // Get available dates and find previous date
-  const dates = [...new Set(data.map(item => item.date))].sort()
+  const dates = getAvailableDates(data)
   const currentDateIndex = dates.indexOf(selectedDate)
   const previousDate = currentDateIndex > 0 ? dates[currentDateIndex - 1] : null
+  
+  console.log('calculatePositionChanges - Available dates:', dates)
+  console.log('calculatePositionChanges - Selected date:', selectedDate)
+  console.log('calculatePositionChanges - Previous date:', previousDate)
   
   if (!previousDate) {
     return { changes: {}, currentDate: selectedDate, previousDate: null }

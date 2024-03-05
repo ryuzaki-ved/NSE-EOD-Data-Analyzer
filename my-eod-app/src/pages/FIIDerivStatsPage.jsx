@@ -43,8 +43,11 @@ const FIIDerivStatsPage = () => {
   useEffect(() => {
     if (data.length > 0 && !selectedDate) {
       const dates = [...new Set(data.map(item => item.date))].sort((a, b) => {
-        const dateA = new Date(a.split('-').reverse().join('-'))
-        const dateB = new Date(b.split('-').reverse().join('-'))
+        // Convert DD-MM-YYYY to YYYY-MM-DD for proper date comparison
+        const [dayA, monthA, yearA] = a.split('-')
+        const [dayB, monthB, yearB] = b.split('-')
+        const dateA = new Date(`${yearA}-${monthA}-${dayA}`)
+        const dateB = new Date(`${yearB}-${monthB}-${dayB}`)
         return dateB - dateA
       })
       
@@ -93,8 +96,11 @@ const FIIDerivStatsPage = () => {
 
   // Get available dates and set default selected dates
   const availableDates = [...new Set(data.map(item => item.date))].sort((a, b) => {
-    const dateA = new Date(a.split('-').reverse().join('-'))
-    const dateB = new Date(b.split('-').reverse().join('-'))
+    // Convert DD-MM-YYYY to YYYY-MM-DD for proper date comparison
+    const [dayA, monthA, yearA] = a.split('-')
+    const [dayB, monthB, yearB] = b.split('-')
+    const dateA = new Date(`${yearA}-${monthA}-${dayA}`)
+    const dateB = new Date(`${yearB}-${monthB}-${dayB}`)
     return dateB - dateA
   })
 

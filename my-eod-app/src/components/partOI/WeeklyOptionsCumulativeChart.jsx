@@ -26,15 +26,19 @@ const WeeklyOptionsCumulativeChart = ({ chartData }) => {
   // Get all available dates and find the latest Friday
   const allDates = useMemo(() => {
     const dates = chartData.map(item => item.date).sort((a, b) => {
-      const dateA = new Date(a.split('-').reverse().join('-'))
-      const dateB = new Date(b.split('-').reverse().join('-'))
+      // Convert DD-MM-YYYY to YYYY-MM-DD for proper date comparison
+      const [dayA, monthA, yearA] = a.split('-')
+      const [dayB, monthB, yearB] = b.split('-')
+      const dateA = new Date(`${yearA}-${monthA}-${dayA}`)
+      const dateB = new Date(`${yearB}-${monthB}-${dayB}`)
       return dateA - dateB
     })
     
     // Find the latest Friday
     let latestFriday = null
     for (let i = dates.length - 1; i >= 0; i--) {
-      const date = new Date(dates[i].split('-').reverse().join('-'))
+      const [day, month, year] = dates[i].split('-')
+      const date = new Date(`${year}-${month}-${day}`)
       if (date.getDay() === 5) { // Friday = 5
         latestFriday = dates[i]
         break
@@ -58,13 +62,19 @@ const WeeklyOptionsCumulativeChart = ({ chartData }) => {
 
     // Filter data for selected date range
     const filteredData = chartData.filter(item => {
-      const itemDate = new Date(item.date.split('-').reverse().join('-'))
-      const start = new Date(startDate.split('-').reverse().join('-'))
-      const end = new Date(endDate.split('-').reverse().join('-'))
+      const [dayItem, monthItem, yearItem] = item.date.split('-')
+      const [dayStart, monthStart, yearStart] = startDate.split('-')
+      const [dayEnd, monthEnd, yearEnd] = endDate.split('-')
+      
+      const itemDate = new Date(`${yearItem}-${monthItem}-${dayItem}`)
+      const start = new Date(`${yearStart}-${monthStart}-${dayStart}`)
+      const end = new Date(`${yearEnd}-${monthEnd}-${dayEnd}`)
       return itemDate >= start && itemDate <= end
     }).sort((a, b) => {
-      const dateA = new Date(a.date.split('-').reverse().join('-'))
-      const dateB = new Date(b.date.split('-').reverse().join('-'))
+      const [dayA, monthA, yearA] = a.date.split('-')
+      const [dayB, monthB, yearB] = b.date.split('-')
+      const dateA = new Date(`${yearA}-${monthA}-${dayA}`)
+      const dateB = new Date(`${yearB}-${monthB}-${dayB}`)
       return dateA - dateB
     })
 
@@ -72,14 +82,16 @@ const WeeklyOptionsCumulativeChart = ({ chartData }) => {
 
     // Get Friday baseline values
     const fridayData = filteredData.find(item => {
-      const date = new Date(item.date.split('-').reverse().join('-'))
+      const [day, month, year] = item.date.split('-')
+      const date = new Date(`${year}-${month}-${day}`)
       return date.getDay() === 5 // Friday
     })
 
     if (!fridayData) return []
 
     // Find the previous day (Thursday) data for Friday calculation
-    const fridayDate = new Date(fridayData.date.split('-').reverse().join('-'))
+    const [dayFriday, monthFriday, yearFriday] = fridayData.date.split('-')
+    const fridayDate = new Date(`${yearFriday}-${monthFriday}-${dayFriday}`)
     const previousDayDate = new Date(fridayDate)
     previousDayDate.setDate(fridayDate.getDate() - 1)
     
@@ -136,7 +148,8 @@ const WeeklyOptionsCumulativeChart = ({ chartData }) => {
       const currentOptionLong = callLong + putShort
       const currentOptionShort = putLong + callShort
 
-      const isFriday = new Date(item.date.split('-').reverse().join('-')).getDay() === 5
+      const [day, month, year] = item.date.split('-')
+      const isFriday = new Date(`${year}-${month}-${day}`).getDay() === 5
 
       if (isFriday) {
         // Friday shows the change from previous day
@@ -177,14 +190,17 @@ const WeeklyOptionsCumulativeChart = ({ chartData }) => {
   const availableFridays = useMemo(() => {
     const fridays = []
     chartData.forEach(item => {
-      const date = new Date(item.date.split('-').reverse().join('-'))
+      const [day, month, year] = item.date.split('-')
+      const date = new Date(`${year}-${month}-${day}`)
       if (date.getDay() === 5) { // Friday
         fridays.push(item.date)
       }
     })
     return fridays.sort((a, b) => {
-      const dateA = new Date(a.split('-').reverse().join('-'))
-      const dateB = new Date(b.split('-').reverse().join('-'))
+      const [dayA, monthA, yearA] = a.split('-')
+      const [dayB, monthB, yearB] = b.split('-')
+      const dateA = new Date(`${yearA}-${monthA}-${dayA}`)
+      const dateB = new Date(`${yearB}-${monthB}-${dayB}`)
       return dateA - dateB
     })
   }, [chartData])
@@ -230,14 +246,18 @@ const WeeklyOptionsCumulativeChart = ({ chartData }) => {
              {chartData
                .filter(item => {
                  if (!startDate) return true
-                 const itemDate = new Date(item.date.split('-').reverse().join('-'))
-                 const start = new Date(startDate.split('-').reverse().join('-'))
+                 const [dayItem, monthItem, yearItem] = item.date.split('-')
+                 const [dayStart, monthStart, yearStart] = startDate.split('-')
+                 const itemDate = new Date(`${yearItem}-${monthItem}-${dayItem}`)
+                 const start = new Date(`${yearStart}-${monthStart}-${dayStart}`)
                  return itemDate >= start
                })
                .map(item => item.date)
                .sort((a, b) => {
-                 const dateA = new Date(a.split('-').reverse().join('-'))
-                 const dateB = new Date(b.split('-').reverse().join('-'))
+                 const [dayA, monthA, yearA] = a.split('-')
+                 const [dayB, monthB, yearB] = b.split('-')
+                 const dateA = new Date(`${yearA}-${monthA}-${dayA}`)
+                 const dateB = new Date(`${yearB}-${monthB}-${dayB}`)
                  return dateA - dateB
                })
                .map(date => (
