@@ -9,10 +9,7 @@
 
 **Advanced visualization and analysis platform for End-of-Day derivatives market data**
 
-[![Project Screenshot](https://via.placeholder.com/800x400/1a1a2e/ffffff?text=EOD+Analytics+Dashboard)](https://via.placeholder.com/800x400/1a1a2e/ffffff?text=EOD+Analytics+Dashboard)
-
-*[Add your project screenshots here]*
-
+![EOD Analytics Dashboard](./images/dashboard-overview.png)
 </div>
 
 ---
@@ -55,8 +52,9 @@ EOD Analytics is a comprehensive financial data analysis platform designed to pr
 graph TD
     A[CSV Files] --> B[Python Import Script]
     B --> C[SQLite Database]
-    C --> D[JSON Export Script]
-    D --> E[React Frontend]
+    B --> D[JSON Files]
+    C --> E[React Frontend]
+    D --> E
     E --> F[Interactive Charts]
     
     G[FII Derivatives Data] --> A
@@ -260,16 +258,22 @@ python view_eod_data.py     # View database contents
 
 ## 📊 Screenshots
 
-*[Add your application screenshots here]*
-
 ### Dashboard Overview
-![Dashboard](https://via.placeholder.com/600x400/1a1a2e/ffffff?text=Dashboard+Overview)
+![Dashboard Overview](./images/dashboard-overview.png)
 
 ### FII Derivatives Analysis
-![FII Analysis](https://via.placeholder.com/600x400/1a1a2e/ffffff?text=FII+Derivatives+Analysis)
+![FII Derivatives Analysis](./images/fii-analysis1.png)
+![FII Derivatives Analysis](./images/fii-analysis2.png)
+![FII Derivatives Analysis](./images/fii-analysis3.png)
+
+### Participant Open Interest
+![Participant Open Interest](./images/participant-oi1.png)
+![Participant Open Interest](./images/participant-oi2.png)
+![Participant Open Interest](./images/participant-oi3.png)
 
 ### Correlation Analysis
-![Correlation](https://via.placeholder.com/600x400/1a1a2e/ffffff?text=Correlation+Analysis)
+![Correlation Analysis](./images/correlation-analysis.png)
+![Correlation Analysis](./images/correlation-analysis1.png)
 
 ---
 
@@ -361,7 +365,7 @@ For support, email [your-email@example.com] or create an issue in the repository
 
 **Made with ❤️ for the financial analytics community**
 
-[![GitHub stars](https://img.shields.io/github/stars/yourusername/eod-analyzer?style=social)](https://github.com/yourusername/eod-analyzer)
-[![GitHub forks](https://img.shields.io/github/forks/yourusername/eod-analyzer?style=social)](https://github.com/yourusername/eod-analyzer)
+<!-- [![GitHub stars](https://img.shields.io/github/stars/ryuzaki-ved/eod-analyzer?style=social)](https://github.com/ryuzaki-ved/eod-analyzer)
+[![GitHub forks](https://img.shields.io/github/forks/ryuzaki-ved/eod-analyzer?style=social)](https://github.com/ryuzaki-ved/eod-analyzer) -->
 
 </div>
