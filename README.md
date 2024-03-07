@@ -303,7 +303,7 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 ```
 MIT License
 
-Copyright (c) 2025 EOD Analytics Platform
+Copyright (c) 2025 Ryuzaki
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -348,7 +348,7 @@ SOFTWARE.
 
 ## 📞 Support
 
-For support, email [your-email@example.com] or create an issue in the repository.
+For support, email [vedantdapt@gmail.com] or create an issue in the repository.
 
 ---
 
@@ -365,7 +365,7 @@ For support, email [your-email@example.com] or create an issue in the repository
 
 **Made with ❤️ for the financial analytics community**
 
-<!-- [![GitHub stars](https://img.shields.io/github/stars/ryuzaki-ved/eod-analyzer?style=social)](https://github.com/ryuzaki-ved/eod-analyzer)
-[![GitHub forks](https://img.shields.io/github/forks/ryuzaki-ved/eod-analyzer?style=social)](https://github.com/ryuzaki-ved/eod-analyzer) -->
+[![GitHub stars](https://img.shields.io/github/stars/ryuzaki-ved/eod-analyzer?style=social)](https://github.com/ryuzaki-ved/eod-analyzer)
+[![GitHub forks](https://img.shields.io/github/forks/ryuzaki-ved/eod-analyzer?style=social)](https://github.com/ryuzaki-ved/eod-analyzer)
 
 </div>
