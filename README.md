@@ -365,7 +365,7 @@ For support, email [vedantdapt@gmail.com] or create an issue in the repository.
 
 **Made with ❤️ for the financial analytics community**
 
-[![GitHub stars](https://img.shields.io/github/stars/ryuzaki-ved/eod-analyzer?style=social)](https://github.com/ryuzaki-ved/eod-analyzer)
-[![GitHub forks](https://img.shields.io/github/forks/ryuzaki-ved/eod-analyzer?style=social)](https://github.com/ryuzaki-ved/eod-analyzer)
+<!-- [![GitHub stars](https://img.shields.io/github/stars/ryuzaki-ved/eod-analyzer?style=social)](https://github.com/ryuzaki-ved/eod-analyzer)
+[![GitHub forks](https://img.shields.io/github/forks/ryuzaki-ved/eod-analyzer?style=social)](https://github.com/ryuzaki-ved/eod-analyzer) -->
 
 </div>
