@@ -10,43 +10,56 @@
   }
   
   body {
-    @apply text-white;
+    @apply text-white bg-dark-950;
     margin: 0;
     padding: 0;
     overflow-x: hidden;
     min-height: 100vh;
-    background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+    background-image: 
+      radial-gradient(circle at 50% 0%, rgba(14, 165, 233, 0.15), transparent 50%),
+      radial-gradient(circle at 0% 50%, rgba(139, 92, 246, 0.1), transparent 50%),
+      radial-gradient(circle at 100% 50%, rgba(236, 72, 153, 0.1), transparent 50%),
+      linear-gradient(to bottom, rgba(2, 6, 23, 0.8), #020617),
+      url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%231e293b' fill-opacity='0.2'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
     background-attachment: fixed;
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
   }
   
   #root {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
   }
 }
 
 @layer components {
   .glass-card {
-    @apply bg-white/5 backdrop-blur-lg border border-white/10 rounded-xl shadow-2xl;
-    height: fit-content;
-    min-height: 100%;
+    @apply bg-dark-900/40 backdrop-blur-xl border border-white/5 rounded-2xl shadow-2xl;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
   }
   
+  .glass-card-hover {
+    @apply transition-all duration-500 hover:bg-dark-800/50 hover:border-primary-500/30 hover:shadow-primary-500/10 hover:-translate-y-1;
+  }
+
   .gradient-text {
-    @apply bg-gradient-to-r from-primary-400 to-primary-600 bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-primary-400 via-accent-purple to-accent-pink bg-clip-text text-transparent font-bold;
   }
   
   .data-card {
-    @apply glass-card p-6 hover:bg-white/10 transition-all duration-300 hover:scale-105;
+    @apply glass-card p-6 glass-card-hover relative overflow-hidden;
+  }
+  
+  .data-card::before {
+    content: '';
+    @apply absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary-500 via-accent-purple to-accent-pink opacity-0 transition-opacity duration-300;
+  }
+
+  .data-card:hover::before {
+    @apply opacity-100;
   }
   
   .metric-card {
-    @apply glass-card p-4 text-center hover:bg-white/10 transition-all duration-300;
+    @apply glass-card p-4 text-center glass-card-hover;
     display: flex;
     flex-direction: column;
     justify-content: space-between;

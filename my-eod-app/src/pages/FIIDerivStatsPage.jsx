@@ -3,6 +3,7 @@ import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, Cartesia
 import DataTable from '../components/DataTable'
 import MetricCard from '../components/MetricCard'
 import { TrendingUp, TrendingDown, DollarSign, Activity, BarChart3, Eye, Target } from 'lucide-react'
+import { motion } from 'framer-motion'
 
 const FIIDerivStatsPage = () => {
   const [data, setData] = useState([])
@@ -192,63 +193,109 @@ const FIIDerivStatsPage = () => {
     { key: 'oi_amt_adj', label: 'OI Amount' },
   ]
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  }
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: {
+        type: "spring",
+        stiffness: 100
+      }
+    }
+  }
+
   return (
-    <div className="space-y-8 animate-fade-in">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
-        <h1 className="text-3xl font-bold gradient-text mb-4 sm:mb-0">FII Derivatives Statistics</h1>
+    <motion.div 
+      className="space-y-8"
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+    >
+      <motion.div className="flex flex-col sm:flex-row justify-between items-start sm:items-center" variants={itemVariants}>
+        <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent mb-4 sm:mb-0">FII Derivatives Statistics</h1>
         <select
           value={selectedInstrument}
           onChange={(e) => setSelectedInstrument(e.target.value)}
-          className="px-4 py-2 bg-dark-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500"
+          className="px-4 py-2 bg-dark-800 border border-white/10 rounded-xl focus:ring-2 focus:ring-primary-500 text-slate-200 outline-none"
         >
           {instruments.map(instrument => (
             <option key={instrument} value={instrument}>{instrument}</option>
           ))}
         </select>
-      </div>
+      </motion.div>
 
       {/* Metrics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <MetricCard
-          title="Total Buy Amount"
-          value={totalBuyAmt}
-          icon={TrendingUp}
-          color="green"
-        />
-        <MetricCard
-          title="Total Sell Amount"
-          value={totalSellAmt}
-          icon={TrendingDown}
-          color="red"
-        />
-        <MetricCard
-          title="Net Flow"
-          value={netFlow}
-          icon={DollarSign}
-          color={netFlow >= 0 ? 'green' : 'red'}
-        />
-        <MetricCard
-          title="Open Interest"
-          value={totalOI}
-          icon={Activity}
-          color="primary"
-        />
-      </div>
+      <motion.div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" variants={containerVariants}>
+        <motion.div variants={itemVariants}>
+          <MetricCard
+            title="Total Buy Amount"
+            value={totalBuyAmt}
+            icon={TrendingUp}
+            color="green"
+          />
+        </motion.div>
+        <motion.div variants={itemVariants}>
+          <MetricCard
+            title="Total Sell Amount"
+            value={totalSellAmt}
+            icon={TrendingDown}
+            color="red"
+          />
+        </motion.div>
+        <motion.div variants={itemVariants}>
+          <MetricCard
+            title="Net Flow"
+            value={netFlow}
+            icon={DollarSign}
+            color={netFlow >= 0 ? 'green' : 'red'}
+          />
+        </motion.div>
+        <motion.div variants={itemVariants}>
+          <MetricCard
+            title="Open Interest"
+            value={totalOI}
+            icon={Activity}
+            color="primary"
+          />
+        </motion.div>
+      </motion.div>
 
       {/* Charts */}
       <div className="grid lg:grid-cols-2 gap-8">
-        <div className="chart-card">
-          <h3>Daily Buy vs Sell Trend</h3>
+        <motion.div variants={itemVariants} className="glass-card p-6">
+          <h3 className="text-xl font-semibold mb-6 text-slate-200">Daily Buy vs Sell Trend</h3>
           <ResponsiveContainer width="100%" height={350}>
             <AreaChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-              <XAxis dataKey="date" stroke="#9ca3af" />
-              <YAxis stroke="#9ca3af" />
+              <defs>
+                <linearGradient id="colorBuy" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                </linearGradient>
+                <linearGradient id="colorSell" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
+              <XAxis dataKey="date" stroke="#94a3b8" tick={{fill: '#94a3b8'}} axisLine={false} tickLine={false} />
+              <YAxis stroke="#94a3b8" tick={{fill: '#94a3b8'}} axisLine={false} tickLine={false} />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: '#1f2937',
-                  border: '1px solid #374151',
-                  borderRadius: '8px',
+                  backgroundColor: '#0f172a',
+                  border: '1px solid #1e293b',
+                  borderRadius: '12px',
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
                 }}
               />
               <Legend />
@@ -257,8 +304,7 @@ const FIIDerivStatsPage = () => {
                 dataKey="buy_amt"
                 stackId="1"
                 stroke="#10b981"
-                fill="#10b981"
-                fillOpacity={0.6}
+                fill="url(#colorBuy)"
                 name="Buy Amount"
               />
               <Area
@@ -266,26 +312,25 @@ const FIIDerivStatsPage = () => {
                 dataKey="sell_amt"
                 stackId="2"
                 stroke="#ef4444"
-                fill="#ef4444"
-                fillOpacity={0.6}
+                fill="url(#colorSell)"
                 name="Sell Amount"
               />
             </AreaChart>
           </ResponsiveContainer>
-        </div>
+        </motion.div>
 
-        <div className="chart-card">
-          <h3>Open Interest Trend</h3>
+        <motion.div variants={itemVariants} className="glass-card p-6">
+          <h3 className="text-xl font-semibold mb-6 text-slate-200">Open Interest Trend</h3>
           <ResponsiveContainer width="100%" height={350}>
             <LineChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-              <XAxis dataKey="date" stroke="#9ca3af" />
-              <YAxis stroke="#9ca3af" />
+              <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
+              <XAxis dataKey="date" stroke="#94a3b8" tick={{fill: '#94a3b8'}} axisLine={false} tickLine={false} />
+              <YAxis stroke="#94a3b8" tick={{fill: '#94a3b8'}} axisLine={false} tickLine={false} />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: '#1f2937',
-                  border: '1px solid #374151',
-                  borderRadius: '8px',
+                  backgroundColor: '#0f172a',
+                  border: '1px solid #1e293b',
+                  borderRadius: '12px',
                 }}
               />
               <Legend />
@@ -295,132 +340,138 @@ const FIIDerivStatsPage = () => {
                 stroke="#0ea5e9"
                 strokeWidth={3}
                 dot={{ fill: '#0ea5e9', strokeWidth: 2, r: 4 }}
+                activeDot={{ r: 8 }}
                 name="Open Interest"
               />
             </LineChart>
           </ResponsiveContainer>
-        </div>
+        </motion.div>
       </div>
 
-      <div className="chart-card">
-        <h3>Daily Net Flow</h3>
+      <motion.div variants={itemVariants} className="glass-card p-6">
+        <h3 className="text-xl font-semibold mb-6 text-slate-200">Daily Net Flow</h3>
         <ResponsiveContainer width="100%" height={350}>
           <BarChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-            <XAxis dataKey="date" stroke="#9ca3af" />
-            <YAxis stroke="#9ca3af" />
+            <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
+            <XAxis dataKey="date" stroke="#94a3b8" tick={{fill: '#94a3b8'}} axisLine={false} tickLine={false} />
+            <YAxis stroke="#94a3b8" tick={{fill: '#94a3b8'}} axisLine={false} tickLine={false} />
             <Tooltip
+              cursor={{fill: 'rgba(255,255,255,0.05)'}}
               contentStyle={{
-                backgroundColor: '#1f2937',
-                border: '1px solid #374151',
-                borderRadius: '8px',
+                backgroundColor: '#0f172a',
+                border: '1px solid #1e293b',
+                borderRadius: '12px',
               }}
             />
             <Bar
               dataKey="buy_amt"
               fill="#10b981"
               name="Buy Amount"
+              radius={[4, 4, 0, 0]}
             />
             <Bar
               dataKey="sell_amt"
               fill="#ef4444"
               name="Sell Amount"
+              radius={[4, 4, 0, 0]}
             />
           </BarChart>
         </ResponsiveContainer>
-      </div>
+      </motion.div>
 
       {/* Instrument Distribution Charts */}
       <div className="grid lg:grid-cols-2 gap-8">
-        <div className="chart-card">
-          <h3>Index Futures OI Distribution</h3>
+        <motion.div variants={itemVariants} className="glass-card p-6">
+          <h3 className="text-xl font-semibold mb-6 text-slate-200">Index Futures OI Distribution</h3>
           <ResponsiveContainer width="100%" height={350}>
             <PieChart>
               <Pie
                 data={mainFuturesOIData}
                 cx="50%"
                 cy="50%"
+                innerRadius={60}
                 outerRadius={100}
-                fill="#8884d8"
+                paddingAngle={5}
                 dataKey="value"
                 label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
               >
                 {mainFuturesOIData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} stroke="rgba(0,0,0,0.1)" />
                 ))}
               </Pie>
               <Tooltip
                 contentStyle={{
-                  backgroundColor: '#1f2937',
-                  border: '1px solid #374151',
-                  borderRadius: '8px',
+                  backgroundColor: '#0f172a',
+                  border: '1px solid #1e293b',
+                  borderRadius: '12px',
                   color: '#e2e8f0',
                 }}
               />
             </PieChart>
           </ResponsiveContainer>
-        </div>
+        </motion.div>
 
-        <div className="glass-card p-6">
-          <h3 className="text-xl font-semibold mb-4">Index Options OI Distribution</h3>
+        <motion.div variants={itemVariants} className="glass-card p-6">
+          <h3 className="text-xl font-semibold mb-6 text-slate-200">Index Options OI Distribution</h3>
           <ResponsiveContainer width="100%" height={350}>
             <PieChart>
               <Pie
                 data={mainOptionsOIData}
                 cx="50%"
                 cy="50%"
+                innerRadius={60}
                 outerRadius={100}
-                fill="#8884d8"
+                paddingAngle={5}
                 dataKey="value"
                 label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
               >
                 {mainOptionsOIData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} stroke="rgba(0,0,0,0.1)" />
                 ))}
               </Pie>
               <Tooltip
                 contentStyle={{
-                  backgroundColor: '#1f2937',
-                  border: '1px solid #374151',
-                  borderRadius: '8px',
+                  backgroundColor: '#0f172a',
+                  border: '1px solid #1e293b',
+                  borderRadius: '12px',
                   color: '#e2e8f0',
                 }}
               />
             </PieChart>
           </ResponsiveContainer>
-        </div>
+        </motion.div>
       </div>
 
       {/* Deep Data Section */}
-      <div className="glass-card p-8 border-2 border-primary-500/30 bg-gradient-to-br from-primary-900/10 to-purple-900/10">
-        <div className="flex items-center space-x-3 mb-6">
-          <div className="p-2 rounded-lg bg-gradient-to-r from-primary-500 to-purple-500">
+      <motion.div variants={itemVariants} className="glass-card p-8 border border-primary-500/20 bg-gradient-to-br from-dark-900/80 to-dark-800/80 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-primary-500/10 rounded-full blur-3xl -z-10"></div>
+        <div className="flex items-center space-x-3 mb-8">
+          <div className="p-3 rounded-xl bg-gradient-to-r from-primary-500 to-accent-purple shadow-lg shadow-primary-500/20">
             <Eye className="h-6 w-6 text-white" />
           </div>
-          <h2 className="text-3xl font-bold gradient-text">Deep Data</h2>
-          <div className="px-3 py-1 bg-primary-500/20 rounded-full text-xs text-primary-400 border border-primary-500/30">
+          <h2 className="text-3xl font-bold bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">Deep Data</h2>
+          <div className="px-3 py-1 bg-primary-500/10 rounded-full text-xs font-semibold text-primary-400 border border-primary-500/20">
             PREMIUM INSIGHTS
           </div>
         </div>
 
-        <div className="space-y-8 animate-stagger">
+        <div className="space-y-8">
           {/* Strike Activity Analysis for All Index Options */}
-          <div className="glass-card p-6 border border-primary-500/20 animate-fade-in-up">
+          <div className="glass-card p-6 border border-white/5 bg-dark-800/50">
             <div className="flex items-center space-x-2 mb-6">
-              <Target className="h-6 w-6 text-primary-400" />
-              <h4 className="text-2xl font-semibold">Strike Activity Analysis</h4>
-              <div className="px-3 py-1 bg-primary-500/20 rounded-full text-xs text-primary-400 border border-primary-500/30">
+              <Target className="h-5 w-5 text-primary-400" />
+              <h4 className="text-xl font-semibold text-slate-200">Strike Activity Analysis</h4>
+              <div className="px-2 py-0.5 bg-dark-700 rounded text-[10px] text-slate-400 border border-white/5">
                 ALL INDICES
               </div>
             </div>
             
-            <div className="mb-4">
-              <p className="text-gray-300 text-sm">
-                <span className="text-primary-400 font-medium">Selected Date:</span> {selectedDate}
-              </p>
+            <div className="mb-6 flex items-center space-x-2 text-sm">
+              <span className="text-slate-400">Selected Date:</span>
+              <span className="text-primary-400 font-medium bg-primary-500/10 px-2 py-0.5 rounded border border-primary-500/20">{selectedDate}</span>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 animate-stagger">
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
               {latestOptionsData.map(({ instrument, data }, index) => {
                 if (!data) return null
                 
@@ -428,51 +479,58 @@ const FIIDerivStatsPage = () => {
                 const buyStrike = roundToFifty(data.buy_str_act || 0)
                 const sellStrike = roundToFifty(data.sell_str_act || 0)
                 
-                                                  return (
-                   <div key={instrument} className={`glass-card p-4 border ${getIndexColor(instrumentName)} hover-lift`} style={{ animationDelay: `${index * 0.1}s` }}>
-                     <div className="flex items-center justify-between mb-3">
-                       <div className="flex items-center space-x-2">
-                         <div className={`w-1 h-6 rounded-full ${instrumentName === 'NIFTY' ? 'bg-blue-400' : 
-                           instrumentName === 'BANKNIFTY' ? 'bg-purple-400' : 
-                           instrumentName === 'FINNIFTY' ? 'bg-green-400' : 
-                           instrumentName === 'MIDCPNIFTY' ? 'bg-orange-400' : 
-                           'bg-indigo-400'}`}></div>
-                         <h5 className="text-lg font-semibold text-white">{instrumentName}</h5>
+                return (
+                  <motion.div 
+                    key={instrument} 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    className={`glass-card p-5 border ${getIndexColor(instrumentName)} hover:border-opacity-50 transition-all duration-300 group`}
+                  >
+                     <div className="flex items-center justify-between mb-4">
+                       <div className="flex items-center space-x-3">
+                         <div className={`w-1 h-8 rounded-full ${instrumentName === 'NIFTY' ? 'bg-blue-500' : 
+                           instrumentName === 'BANKNIFTY' ? 'bg-purple-500' : 
+                           instrumentName === 'FINNIFTY' ? 'bg-emerald-500' : 
+                           instrumentName === 'MIDCPNIFTY' ? 'bg-orange-500' : 
+                           'bg-indigo-500'}`}></div>
+                         <h5 className="text-lg font-bold text-white tracking-wide">{instrumentName}</h5>
                        </div>
-                       <div className={`w-3 h-3 rounded-full ${instrumentName === 'NIFTY' ? 'bg-blue-400' : 
+                       <div className={`w-2 h-2 rounded-full ${instrumentName === 'NIFTY' ? 'bg-blue-400' : 
                          instrumentName === 'BANKNIFTY' ? 'bg-purple-400' : 
-                         instrumentName === 'FINNIFTY' ? 'bg-green-400' : 
+                         instrumentName === 'FINNIFTY' ? 'bg-emerald-400' : 
                          instrumentName === 'MIDCPNIFTY' ? 'bg-orange-400' : 
-                         'bg-indigo-400'} animate-pulse-slow`}></div>
+                         'bg-indigo-400'} animate-pulse`}></div>
                      </div>
                     
-                    <div className="space-y-3 text-sm">
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-400">Buy Activity:</span>
-                        <span className="text-green-400 font-bold">
-                          {formatIndianNumber(Math.round(data.buy_str_act || 0))}
-                        </span>
+                    <div className="space-y-4 text-sm">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="bg-dark-900/50 p-3 rounded-lg border border-white/5">
+                          <span className="text-slate-400 text-xs block mb-1">Buy Activity</span>
+                          <span className="text-emerald-400 font-bold text-lg">
+                            {formatIndianNumber(Math.round(data.buy_str_act || 0))}
+                          </span>
+                        </div>
+                        <div className="bg-dark-900/50 p-3 rounded-lg border border-white/5">
+                          <span className="text-slate-400 text-xs block mb-1">Sell Activity</span>
+                          <span className="text-rose-400 font-bold text-lg">
+                            {formatIndianNumber(Math.round(data.sell_str_act || 0))}
+                          </span>
+                        </div>
                       </div>
                       
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-400">Sell Activity:</span>
-                        <span className="text-red-400 font-bold">
-                          {formatIndianNumber(Math.round(data.sell_str_act || 0))}
-                        </span>
-                      </div>
-                      
-                      <div className="border-t border-gray-700 pt-3">
-                        <p className="text-gray-400 text-xs mb-2">Key Strikes:</p>
-                        <div className="space-y-1">
-                          <div className="flex justify-between">
-                            <span className="text-green-400 text-xs">BUY:</span>
-                            <span className="text-green-400 font-bold text-sm">
+                      <div className="border-t border-white/5 pt-4">
+                        <p className="text-slate-400 text-xs font-medium uppercase tracking-wider mb-3">Key Strikes</p>
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-center bg-emerald-500/5 px-3 py-2 rounded-lg border border-emerald-500/10">
+                            <span className="text-emerald-400 text-xs font-bold">BUY LEVEL</span>
+                            <span className="text-emerald-300 font-mono font-bold">
                               {formatIndianNumber(buyStrike)}
                             </span>
                           </div>
-                          <div className="flex justify-between">
-                            <span className="text-red-400 text-xs">SELL:</span>
-                            <span className="text-red-400 font-bold text-sm">
+                          <div className="flex justify-between items-center bg-rose-500/5 px-3 py-2 rounded-lg border border-rose-500/10">
+                            <span className="text-rose-400 text-xs font-bold">SELL LEVEL</span>
+                            <span className="text-rose-300 font-mono font-bold">
                               {formatIndianNumber(sellStrike)}
                             </span>
                           </div>
@@ -480,56 +538,56 @@ const FIIDerivStatsPage = () => {
                       </div>
                       
                       {/* Additional metrics */}
-                      <div className="border-t border-gray-700 pt-3">
-                        <div className="flex justify-between text-xs">
-                          <span className="text-gray-400">Buy Amount:</span>
-                          <span className="text-green-400">
+                      <div className="border-t border-white/5 pt-4 grid grid-cols-3 gap-2 text-center">
+                        <div>
+                          <span className="text-slate-500 text-[10px] block uppercase">Buy Amt</span>
+                          <span className="text-emerald-400 text-xs font-medium">
                             {formatAmountInCrores(data.buy_amt_adj || 0)}
                           </span>
                         </div>
-                        <div className="flex justify-between text-xs">
-                          <span className="text-gray-400">Sell Amount:</span>
-                          <span className="text-red-400">
+                        <div>
+                          <span className="text-slate-500 text-[10px] block uppercase">Sell Amt</span>
+                          <span className="text-rose-400 text-xs font-medium">
                             {formatAmountInCrores(data.sell_amt_adj || 0)}
                           </span>
                         </div>
-                        <div className="flex justify-between text-xs">
-                          <span className="text-gray-400">OI Amount:</span>
-                          <span className="text-cyan-400 font-semibold">
+                        <div>
+                          <span className="text-slate-500 text-[10px] block uppercase">OI Amt</span>
+                          <span className="text-cyan-400 text-xs font-medium">
                             {formatAmountInCrores(data.oi_amt_adj || 0)}
                           </span>
                         </div>
                       </div>
                     </div>
-                  </div>
+                  </motion.div>
                 )
               })}
             </div>
             
             {latestOptionsData.every(({ data }) => !data) && (
-              <div className="text-center py-8">
-                <p className="text-gray-400 text-sm">No recent index options data available</p>
+              <div className="text-center py-12 bg-dark-800/30 rounded-xl border border-dashed border-white/10">
+                <p className="text-slate-400 text-sm">No recent index options data available</p>
               </div>
             )}
           </div>
 
           {/* Enhanced Market Sentiment for All Indices */}
-          <div className="glass-card p-6 border border-purple-500/20 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center space-x-2">
+          <div className="glass-card p-6 border border-purple-500/20 bg-dark-800/50">
+            <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+              <div className="flex items-center space-x-3">
                 <div className="p-2 rounded-lg bg-purple-500/20">
                   <TrendingUp className="h-5 w-5 text-purple-400" />
                 </div>
-                <h4 className="text-2xl font-semibold text-purple-400">Market Sentiment Analysis</h4>
-                <div className="px-3 py-1 bg-purple-500/20 rounded-full text-xs text-purple-400 border border-purple-500/30">
-                  DAY-OVER-DAY
+                <div>
+                  <h4 className="text-xl font-semibold text-slate-200">Market Sentiment Analysis</h4>
+                  <div className="text-xs text-purple-400 font-medium">DAY-OVER-DAY COMPARISON</div>
                 </div>
               </div>
               
               {/* Date Selection Dropdowns */}
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-4 bg-dark-900/50 p-2 rounded-xl border border-white/5">
                 <div className="flex items-center space-x-2">
-                  <label className="text-sm text-gray-400">Latest:</label>
+                  <label className="text-xs text-slate-400 uppercase font-bold">Latest</label>
                   <select
                     value={selectedDate}
                     onChange={(e) => {
@@ -537,19 +595,20 @@ const FIIDerivStatsPage = () => {
                       const currentIndex = availableDates.indexOf(e.target.value)
                       setPreviousDate(availableDates[currentIndex + 1] || availableDates[currentIndex])
                     }}
-                    className="px-3 py-1 bg-dark-700 border border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-purple-500"
+                    className="px-2 py-1 bg-dark-800 border border-white/10 rounded-lg text-sm focus:ring-1 focus:ring-purple-500 outline-none text-slate-300"
                   >
                     {availableDates.map(date => (
                       <option key={date} value={date}>{date}</option>
                     ))}
                   </select>
                 </div>
+                <div className="w-px h-4 bg-white/10"></div>
                 <div className="flex items-center space-x-2">
-                  <label className="text-sm text-gray-400">Previous:</label>
+                  <label className="text-xs text-slate-400 uppercase font-bold">Prev</label>
                   <select
                     value={previousDate}
                     onChange={(e) => setPreviousDate(e.target.value)}
-                    className="px-3 py-1 bg-dark-700 border border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-purple-500"
+                    className="px-2 py-1 bg-dark-800 border border-white/10 rounded-lg text-sm focus:ring-1 focus:ring-purple-500 outline-none text-slate-300"
                   >
                     {availableDates.map(date => (
                       <option key={date} value={date}>{date}</option>
@@ -561,7 +620,7 @@ const FIIDerivStatsPage = () => {
             
             {(() => {
               if (availableDates.length < 2) {
-                return <p className="text-gray-400 text-sm">Insufficient data for comparison</p>
+                return <p className="text-slate-400 text-sm text-center py-8">Insufficient data for comparison</p>
               }
               
               const sentimentData = indexOptions.map(option => {
@@ -590,61 +649,69 @@ const FIIDerivStatsPage = () => {
               
               return (
                 <div className="space-y-6">
-                  <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 animate-stagger">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
                     {sentimentData.map(({ instrument, latestData, previousData, buyDiff, sellDiff, oiDiff }, index) => (
-                                                                    <div key={instrument} className={`glass-card p-4 border ${getIndexColor(instrument)} hover-lift`} style={{ animationDelay: `${0.4 + index * 0.1}s` }}>
-                         <div className="flex items-center justify-between mb-3">
+                      <motion.div 
+                        key={instrument} 
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 0.2 + index * 0.1 }}
+                        className={`glass-card p-5 border ${getIndexColor(instrument)} hover:border-opacity-50 transition-all duration-300`}
+                      >
+                         <div className="flex items-center justify-between mb-4">
                            <div className="flex items-center space-x-2">
-                             <div className={`w-1 h-6 rounded-full ${instrument === 'NIFTY' ? 'bg-blue-400' : 
-                               instrument === 'BANKNIFTY' ? 'bg-purple-400' : 
-                               instrument === 'FINNIFTY' ? 'bg-green-400' : 
-                               instrument === 'MIDCPNIFTY' ? 'bg-orange-400' : 
-                               'bg-indigo-400'}`}></div>
-                             <h5 className="text-lg font-semibold text-white">{instrument}</h5>
+                             <div className={`w-1 h-6 rounded-full ${instrument === 'NIFTY' ? 'bg-blue-500' : 
+                               instrument === 'BANKNIFTY' ? 'bg-purple-500' : 
+                               instrument === 'FINNIFTY' ? 'bg-emerald-500' : 
+                               instrument === 'MIDCPNIFTY' ? 'bg-orange-500' : 
+                               'bg-indigo-500'}`}></div>
+                             <h5 className="text-lg font-bold text-white">{instrument}</h5>
                            </div>
                            <div className={`w-2 h-2 rounded-full ${
-                             buyDiff > sellDiff ? 'bg-green-400' : 'bg-red-400'
-                           } animate-pulse-slow`}></div>
+                             buyDiff > sellDiff ? 'bg-emerald-400' : 'bg-rose-400'
+                           } animate-pulse`}></div>
                          </div>
                         
-                        <div className="space-y-3 text-sm">
-                          <div className="flex justify-between">
-                            <span className="text-gray-400">Buy Amount:</span>
-                            <span className="text-green-400">
-                              {formatAmountInCrores(latestData.buy_amt_adj)}
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-400">Sell Amount:</span>
-                            <span className="text-red-400">
-                              {formatAmountInCrores(latestData.sell_amt_adj)}
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-400">OI Amount:</span>
-                            <span className="text-cyan-400 font-semibold">
-                              {formatAmountInCrores(latestData.oi_amt_adj)}
-                            </span>
+                        <div className="space-y-4 text-sm">
+                          <div className="grid grid-cols-3 gap-2 text-center bg-dark-900/30 p-2 rounded-lg">
+                            <div>
+                              <span className="text-slate-500 text-[10px] block uppercase">Buy</span>
+                              <span className="text-emerald-400 font-medium text-xs">
+                                {formatAmountInCrores(latestData.buy_amt_adj)}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-slate-500 text-[10px] block uppercase">Sell</span>
+                              <span className="text-rose-400 font-medium text-xs">
+                                {formatAmountInCrores(latestData.sell_amt_adj)}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-slate-500 text-[10px] block uppercase">OI</span>
+                              <span className="text-cyan-400 font-medium text-xs">
+                                {formatAmountInCrores(latestData.oi_amt_adj)}
+                              </span>
+                            </div>
                           </div>
                           
-                                                     <div className="border-t border-gray-700 pt-3">
-                             <p className="text-gray-400 text-xs mb-2">Day-over-Day Change:</p>
-                             <div className="space-y-1">
+                          <div className="border-t border-white/5 pt-3">
+                             <p className="text-slate-400 text-[10px] uppercase font-bold mb-2">Day-over-Day Change</p>
+                             <div className="space-y-1.5">
                                <div className="flex justify-between text-xs">
-                                 <span className="text-gray-400">Buy:</span>
-                                 <span className={buyDiff >= 0 ? 'text-green-400' : 'text-red-400'}>
+                                 <span className="text-slate-400">Buy Change</span>
+                                 <span className={buyDiff >= 0 ? 'text-emerald-400' : 'text-rose-400'}>
                                    {buyDiff >= 0 ? '+' : ''}{formatAmountInCrores(buyDiff)}
                                  </span>
                                </div>
                                <div className="flex justify-between text-xs">
-                                 <span className="text-gray-400">Sell:</span>
-                                 <span className={sellDiff >= 0 ? 'text-green-400' : 'text-red-400'}>
+                                 <span className="text-slate-400">Sell Change</span>
+                                 <span className={sellDiff >= 0 ? 'text-emerald-400' : 'text-rose-400'}>
                                    {sellDiff >= 0 ? '+' : ''}{formatAmountInCrores(sellDiff)}
                                  </span>
                                </div>
                                <div className="flex justify-between text-xs">
-                                 <span className="text-gray-400">OI:</span>
-                                 <span className={oiDiff >= 0 ? 'text-cyan-400 font-semibold' : 'text-red-400 font-semibold'}>
+                                 <span className="text-slate-400">OI Change</span>
+                                 <span className={oiDiff >= 0 ? 'text-cyan-400 font-bold' : 'text-rose-400 font-bold'}>
                                    {oiDiff >= 0 ? '+' : ''}{formatAmountInCrores(oiDiff)}
                                  </span>
                                </div>
@@ -652,22 +719,21 @@ const FIIDerivStatsPage = () => {
                            </div>
                            
                            {/* Market Insight */}
-                           <div className="border-t border-gray-700 pt-3">
-                             <p className="text-gray-400 text-xs mb-2">Market Insight:</p>
-                             <div className="bg-dark-800/50 rounded-lg p-2">
-                               <p className="text-xs text-gray-300 leading-relaxed">
+                           <div className="border-t border-white/5 pt-3">
+                             <div className="bg-primary-500/5 rounded-lg p-3 border border-primary-500/10">
+                               <p className="text-xs text-primary-200 leading-relaxed">
                                  {generateInsight(latestData, previousData)}
                                </p>
                              </div>
                            </div>
                         </div>
-                      </div>
+                      </motion.div>
                     ))}
                   </div>
                   
                   {sentimentData.length === 0 && (
                     <div className="text-center py-8">
-                      <p className="text-gray-400 text-sm">Insufficient data for sentiment analysis</p>
+                      <p className="text-slate-400 text-sm">Insufficient data for sentiment analysis</p>
                     </div>
                   )}
                 </div>
@@ -675,17 +741,19 @@ const FIIDerivStatsPage = () => {
             })()}
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Data Table */}
-      <DataTable
-        data={filteredData}
-        columns={columns}
-        title="FII Derivatives Data"
-        defaultSortKey="date"
-        defaultSortDirection="desc"
-      />
-    </div>
+      <motion.div variants={itemVariants}>
+        <DataTable
+          data={filteredData}
+          columns={columns}
+          title="FII Derivatives Data"
+          defaultSortKey="date"
+          defaultSortDirection="desc"
+        />
+      </motion.div>
+    </motion.div>
   )
 }
 

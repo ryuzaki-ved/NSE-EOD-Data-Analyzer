@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { motion } from 'framer-motion'
 import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 import DataTable from '../components/DataTable'
 import MetricCard from '../components/MetricCard'
@@ -211,23 +212,56 @@ const PartVolPage = () => {
     { key: 'total_short_contracts', label: 'Total Short' },
   ]
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  }
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: {
+        type: "spring",
+        stiffness: 100
+      }
+    }
+  }
+
   return (
-    <div className="space-y-8 animate-fade-in">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
+    <motion.div 
+      className="space-y-8"
+      initial="hidden"
+      animate="visible"
+      variants={containerVariants}
+    >
+      <motion.div 
+        className="flex flex-col sm:flex-row justify-between items-start sm:items-center"
+        variants={itemVariants}
+      >
         <h1 className="text-3xl font-bold gradient-text mb-4 sm:mb-0">Participant Trading Volume</h1>
         <select
           value={selectedClientType}
           onChange={(e) => setSelectedClientType(e.target.value)}
-          className="px-4 py-2 bg-dark-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500"
+          className="px-4 py-2 bg-dark-800/50 border border-white/10 rounded-lg focus:ring-2 focus:ring-primary-500 text-gray-200 backdrop-blur-sm"
         >
           {clientTypes.map(type => (
             <option key={type} value={type}>{type}</option>
           ))}
         </select>
-      </div>
+      </motion.div>
 
       {/* Metrics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <motion.div 
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+        variants={containerVariants}
+      >
         <MetricCard
           title="Total Long Volume"
           value={totalLongVolume}
@@ -252,23 +286,37 @@ const PartVolPage = () => {
           icon={Users}
           color="purple"
         />
-      </div>
+      </motion.div>
 
       {/* Charts */}
-      <div className="grid lg:grid-cols-2 gap-8">
-        <div className="chart-card">
-          <h3>Daily Total Volume Trend</h3>
+      <motion.div 
+        className="grid lg:grid-cols-2 gap-8"
+        variants={containerVariants}
+      >
+        <motion.div variants={itemVariants} className="glass-card p-6 rounded-xl border border-white/5">
+          <h3 className="text-xl font-semibold mb-6 text-gray-100">Daily Total Volume Trend</h3>
           <ResponsiveContainer width="100%" height={350}>
             <AreaChart data={dailyVolumeData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-              <XAxis dataKey="date" stroke="#9ca3af" />
-              <YAxis stroke="#9ca3af" />
+              <defs>
+                <linearGradient id="colorFuture" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#0ea5e9" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="#0ea5e9" stopOpacity={0}/>
+                </linearGradient>
+                <linearGradient id="colorOption" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
+              <XAxis dataKey="date" stroke="#9ca3af" tick={{fill: '#9ca3af'}} axisLine={{stroke: '#4b5563'}} />
+              <YAxis stroke="#9ca3af" tick={{fill: '#9ca3af'}} axisLine={{stroke: '#4b5563'}} />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: '#1f2937',
-                  border: '1px solid #374151',
+                  backgroundColor: 'rgba(17, 24, 39, 0.9)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
                   borderRadius: '8px',
                   color: '#e2e8f0',
+                  backdropFilter: 'blur(4px)'
                 }}
               />
               <Legend />
@@ -277,8 +325,7 @@ const PartVolPage = () => {
                 dataKey="future_volume"
                 stackId="1"
                 stroke="#0ea5e9"
-                fill="#0ea5e9"
-                fillOpacity={0.6}
+                fill="url(#colorFuture)"
                 name="Future Volume"
               />
               <Area
@@ -286,82 +333,88 @@ const PartVolPage = () => {
                 dataKey="option_volume"
                 stackId="1"
                 stroke="#8b5cf6"
-                fill="#8b5cf6"
-                fillOpacity={0.6}
+                fill="url(#colorOption)"
                 name="Option Volume"
               />
             </AreaChart>
           </ResponsiveContainer>
-        </div>
+        </motion.div>
 
-        <div className="chart-card">
-          <h3>Client Type Volume Distribution</h3>
+        <motion.div variants={itemVariants} className="glass-card p-6 rounded-xl border border-white/5">
+          <h3 className="text-xl font-semibold mb-6 text-gray-100">Client Type Volume Distribution</h3>
           <ResponsiveContainer width="100%" height={350}>
             <PieChart>
               <Pie
                 data={volumeDistribution}
                 cx="50%"
                 cy="50%"
-                outerRadius={80}
-                fill="#8884d8"
+                outerRadius={100}
+                innerRadius={60}
+                paddingAngle={5}
                 dataKey="volume"
                 label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
               >
                 {volumeDistribution.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} stroke="rgba(0,0,0,0.2)" />
                 ))}
               </Pie>
               <Tooltip
                 contentStyle={{
-                  backgroundColor: '#1f2937',
-                  border: '1px solid #374151',
+                  backgroundColor: 'rgba(17, 24, 39, 0.9)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
                   borderRadius: '8px',
                   color: '#e2e8f0',
+                  backdropFilter: 'blur(4px)'
                 }}
               />
             </PieChart>
           </ResponsiveContainer>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
-      <div className="grid lg:grid-cols-2 gap-8">
-        <div className="chart-card">
-          <h3>Client Type Volume Comparison</h3>
+      <motion.div 
+        className="grid lg:grid-cols-2 gap-8"
+        variants={containerVariants}
+      >
+        <motion.div variants={itemVariants} className="glass-card p-6 rounded-xl border border-white/5">
+          <h3 className="text-xl font-semibold mb-6 text-gray-100">Client Type Volume Comparison</h3>
           <ResponsiveContainer width="100%" height={350}>
             <BarChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-              <XAxis dataKey="date" stroke="#9ca3af" />
-              <YAxis stroke="#9ca3af" />
+              <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
+              <XAxis dataKey="date" stroke="#9ca3af" tick={{fill: '#9ca3af'}} axisLine={{stroke: '#4b5563'}} />
+              <YAxis stroke="#9ca3af" tick={{fill: '#9ca3af'}} axisLine={{stroke: '#4b5563'}} />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: '#1f2937',
-                  border: '1px solid #374151',
+                  backgroundColor: 'rgba(17, 24, 39, 0.9)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
                   borderRadius: '8px',
                   color: '#e2e8f0',
+                  backdropFilter: 'blur(4px)'
                 }}
               />
               <Legend />
-              <Bar dataKey="Client_total" fill="#0ea5e9" name="Client" />
-              <Bar dataKey="FII_total" fill="#10b981" name="FII" />
-              <Bar dataKey="DII_total" fill="#8b5cf6" name="DII" />
-              <Bar dataKey="Pro_total" fill="#f59e0b" name="Pro" />
+              <Bar dataKey="Client_total" fill="#0ea5e9" name="Client" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="FII_total" fill="#10b981" name="FII" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="DII_total" fill="#8b5cf6" name="DII" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="Pro_total" fill="#f59e0b" name="Pro" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
-        </div>
+        </motion.div>
 
-        <div className="chart-card">
-          <h3>FII Volume Trend</h3>
+        <motion.div variants={itemVariants} className="glass-card p-6 rounded-xl border border-white/5">
+          <h3 className="text-xl font-semibold mb-6 text-gray-100">FII Volume Trend</h3>
           <ResponsiveContainer width="100%" height={350}>
             <LineChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-              <XAxis dataKey="date" stroke="#9ca3af" />
-              <YAxis stroke="#9ca3af" />
+              <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
+              <XAxis dataKey="date" stroke="#9ca3af" tick={{fill: '#9ca3af'}} axisLine={{stroke: '#4b5563'}} />
+              <YAxis stroke="#9ca3af" tick={{fill: '#9ca3af'}} axisLine={{stroke: '#4b5563'}} />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: '#1f2937',
-                  border: '1px solid #374151',
+                  backgroundColor: 'rgba(17, 24, 39, 0.9)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
                   borderRadius: '8px',
                   color: '#e2e8f0',
+                  backdropFilter: 'blur(4px)'
                 }}
               />
               <Legend />
@@ -383,25 +436,29 @@ const PartVolPage = () => {
               />
             </LineChart>
           </ResponsiveContainer>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
       {/* Deep Insights Section */}
-      <DeepInsightsPartVol
-        data={deepInsightsData}
-        latestDate={insightsLatestDate}
-        previousDate={insightsPreviousDate}
-      />
+      <motion.div variants={itemVariants}>
+        <DeepInsightsPartVol
+          data={deepInsightsData}
+          latestDate={insightsLatestDate}
+          previousDate={insightsPreviousDate}
+        />
+      </motion.div>
 
       {/* Data Table */}
-      <DataTable
-        data={filteredData}
-        columns={columns}
-        title="Participant Trading Volume Data"
-        defaultSortKey="date"
-        defaultSortDirection="desc"
-      />
-    </div>
+      <motion.div variants={itemVariants} className="glass-card rounded-xl border border-white/5 overflow-hidden">
+        <DataTable
+          data={filteredData}
+          columns={columns}
+          title="Participant Trading Volume Data"
+          defaultSortKey="date"
+          defaultSortDirection="desc"
+        />
+      </motion.div>
+    </motion.div>
   )
 }
 

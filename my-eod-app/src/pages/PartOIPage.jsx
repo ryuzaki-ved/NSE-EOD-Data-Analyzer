@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { motion } from 'framer-motion'
 import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 import DataTable from '../components/DataTable'
 import MetricCard from '../components/MetricCard'
@@ -1069,23 +1070,56 @@ const PartOIPage = () => {
     { key: 'total_short_contracts', label: 'Total Short' },
   ]
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  }
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: {
+        type: "spring",
+        stiffness: 100
+      }
+    }
+  }
+
   return (
-    <div className="space-y-8 animate-fade-in">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
+    <motion.div 
+      className="space-y-8"
+      initial="hidden"
+      animate="visible"
+      variants={containerVariants}
+    >
+      <motion.div 
+        className="flex flex-col sm:flex-row justify-between items-start sm:items-center"
+        variants={itemVariants}
+      >
         <h1 className="text-3xl font-bold gradient-text mb-4 sm:mb-0">Participant Open Interest</h1>
         <select
           value={selectedClientType}
           onChange={(e) => setSelectedClientType(e.target.value)}
-          className="px-4 py-2 bg-dark-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500"
+          className="px-4 py-2 bg-dark-800/50 border border-white/10 rounded-lg focus:ring-2 focus:ring-primary-500 text-gray-200 backdrop-blur-sm"
         >
           {clientTypes.map(type => (
             <option key={type} value={type}>{type}</option>
           ))}
         </select>
-      </div>
+      </motion.div>
 
       {/* Metrics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <motion.div 
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+        variants={containerVariants}
+      >
         <MetricCard
           title="Total Long Contracts"
           value={totalLongContracts}
@@ -1110,71 +1144,100 @@ const PartOIPage = () => {
           icon={PieChartIcon}
           color="purple"
         />
-      </div>
+      </motion.div>
 
       {/* Charts */}
-      <div className="grid lg:grid-cols-2 gap-8">
-        <LongVsShortTrendChart chartData={chartData} />
-        <ClientTypeDistributionPie clientDistribution={clientDistribution} COLORS={COLORS} />
-      </div>
+      <motion.div 
+        className="grid lg:grid-cols-2 gap-8"
+        variants={containerVariants}
+      >
+        <motion.div variants={itemVariants} className="glass-card p-6 rounded-xl border border-white/5">
+          <LongVsShortTrendChart chartData={chartData} />
+        </motion.div>
+        <motion.div variants={itemVariants} className="glass-card p-6 rounded-xl border border-white/5">
+          <ClientTypeDistributionPie clientDistribution={clientDistribution} COLORS={COLORS} />
+        </motion.div>
+      </motion.div>
 
-      <div className="grid lg:grid-cols-2 gap-8">
-        <OptionsLongVsShortChart chartData={chartData} />
-        <WeeklyOptionsCumulativeChart chartData={chartData} />
-      </div>
+      <motion.div 
+        className="grid lg:grid-cols-2 gap-8"
+        variants={containerVariants}
+      >
+        <motion.div variants={itemVariants} className="glass-card p-6 rounded-xl border border-white/5">
+          <OptionsLongVsShortChart chartData={chartData} />
+        </motion.div>
+        <motion.div variants={itemVariants} className="glass-card p-6 rounded-xl border border-white/5">
+          <WeeklyOptionsCumulativeChart chartData={chartData} />
+        </motion.div>
+      </motion.div>
 
       {/* Participant Comparison Charts */}
-      <div className="grid lg:grid-cols-2 gap-8">
-        <FutureIndexOIBarChart clientDistribution={clientDistribution} data={data} latestDate={latestDate} />
-        <OptionIndexOIBarChart clientDistribution={clientDistribution} data={data} latestDate={latestDate} />
-      </div>
+      <motion.div 
+        className="grid lg:grid-cols-2 gap-8"
+        variants={containerVariants}
+      >
+        <motion.div variants={itemVariants} className="glass-card p-6 rounded-xl border border-white/5">
+          <FutureIndexOIBarChart clientDistribution={clientDistribution} data={data} latestDate={latestDate} />
+        </motion.div>
+        <motion.div variants={itemVariants} className="glass-card p-6 rounded-xl border border-white/5">
+          <OptionIndexOIBarChart clientDistribution={clientDistribution} data={data} latestDate={latestDate} />
+        </motion.div>
+      </motion.div>
 
       {/* Deep Insights Section */}
-      <DeepInsights
-        latestDate={latestDate}
-        previousDate={previousDate}
-        ratioData={ratioData}
-        dailyChangeData={dailyChangeData}
-        getRatioClass={getRatioClass}
-        formatRatio={formatRatio}
-        formatDifference={formatDifference}
-        generateInsights={generateInsights}
-        generateDailyChangeInsights={generateDailyChangeInsights}
-        groupedInsights={generateGroupedInsights()}
-        groupedDailyChangeInsights={generateGroupedDailyChangeInsights()}
-        data={data}
-      />
+      <motion.div variants={itemVariants}>
+        <DeepInsights
+          latestDate={latestDate}
+          previousDate={previousDate}
+          ratioData={ratioData}
+          dailyChangeData={dailyChangeData}
+          getRatioClass={getRatioClass}
+          formatRatio={formatRatio}
+          formatDifference={formatDifference}
+          generateInsights={generateInsights}
+          generateDailyChangeInsights={generateDailyChangeInsights}
+          groupedInsights={generateGroupedInsights()}
+          groupedDailyChangeInsights={generateGroupedDailyChangeInsights()}
+          data={data}
+        />
+      </motion.div>
 
       {/* Correlation Insights */}
-      <div className="grid lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2">
+      <motion.div 
+        className="grid lg:grid-cols-3 gap-8"
+        variants={containerVariants}
+      >
+        <motion.div className="lg:col-span-2" variants={itemVariants}>
           <CorrelationInsights participantData={data} />
-        </div>
-        <div className="lg:col-span-1">
-          <div className="glass-card p-6 border border-blue-500/20">
-            <h3 className="text-lg font-semibold mb-4 text-blue-400">Correlation Analysis</h3>
-            <p className="text-sm text-gray-400 mb-4">
+        </motion.div>
+        <motion.div className="lg:col-span-1" variants={itemVariants}>
+          <div className="glass-card p-6 border border-blue-500/20 rounded-xl relative overflow-hidden group">
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            <h3 className="text-lg font-semibold mb-4 text-blue-400 relative z-10">Correlation Analysis</h3>
+            <p className="text-sm text-gray-400 mb-4 relative z-10">
               Discover relationships between different market participants and their trading patterns.
             </p>
             <a 
               href="/correlation" 
-              className="inline-flex items-center px-4 py-2 bg-blue-500/20 text-blue-400 rounded-lg hover:bg-blue-500/30 transition-colors"
+              className="inline-flex items-center px-4 py-2 bg-blue-500/20 text-blue-400 rounded-lg hover:bg-blue-500/30 transition-colors relative z-10"
             >
               View Full Analysis
             </a>
           </div>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
       {/* Data Table */}
-      <DataTable
-        data={filteredData}
-        columns={columns}
-        title="Participant Open Interest Data"
-        defaultSortKey="date"
-        defaultSortDirection="desc"
-      />
-    </div>
+      <motion.div variants={itemVariants} className="glass-card rounded-xl border border-white/5 overflow-hidden">
+        <DataTable
+          data={filteredData}
+          columns={columns}
+          title="Participant Open Interest Data"
+          defaultSortKey="date"
+          defaultSortDirection="desc"
+        />
+      </motion.div>
+    </motion.div>
   )
 }
 

@@ -18,6 +18,13 @@ export default {
           700: '#0369a1',
           800: '#075985',
           900: '#0c4a6e',
+          DEFAULT: '#0ea5e9',
+        },
+        accent: {
+          purple: '#8b5cf6',
+          pink: '#ec4899',
+          cyan: '#06b6d4',
+          emerald: '#10b981',
         },
         dark: {
           50: '#f8fafc',
@@ -30,7 +37,12 @@ export default {
           700: '#334155',
           800: '#1e293b',
           900: '#0f172a',
+          950: '#020617',
         }
+      },
+      fontFamily: {
+        sans: ['Inter', 'system-ui', 'sans-serif'],
+        mono: ['JetBrains Mono', 'monospace'],
       },
       animation: {
         'fade-in': 'fadeIn 0.5s ease-in-out',

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import AdvancedMathematicalAnalysis from '../components/AdvancedMathematicalAnalysis'
 import { Brain, Database, TrendingUp, Shield, AlertTriangle, Cpu, BarChart3 } from 'lucide-react'
 
@@ -40,6 +41,28 @@ const AdvancedMathPage = () => {
     }
   }
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  }
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: {
+        type: "spring",
+        stiffness: 100
+      }
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-dark-900 flex items-center justify-center">
@@ -68,50 +91,55 @@ const AdvancedMathPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-dark-900 animate-page-enter">
+    <motion.div 
+      className="min-h-screen bg-dark-900"
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+    >
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
-        <div className="mb-8 animate-fade-in-up">
+        <motion.div className="mb-8" variants={itemVariants}>
           <div className="flex items-center space-x-3 mb-4">
-            <div className="p-3 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 animate-float">
+            <div className="p-3 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500">
               <Brain className="h-8 w-8 text-white" />
             </div>
             <div>
-              <h1 className="text-4xl font-bold gradient-text animate-scale-in">Advanced Mathematical Analysis</h1>
-              <p className="text-gray-400 mt-2 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>Quantum-level insights through complex statistical modeling</p>
+              <h1 className="text-4xl font-bold gradient-text">Advanced Mathematical Analysis</h1>
+              <p className="text-gray-400 mt-2">Quantum-level insights through complex statistical modeling</p>
             </div>
           </div>
           
-          <div className="flex flex-wrap gap-2 mt-4 animate-stagger">
-            <div className="px-3 py-1 bg-purple-500/20 rounded-full text-xs text-purple-400 border border-purple-500/30 hover-lift">
+          <motion.div className="flex flex-wrap gap-2 mt-4" variants={containerVariants}>
+            <motion.div className="px-3 py-1 bg-purple-500/20 rounded-full text-xs text-purple-400 border border-purple-500/30 hover-lift" variants={itemVariants}>
               QUANTUM ANALYTICS
-            </div>
-            <div className="px-3 py-1 bg-blue-500/20 rounded-full text-xs text-blue-400 border border-blue-500/30 hover-lift">
+            </motion.div>
+            <motion.div className="px-3 py-1 bg-blue-500/20 rounded-full text-xs text-blue-400 border border-blue-500/30 hover-lift" variants={itemVariants}>
               TIME SERIES
-            </div>
-            <div className="px-3 py-1 bg-green-500/20 rounded-full text-xs text-green-400 border border-green-500/30 hover-lift">
+            </motion.div>
+            <motion.div className="px-3 py-1 bg-green-500/20 rounded-full text-xs text-green-400 border border-green-500/30 hover-lift" variants={itemVariants}>
               RISK METRICS
-            </div>
-            <div className="px-3 py-1 bg-red-500/20 rounded-full text-xs text-red-400 border border-red-500/30 hover-lift">
+            </motion.div>
+            <motion.div className="px-3 py-1 bg-red-500/20 rounded-full text-xs text-red-400 border border-red-500/30 hover-lift" variants={itemVariants}>
               STRUCTURAL BREAKS
-            </div>
-            <div className="px-3 py-1 bg-cyan-500/20 rounded-full text-xs text-cyan-400 border border-cyan-500/30 hover-lift">
+            </motion.div>
+            <motion.div className="px-3 py-1 bg-cyan-500/20 rounded-full text-xs text-cyan-400 border border-cyan-500/30 hover-lift" variants={itemVariants}>
               MONTE CARLO
-            </div>
-          </div>
-        </div>
+            </motion.div>
+          </motion.div>
+        </motion.div>
 
         {/* Feature Overview */}
-        <div className="glass-card p-6 border border-purple-500/20 mb-8 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
-          <h2 className="text-2xl font-semibold mb-6 flex items-center animate-slide-in-left">
-            <Database className="h-6 w-6 mr-2 text-purple-400 animate-float" />
+        <motion.div className="glass-card p-6 border border-purple-500/20 mb-8" variants={itemVariants}>
+          <h2 className="text-2xl font-semibold mb-6 flex items-center">
+            <Database className="h-6 w-6 mr-2 text-purple-400" />
             Advanced Mathematical Features
           </h2>
           
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 animate-stagger">
-            <div className="p-4 bg-dark-700 rounded-lg border border-blue-500/20 hover-lift">
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+            <motion.div className="p-4 bg-dark-700/50 rounded-lg border border-blue-500/20 hover-lift" variants={itemVariants}>
               <div className="flex items-center mb-3">
-                <TrendingUp className="h-5 w-5 text-blue-400 mr-2 animate-float" />
+                <TrendingUp className="h-5 w-5 text-blue-400 mr-2" />
                 <h3 className="text-lg font-semibold text-white">Time Series Analysis</h3>
               </div>
               <ul className="text-sm text-gray-400 space-y-1">
@@ -120,11 +148,11 @@ const AdvancedMathPage = () => {
                 <li>• Cyclical pattern detection</li>
                 <li>• Frequency domain analysis</li>
               </ul>
-            </div>
+            </motion.div>
 
-            <div className="p-4 bg-dark-700 rounded-lg border border-green-500/20 hover-lift">
+            <motion.div className="p-4 bg-dark-700/50 rounded-lg border border-green-500/20 hover-lift" variants={itemVariants}>
               <div className="flex items-center mb-3">
-                <Shield className="h-5 w-5 text-green-400 mr-2 animate-float" />
+                <Shield className="h-5 w-5 text-green-400 mr-2" />
                 <h3 className="text-lg font-semibold text-white">Advanced Risk Metrics</h3>
               </div>
               <ul className="text-sm text-gray-400 space-y-1">
@@ -133,11 +161,11 @@ const AdvancedMathPage = () => {
                 <li>• Calmar Ratio</li>
                 <li>• Sortino Ratio</li>
               </ul>
-            </div>
+            </motion.div>
 
-            <div className="p-4 bg-dark-700 rounded-lg border border-red-500/20 hover-lift">
+            <motion.div className="p-4 bg-dark-700/50 rounded-lg border border-red-500/20 hover-lift" variants={itemVariants}>
               <div className="flex items-center mb-3">
-                <AlertTriangle className="h-5 w-5 text-red-400 mr-2 animate-float" />
+                <AlertTriangle className="h-5 w-5 text-red-400 mr-2" />
                 <h3 className="text-lg font-semibold text-white">Structural Break Detection</h3>
               </div>
               <ul className="text-sm text-gray-400 space-y-1">
@@ -146,11 +174,11 @@ const AdvancedMathPage = () => {
                 <li>• Regime change detection</li>
                 <li>• Break point identification</li>
               </ul>
-            </div>
+            </motion.div>
 
-            <div className="p-4 bg-dark-700 rounded-lg border border-purple-500/20 hover-lift">
+            <motion.div className="p-4 bg-dark-700/50 rounded-lg border border-purple-500/20 hover-lift" variants={itemVariants}>
               <div className="flex items-center mb-3">
-                <Cpu className="h-5 w-5 text-purple-400 mr-2 animate-float" />
+                <Cpu className="h-5 w-5 text-purple-400 mr-2" />
                 <h3 className="text-lg font-semibold text-white">Monte Carlo Simulation</h3>
               </div>
               <ul className="text-sm text-gray-400 space-y-1">
@@ -159,11 +187,11 @@ const AdvancedMathPage = () => {
                 <li>• Risk assessment</li>
                 <li>• Confidence intervals</li>
               </ul>
-            </div>
+            </motion.div>
 
-            <div className="p-4 bg-dark-700 rounded-lg border border-cyan-500/20 hover-lift">
+            <motion.div className="p-4 bg-dark-700/50 rounded-lg border border-cyan-500/20 hover-lift" variants={itemVariants}>
               <div className="flex items-center mb-3">
-                <BarChart3 className="h-5 w-5 text-cyan-400 mr-2 animate-float" />
+                <BarChart3 className="h-5 w-5 text-cyan-400 mr-2" />
                 <h3 className="text-lg font-semibold text-white">Rolling Statistics</h3>
               </div>
               <ul className="text-sm text-gray-400 space-y-1">
@@ -172,11 +200,11 @@ const AdvancedMathPage = () => {
                 <li>• Dynamic volatility</li>
                 <li>• Distribution analysis</li>
               </ul>
-            </div>
+            </motion.div>
 
-            <div className="p-4 bg-dark-700 rounded-lg border border-orange-500/20 hover-lift">
+            <motion.div className="p-4 bg-dark-700/50 rounded-lg border border-orange-500/20 hover-lift" variants={itemVariants}>
               <div className="flex items-center mb-3">
-                <Brain className="h-5 w-5 text-orange-400 mr-2 animate-float" />
+                <Brain className="h-5 w-5 text-orange-400 mr-2" />
                 <h3 className="text-lg font-semibold text-white">Machine Learning</h3>
               </div>
               <ul className="text-sm text-gray-400 space-y-1">
@@ -185,67 +213,67 @@ const AdvancedMathPage = () => {
                 <li>• Pattern recognition</li>
                 <li>• Behavioral grouping</li>
               </ul>
-            </div>
+            </motion.div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Data Summary */}
-        <div className="glass-card p-6 border border-gray-500/20 mb-8 animate-fade-in-up" style={{ animationDelay: '0.5s' }}>
-          <h2 className="text-xl font-semibold mb-4 flex items-center animate-slide-in-left">
-            <Database className="h-5 w-5 mr-2 text-gray-400 animate-float" />
+        <motion.div className="glass-card p-6 border border-gray-500/20 mb-8" variants={itemVariants}>
+          <h2 className="text-xl font-semibold mb-4 flex items-center">
+            <Database className="h-5 w-5 mr-2 text-gray-400" />
             Data Summary
           </h2>
           
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 animate-stagger">
-            <div className="text-center p-4 bg-dark-700 rounded-lg hover-lift">
-              <div className="text-2xl font-bold text-blue-400 mb-2 animate-pulse-slow">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <motion.div className="text-center p-4 bg-dark-700/50 rounded-lg hover-lift" variants={itemVariants}>
+              <div className="text-2xl font-bold text-blue-400 mb-2">
                 {participantData.length}
               </div>
               <div className="text-sm text-gray-400">Total Records</div>
-            </div>
+            </motion.div>
             
-            <div className="text-center p-4 bg-dark-700 rounded-lg hover-lift">
-              <div className="text-2xl font-bold text-green-400 mb-2 animate-pulse-slow" style={{ animationDelay: '0.5s' }}>
+            <motion.div className="text-center p-4 bg-dark-700/50 rounded-lg hover-lift" variants={itemVariants}>
+              <div className="text-2xl font-bold text-green-400 mb-2">
                 {fiiData.length}
               </div>
               <div className="text-sm text-gray-400">FII Records</div>
-            </div>
+            </motion.div>
             
-            <div className="text-center p-4 bg-dark-700 rounded-lg hover-lift">
-              <div className="text-2xl font-bold text-purple-400 mb-2 animate-pulse-slow" style={{ animationDelay: '1s' }}>
+            <motion.div className="text-center p-4 bg-dark-700/50 rounded-lg hover-lift" variants={itemVariants}>
+              <div className="text-2xl font-bold text-purple-400 mb-2">
                 {participantData.length > 0 ? 
                   [...new Set(participantData.map(item => item.date))].length : 0}
               </div>
               <div className="text-sm text-gray-400">Trading Days</div>
-            </div>
+            </motion.div>
             
-            <div className="text-center p-4 bg-dark-700 rounded-lg hover-lift">
-              <div className="text-2xl font-bold text-orange-400 mb-2 animate-pulse-slow" style={{ animationDelay: '1.5s' }}>
+            <motion.div className="text-center p-4 bg-dark-700/50 rounded-lg hover-lift" variants={itemVariants}>
+              <div className="text-2xl font-bold text-orange-400 mb-2">
                 {participantData.length > 0 ? 
                   [...new Set(participantData.map(item => item.client_type))].length : 0}
               </div>
               <div className="text-sm text-gray-400">Participant Types</div>
-            </div>
+            </motion.div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Main Analysis Component */}
-        <div className="animate-fade-in-up" style={{ animationDelay: '0.7s' }}>
+        <motion.div variants={itemVariants}>
           <AdvancedMathematicalAnalysis 
             participantData={participantData} 
             fiiData={fiiData} 
           />
-        </div>
+        </motion.div>
 
         {/* Footer */}
-        <div className="mt-12 text-center text-gray-500 text-sm animate-fade-in-up" style={{ animationDelay: '0.9s' }}>
+        <motion.div className="mt-12 text-center text-gray-500 text-sm" variants={itemVariants}>
           <p>Advanced Mathematical Analysis powered by quantum-level statistical modeling</p>
           <p className="mt-2">
             Features: Time Series Analysis • Risk Metrics • Structural Breaks • Monte Carlo • Machine Learning
           </p>
-        </div>
+        </motion.div>
       </div>
-    </div>
+    </motion.div>
   )
 }
 
