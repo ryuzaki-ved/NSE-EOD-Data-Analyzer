@@ -2,7 +2,7 @@ import React from 'react'
 import { Link } from 'react-router-dom'
 import { BarChart3, PieChart, Activity, TrendingUp, ArrowRight, Zap, Brain, Globe, Layers } from 'lucide-react'
 import { motion } from 'framer-motion'
-import AnimatedBackground from '../components/AnimatedBackground'
+import InnovationBackground from '../components/InnovationBackground'
 import ThreeDCard from '../components/ThreeDCard'
 
 const HomePage = () => {
@@ -56,7 +56,7 @@ const HomePage = () => {
 
   return (
     <div className="relative min-h-screen overflow-hidden">
-      <AnimatedBackground />
+      <InnovationBackground />
       
       <div className="relative z-10 container mx-auto px-4 py-12 flex flex-col justify-center min-h-screen">
         
