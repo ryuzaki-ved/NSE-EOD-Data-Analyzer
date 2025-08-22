@@ -180,8 +180,8 @@ INSTRUMENT_MULTIPLIERS = {
 
 - **Index Futures**: NIFTY, BANKNIFTY, FINNIFTY, MIDCPNIFTY, NIFTYNXT50
 - **Index Options**: All index-based options
-- **Stock Futures**: Individual stock futures
-- **Stock Options**: Individual stock options
+<!-- - **Stock Futures**: Individual stock futures
+- **Stock Options**: Individual stock options -->
 
 ---
 
