@@ -1,0 +1,7 @@
+""Participant wise Trading Volume (no. of contracts) in Equity Derivatives as on Oct 21, 2025"",,,,,,,,,,,,,,
+Client Type,Future Index Long,Future Index Short,Future Stock Long,Future Stock Short       ,Option Index Call Long,Option Index Put Long,Option Index Call Short,Option Index Put Short,Option Stock Call Long,Option Stock Put Long,Option Stock Call Short,Option Stock Put Short,Total Long Contracts      ,Total Short Contracts
+Client,16084,19037,103266,100728,2536054,2113606,2539570,2138627,364100,126008,399271,128903,5259118,5326136
+DII,0,1543,21763,13026,0,0,0,0,0,0,0,0,21763,14569
+FII,1856,1557,26294,19099,355923,423613,362178,438864,9908,6855,11253,7198,824449,840149
+Pro,11758,7561,88759,107229,4263362,3648684,4253591,3608412,608283,264480,571767,261242,8885326,8809802
+TOTAL,29698,29698,240082,240082,7155339,6185903,7155339,6185903,982291,397343,982291,397343,14990656,14990656
