@@ -51,7 +51,7 @@ const FIIDerivStatsPage = () => {
         const dateB = new Date(`${yearB}-${monthB}-${dayB}`)
         return dateB - dateA
       })
-      
+
       if (dates.length > 0) {
         setSelectedDate(dates[0])
         setPreviousDate(dates.length > 1 ? dates[1] : dates[0])
@@ -82,10 +82,10 @@ const FIIDerivStatsPage = () => {
   // Helper function to generate insights based on OI changes
   const generateInsight = (latestData, previousData) => {
     if (!latestData || !previousData) return "Insufficient data for analysis"
-    
+
     const oiContractDiff = (latestData.oi_contracts_adj || 0) - (previousData.oi_contracts_adj || 0)
     const oiAmountDiff = (latestData.oi_amt_adj || 0) - (previousData.oi_amt_adj || 0)
-    
+
     if (oiContractDiff > 0) {
       return `Added ${formatIndianNumber(Math.abs(oiContractDiff))} contracts worth ${formatAmountInCrores(Math.abs(oiAmountDiff))}`
     } else if (oiContractDiff < 0) {
@@ -109,10 +109,10 @@ const FIIDerivStatsPage = () => {
 
   // Get latest data for all index options
   const indexOptions = ['NIFTY OPTIONS', 'BANKNIFTY OPTIONS', 'FINNIFTY OPTIONS', 'MIDCPNIFTY OPTIONS', 'NIFTYNXT50 OPTIONS']
-  const latestIndexOptionsData = data.find(item => 
+  const latestIndexOptionsData = data.find(item =>
     item.date === selectedDate && item.instrument === 'INDEX OPTIONS'
   )
-  
+
   const latestOptionsData = indexOptions.map(option => ({
     instrument: option,
     data: data.find(item => item.date === selectedDate && item.instrument === option)
@@ -138,7 +138,7 @@ const FIIDerivStatsPage = () => {
 
   // Instrument-wise data for pie chart
   const latestDateData = data.filter(item => item.date === selectedDate)
-  
+
   const mainFuturesOIData = latestDateData
     .filter(item => item.instrument.includes('FUTURES') && !item.instrument.includes('STOCK') && item.instrument !== 'INDEX FUTURES')
     .map(item => ({
@@ -216,7 +216,7 @@ const FIIDerivStatsPage = () => {
   }
 
   return (
-    <motion.div 
+    <motion.div
       className="space-y-8"
       variants={containerVariants}
       initial="hidden"
@@ -279,17 +279,17 @@ const FIIDerivStatsPage = () => {
             <AreaChart data={chartData}>
               <defs>
                 <linearGradient id="colorBuy" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
                 </linearGradient>
                 <linearGradient id="colorSell" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
+                  <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
-              <XAxis dataKey="date" stroke="#94a3b8" tick={{fill: '#94a3b8'}} axisLine={false} tickLine={false} />
-              <YAxis stroke="#94a3b8" tick={{fill: '#94a3b8'}} axisLine={false} tickLine={false} />
+              <XAxis dataKey="date" stroke="#94a3b8" tick={{ fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+              <YAxis stroke="#94a3b8" tick={{ fill: '#94a3b8' }} axisLine={false} tickLine={false} />
               <Tooltip
                 contentStyle={{
                   backgroundColor: '#0f172a',
@@ -324,8 +324,8 @@ const FIIDerivStatsPage = () => {
           <ResponsiveContainer width="100%" height={350}>
             <LineChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
-              <XAxis dataKey="date" stroke="#94a3b8" tick={{fill: '#94a3b8'}} axisLine={false} tickLine={false} />
-              <YAxis stroke="#94a3b8" tick={{fill: '#94a3b8'}} axisLine={false} tickLine={false} />
+              <XAxis dataKey="date" stroke="#94a3b8" tick={{ fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+              <YAxis stroke="#94a3b8" tick={{ fill: '#94a3b8' }} axisLine={false} tickLine={false} />
               <Tooltip
                 contentStyle={{
                   backgroundColor: '#0f172a',
@@ -353,10 +353,10 @@ const FIIDerivStatsPage = () => {
         <ResponsiveContainer width="100%" height={350}>
           <BarChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
-            <XAxis dataKey="date" stroke="#94a3b8" tick={{fill: '#94a3b8'}} axisLine={false} tickLine={false} />
-            <YAxis stroke="#94a3b8" tick={{fill: '#94a3b8'}} axisLine={false} tickLine={false} />
+            <XAxis dataKey="date" stroke="#94a3b8" tick={{ fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+            <YAxis stroke="#94a3b8" tick={{ fill: '#94a3b8' }} axisLine={false} tickLine={false} />
             <Tooltip
-              cursor={{fill: 'rgba(255,255,255,0.05)'}}
+              cursor={{ fill: 'rgba(255,255,255,0.05)' }}
               contentStyle={{
                 backgroundColor: '#0f172a',
                 border: '1px solid #1e293b',
@@ -406,6 +406,7 @@ const FIIDerivStatsPage = () => {
                   borderRadius: '12px',
                   color: '#e2e8f0',
                 }}
+                itemStyle={{ color: '#e2e8f0' }}
               />
             </PieChart>
           </ResponsiveContainer>
@@ -436,6 +437,7 @@ const FIIDerivStatsPage = () => {
                   borderRadius: '12px',
                   color: '#e2e8f0',
                 }}
+                itemStyle={{ color: '#e2e8f0' }}
               />
             </PieChart>
           </ResponsiveContainer>
@@ -465,7 +467,7 @@ const FIIDerivStatsPage = () => {
                 ALL INDICES
               </div>
             </div>
-            
+
             <div className="mb-6 flex items-center space-x-2 text-sm">
               <span className="text-slate-400">Selected Date:</span>
               <span className="text-primary-400 font-medium bg-primary-500/10 px-2 py-0.5 rounded border border-primary-500/20">{selectedDate}</span>
@@ -474,35 +476,35 @@ const FIIDerivStatsPage = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
               {latestOptionsData.map(({ instrument, data }, index) => {
                 if (!data) return null
-                
+
                 const instrumentName = instrument.replace(' OPTIONS', '')
                 const buyStrike = roundToFifty(data.buy_str_act || 0)
                 const sellStrike = roundToFifty(data.sell_str_act || 0)
-                
+
                 return (
-                  <motion.div 
-                    key={instrument} 
+                  <motion.div
+                    key={instrument}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.1 }}
                     className={`glass-card p-5 border ${getIndexColor(instrumentName)} hover:border-opacity-50 transition-all duration-300 group`}
                   >
-                     <div className="flex items-center justify-between mb-4">
-                       <div className="flex items-center space-x-3">
-                         <div className={`w-1 h-8 rounded-full ${instrumentName === 'NIFTY' ? 'bg-blue-500' : 
-                           instrumentName === 'BANKNIFTY' ? 'bg-purple-500' : 
-                           instrumentName === 'FINNIFTY' ? 'bg-emerald-500' : 
-                           instrumentName === 'MIDCPNIFTY' ? 'bg-orange-500' : 
-                           'bg-indigo-500'}`}></div>
-                         <h5 className="text-lg font-bold text-white tracking-wide">{instrumentName}</h5>
-                       </div>
-                       <div className={`w-2 h-2 rounded-full ${instrumentName === 'NIFTY' ? 'bg-blue-400' : 
-                         instrumentName === 'BANKNIFTY' ? 'bg-purple-400' : 
-                         instrumentName === 'FINNIFTY' ? 'bg-emerald-400' : 
-                         instrumentName === 'MIDCPNIFTY' ? 'bg-orange-400' : 
-                         'bg-indigo-400'} animate-pulse`}></div>
-                     </div>
-                    
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center space-x-3">
+                        <div className={`w-1 h-8 rounded-full ${instrumentName === 'NIFTY' ? 'bg-blue-500' :
+                          instrumentName === 'BANKNIFTY' ? 'bg-purple-500' :
+                            instrumentName === 'FINNIFTY' ? 'bg-emerald-500' :
+                              instrumentName === 'MIDCPNIFTY' ? 'bg-orange-500' :
+                                'bg-indigo-500'}`}></div>
+                        <h5 className="text-lg font-bold text-white tracking-wide">{instrumentName}</h5>
+                      </div>
+                      <div className={`w-2 h-2 rounded-full ${instrumentName === 'NIFTY' ? 'bg-blue-400' :
+                        instrumentName === 'BANKNIFTY' ? 'bg-purple-400' :
+                          instrumentName === 'FINNIFTY' ? 'bg-emerald-400' :
+                            instrumentName === 'MIDCPNIFTY' ? 'bg-orange-400' :
+                              'bg-indigo-400'} animate-pulse`}></div>
+                    </div>
+
                     <div className="space-y-4 text-sm">
                       <div className="grid grid-cols-2 gap-4">
                         <div className="bg-dark-900/50 p-3 rounded-lg border border-white/5">
@@ -518,7 +520,7 @@ const FIIDerivStatsPage = () => {
                           </span>
                         </div>
                       </div>
-                      
+
                       <div className="border-t border-white/5 pt-4">
                         <p className="text-slate-400 text-xs font-medium uppercase tracking-wider mb-3">Key Strikes</p>
                         <div className="space-y-2">
@@ -536,7 +538,7 @@ const FIIDerivStatsPage = () => {
                           </div>
                         </div>
                       </div>
-                      
+
                       {/* Additional metrics */}
                       <div className="border-t border-white/5 pt-4 grid grid-cols-3 gap-2 text-center">
                         <div>
@@ -563,7 +565,7 @@ const FIIDerivStatsPage = () => {
                 )
               })}
             </div>
-            
+
             {latestOptionsData.every(({ data }) => !data) && (
               <div className="text-center py-12 bg-dark-800/30 rounded-xl border border-dashed border-white/10">
                 <p className="text-slate-400 text-sm">No recent index options data available</p>
@@ -583,7 +585,7 @@ const FIIDerivStatsPage = () => {
                   <div className="text-xs text-purple-400 font-medium">DAY-OVER-DAY COMPARISON</div>
                 </div>
               </div>
-              
+
               {/* Date Selection Dropdowns */}
               <div className="flex items-center space-x-4 bg-dark-900/50 p-2 rounded-xl border border-white/5">
                 <div className="flex items-center space-x-2">
@@ -617,26 +619,26 @@ const FIIDerivStatsPage = () => {
                 </div>
               </div>
             </div>
-            
+
             {(() => {
               if (availableDates.length < 2) {
                 return <p className="text-slate-400 text-sm text-center py-8">Insufficient data for comparison</p>
               }
-              
+
               const sentimentData = indexOptions.map(option => {
-                const latestData = data.find(item => 
+                const latestData = data.find(item =>
                   item.date === selectedDate && item.instrument === option
                 )
-                const previousData = data.find(item => 
+                const previousData = data.find(item =>
                   item.date === previousDate && item.instrument === option
                 )
-                
+
                 if (!latestData || !previousData) return null
-                
+
                 const buyDiff = (latestData.buy_amt_adj || 0) - (previousData.buy_amt_adj || 0)
                 const sellDiff = (latestData.sell_amt_adj || 0) - (previousData.sell_amt_adj || 0)
                 const oiDiff = (latestData.oi_amt_adj || 0) - (previousData.oi_amt_adj || 0)
-                
+
                 return {
                   instrument: option.replace(' OPTIONS', ''),
                   latestData,
@@ -646,32 +648,31 @@ const FIIDerivStatsPage = () => {
                   oiDiff
                 }
               }).filter(Boolean)
-              
+
               return (
                 <div className="space-y-6">
                   <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
                     {sentimentData.map(({ instrument, latestData, previousData, buyDiff, sellDiff, oiDiff }, index) => (
-                      <motion.div 
-                        key={instrument} 
+                      <motion.div
+                        key={instrument}
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ delay: 0.2 + index * 0.1 }}
                         className={`glass-card p-5 border ${getIndexColor(instrument)} hover:border-opacity-50 transition-all duration-300`}
                       >
-                         <div className="flex items-center justify-between mb-4">
-                           <div className="flex items-center space-x-2">
-                             <div className={`w-1 h-6 rounded-full ${instrument === 'NIFTY' ? 'bg-blue-500' : 
-                               instrument === 'BANKNIFTY' ? 'bg-purple-500' : 
-                               instrument === 'FINNIFTY' ? 'bg-emerald-500' : 
-                               instrument === 'MIDCPNIFTY' ? 'bg-orange-500' : 
-                               'bg-indigo-500'}`}></div>
-                             <h5 className="text-lg font-bold text-white">{instrument}</h5>
-                           </div>
-                           <div className={`w-2 h-2 rounded-full ${
-                             buyDiff > sellDiff ? 'bg-emerald-400' : 'bg-rose-400'
-                           } animate-pulse`}></div>
-                         </div>
-                        
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center space-x-2">
+                            <div className={`w-1 h-6 rounded-full ${instrument === 'NIFTY' ? 'bg-blue-500' :
+                              instrument === 'BANKNIFTY' ? 'bg-purple-500' :
+                                instrument === 'FINNIFTY' ? 'bg-emerald-500' :
+                                  instrument === 'MIDCPNIFTY' ? 'bg-orange-500' :
+                                    'bg-indigo-500'}`}></div>
+                            <h5 className="text-lg font-bold text-white">{instrument}</h5>
+                          </div>
+                          <div className={`w-2 h-2 rounded-full ${buyDiff > sellDiff ? 'bg-emerald-400' : 'bg-rose-400'
+                            } animate-pulse`}></div>
+                        </div>
+
                         <div className="space-y-4 text-sm">
                           <div className="grid grid-cols-3 gap-2 text-center bg-dark-900/30 p-2 rounded-lg">
                             <div>
@@ -693,44 +694,44 @@ const FIIDerivStatsPage = () => {
                               </span>
                             </div>
                           </div>
-                          
+
                           <div className="border-t border-white/5 pt-3">
-                             <p className="text-slate-400 text-[10px] uppercase font-bold mb-2">Day-over-Day Change</p>
-                             <div className="space-y-1.5">
-                               <div className="flex justify-between text-xs">
-                                 <span className="text-slate-400">Buy Change</span>
-                                 <span className={buyDiff >= 0 ? 'text-emerald-400' : 'text-rose-400'}>
-                                   {buyDiff >= 0 ? '+' : ''}{formatAmountInCrores(buyDiff)}
-                                 </span>
-                               </div>
-                               <div className="flex justify-between text-xs">
-                                 <span className="text-slate-400">Sell Change</span>
-                                 <span className={sellDiff >= 0 ? 'text-emerald-400' : 'text-rose-400'}>
-                                   {sellDiff >= 0 ? '+' : ''}{formatAmountInCrores(sellDiff)}
-                                 </span>
-                               </div>
-                               <div className="flex justify-between text-xs">
-                                 <span className="text-slate-400">OI Change</span>
-                                 <span className={oiDiff >= 0 ? 'text-cyan-400 font-bold' : 'text-rose-400 font-bold'}>
-                                   {oiDiff >= 0 ? '+' : ''}{formatAmountInCrores(oiDiff)}
-                                 </span>
-                               </div>
-                             </div>
-                           </div>
-                           
-                           {/* Market Insight */}
-                           <div className="border-t border-white/5 pt-3">
-                             <div className="bg-primary-500/5 rounded-lg p-3 border border-primary-500/10">
-                               <p className="text-xs text-primary-200 leading-relaxed">
-                                 {generateInsight(latestData, previousData)}
-                               </p>
-                             </div>
-                           </div>
+                            <p className="text-slate-400 text-[10px] uppercase font-bold mb-2">Day-over-Day Change</p>
+                            <div className="space-y-1.5">
+                              <div className="flex justify-between text-xs">
+                                <span className="text-slate-400">Buy Change</span>
+                                <span className={buyDiff >= 0 ? 'text-emerald-400' : 'text-rose-400'}>
+                                  {buyDiff >= 0 ? '+' : ''}{formatAmountInCrores(buyDiff)}
+                                </span>
+                              </div>
+                              <div className="flex justify-between text-xs">
+                                <span className="text-slate-400">Sell Change</span>
+                                <span className={sellDiff >= 0 ? 'text-emerald-400' : 'text-rose-400'}>
+                                  {sellDiff >= 0 ? '+' : ''}{formatAmountInCrores(sellDiff)}
+                                </span>
+                              </div>
+                              <div className="flex justify-between text-xs">
+                                <span className="text-slate-400">OI Change</span>
+                                <span className={oiDiff >= 0 ? 'text-cyan-400 font-bold' : 'text-rose-400 font-bold'}>
+                                  {oiDiff >= 0 ? '+' : ''}{formatAmountInCrores(oiDiff)}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Market Insight */}
+                          <div className="border-t border-white/5 pt-3">
+                            <div className="bg-primary-500/5 rounded-lg p-3 border border-primary-500/10">
+                              <p className="text-xs text-primary-200 leading-relaxed">
+                                {generateInsight(latestData, previousData)}
+                              </p>
+                            </div>
+                          </div>
                         </div>
                       </motion.div>
                     ))}
                   </div>
-                  
+
                   {sentimentData.length === 0 && (
                     <div className="text-center py-8">
                       <p className="text-slate-400 text-sm">Insufficient data for sentiment analysis</p>

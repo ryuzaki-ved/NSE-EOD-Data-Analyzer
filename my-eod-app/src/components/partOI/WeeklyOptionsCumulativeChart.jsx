@@ -23,7 +23,24 @@ const WeeklyOptionsCumulativeChart = ({ chartData }) => {
     return Array.from(participantSet).sort()
   }, [chartData])
 
-  // Get all available dates and find the latest Friday
+  // Helper to check if a date is a cycle start date
+  // Before Aug 28, 2025: Start of cycle is Friday (expiry Thursday)
+  // After Aug 28, 2025: Start of cycle is Wednesday (expiry Tuesday)
+  const isCycleStartDate = (dateStr) => {
+    const [day, month, year] = dateStr.split('-')
+    const date = new Date(`${year}-${month}-${day}`)
+    const cutoffDate = new Date('2025-08-28')
+
+    const dayOfWeek = date.getDay()
+
+    if (date <= cutoffDate) {
+      return dayOfWeek === 5 // Friday
+    } else {
+      return dayOfWeek === 3 // Wednesday
+    }
+  }
+
+  // Get all available dates and find the latest Cycle Start Date
   const allDates = useMemo(() => {
     const dates = chartData.map(item => item.date).sort((a, b) => {
       // Convert DD-MM-YYYY to YYYY-MM-DD for proper date comparison
@@ -33,25 +50,23 @@ const WeeklyOptionsCumulativeChart = ({ chartData }) => {
       const dateB = new Date(`${yearB}-${monthB}-${dayB}`)
       return dateA - dateB
     })
-    
-    // Find the latest Friday
-    let latestFriday = null
+
+    // Find the latest Cycle Start Date
+    let latestCycleStart = null
     for (let i = dates.length - 1; i >= 0; i--) {
-      const [day, month, year] = dates[i].split('-')
-      const date = new Date(`${year}-${month}-${day}`)
-      if (date.getDay() === 5) { // Friday = 5
-        latestFriday = dates[i]
+      if (isCycleStartDate(dates[i])) {
+        latestCycleStart = dates[i]
         break
       }
     }
-    
-    return { dates, latestFriday }
+
+    return { dates, latestCycleStart }
   }, [chartData])
 
-  // Set default date range to latest Friday to latest available date
+  // Set default date range to latest Cycle Start to latest available date
   React.useEffect(() => {
-    if (allDates.latestFriday && !startDate) {
-      setStartDate(allDates.latestFriday)
+    if (allDates.latestCycleStart && !startDate) {
+      setStartDate(allDates.latestCycleStart)
       setEndDate(allDates.dates[allDates.dates.length - 1])
     }
   }, [allDates, startDate])
@@ -65,7 +80,7 @@ const WeeklyOptionsCumulativeChart = ({ chartData }) => {
       const [dayItem, monthItem, yearItem] = item.date.split('-')
       const [dayStart, monthStart, yearStart] = startDate.split('-')
       const [dayEnd, monthEnd, yearEnd] = endDate.split('-')
-      
+
       const itemDate = new Date(`${yearItem}-${monthItem}-${dayItem}`)
       const start = new Date(`${yearStart}-${monthStart}-${dayStart}`)
       const end = new Date(`${yearEnd}-${monthEnd}-${dayEnd}`)
@@ -80,38 +95,37 @@ const WeeklyOptionsCumulativeChart = ({ chartData }) => {
 
     if (filteredData.length === 0) return []
 
-    // Get Friday baseline values
-    const fridayData = filteredData.find(item => {
-      const [day, month, year] = item.date.split('-')
-      const date = new Date(`${year}-${month}-${day}`)
-      return date.getDay() === 5 // Friday
-    })
+    // Get Baseline values (Start of Cycle data)
+    // The "Start Date" selected by user is expected to be a valid cycle start date (Friday/Wednesday)
+    // So the first item in filteredData SHOULD be the baseline if it matches startDate
+    // However, to be safe, we look for the specific starting record.
+    const baselineData = filteredData.find(item => item.date === startDate)
 
-    if (!fridayData) return []
+    if (!baselineData) return []
 
-    // Find the previous day (Thursday) data for Friday calculation
-    const [dayFriday, monthFriday, yearFriday] = fridayData.date.split('-')
-    const fridayDate = new Date(`${yearFriday}-${monthFriday}-${dayFriday}`)
-    const previousDayDate = new Date(fridayDate)
-    previousDayDate.setDate(fridayDate.getDate() - 1)
-    
+    // Find the previous day data to calculate the baseline's daily change
+    const [dayBase, monthBase, yearBase] = baselineData.date.split('-')
+    const baselineDateObj = new Date(`${yearBase}-${monthBase}-${dayBase}`)
+    const previousDayDate = new Date(baselineDateObj)
+    previousDayDate.setDate(baselineDateObj.getDate() - 1)
+
     // Format the previous day in the same format as the data (DD-MMM-YYYY)
     const day = previousDayDate.getDate().toString().padStart(2, '0')
     const month = previousDayDate.toLocaleDateString('en-US', { month: 'short' })
     const year = previousDayDate.getFullYear()
     const previousDayStr = `${day}-${month}-${year}`
-    
-    // Look for previous day data in the entire dataset, not just filtered data
+
+    // Look for previous day data in the entire dataset
     const previousDayData = chartData.find(item => item.date === previousDayStr)
 
-    // Calculate Friday's change from previous day
-    const fridayCallLong = fridayData[`${selectedParticipant}_option_index_call_long`] || 0
-    const fridayPutShort = fridayData[`${selectedParticipant}_option_index_put_short`] || 0
-    const fridayPutLong = fridayData[`${selectedParticipant}_option_index_put_long`] || 0
-    const fridayCallShort = fridayData[`${selectedParticipant}_option_index_call_short`] || 0
+    // Calculate Baseline's change from previous day
+    const baselineCallLong = baselineData[`${selectedParticipant}_option_index_call_long`] || 0
+    const baselinePutShort = baselineData[`${selectedParticipant}_option_index_put_short`] || 0
+    const baselinePutLong = baselineData[`${selectedParticipant}_option_index_put_long`] || 0
+    const baselineCallShort = baselineData[`${selectedParticipant}_option_index_call_short`] || 0
 
-    const fridayOptionLong = fridayCallLong + fridayPutShort
-    const fridayOptionShort = fridayPutLong + fridayCallShort
+    const baselineOptionLong = baselineCallLong + baselinePutShort
+    const baselineOptionShort = baselinePutLong + baselineCallShort
 
     const prevCallLong = previousDayData ? (previousDayData[`${selectedParticipant}_option_index_call_long`] || 0) : 0
     const prevPutShort = previousDayData ? (previousDayData[`${selectedParticipant}_option_index_put_short`] || 0) : 0
@@ -121,23 +135,20 @@ const WeeklyOptionsCumulativeChart = ({ chartData }) => {
     const prevOptionLong = prevCallLong + prevPutShort
     const prevOptionShort = prevPutLong + prevCallShort
 
-    // Friday's change from previous day
-    const fridayOptionLongChange = fridayOptionLong - prevOptionLong
-    const fridayOptionShortChange = fridayOptionShort - prevOptionShort
+    // Baseline's change from previous day (Initials for the chart)
+    const baselineOptionLongChange = baselineOptionLong - prevOptionLong
+    const baselineOptionShortChange = baselineOptionShort - prevOptionShort
 
-    // Calculate individual Friday changes
-    const fridayCallLongChange = fridayData[`${selectedParticipant}_option_index_call_long`] - (prevCallLong || 0)
-    const fridayPutLongChange = fridayData[`${selectedParticipant}_option_index_put_long`] - (prevPutLong || 0)
-    const fridayCallShortChange = fridayData[`${selectedParticipant}_option_index_call_short`] - (prevCallShort || 0)
-    const fridayPutShortChange = fridayData[`${selectedParticipant}_option_index_put_short`] - (prevPutShort || 0)
+    // Calculate individual Baseline changes
+    const baselineCallLongChange = baselineData[`${selectedParticipant}_option_index_call_long`] - (prevCallLong || 0)
+    const baselinePutLongChange = baselineData[`${selectedParticipant}_option_index_put_long`] - (prevPutLong || 0)
+    const baselineCallShortChange = baselineData[`${selectedParticipant}_option_index_call_short`] - (prevCallShort || 0)
+    const baselinePutShortChange = baselineData[`${selectedParticipant}_option_index_put_short`] - (prevPutShort || 0)
 
     // Debug logging
-    console.log('Friday date:', fridayData.date)
+    console.log('Baseline date:', baselineData.date)
     console.log('Previous day string:', previousDayStr)
     console.log('Previous day data found:', !!previousDayData)
-    console.log('Friday Option Long:', fridayOptionLong)
-    console.log('Previous Option Long:', prevOptionLong)
-    console.log('Friday Option Long Change:', fridayOptionLongChange)
 
     return filteredData.map(item => {
       const callLong = item[`${selectedParticipant}_option_index_call_long`] || 0
@@ -148,55 +159,64 @@ const WeeklyOptionsCumulativeChart = ({ chartData }) => {
       const currentOptionLong = callLong + putShort
       const currentOptionShort = putLong + callShort
 
-      const [day, month, year] = item.date.split('-')
-      const isFriday = new Date(`${year}-${month}-${day}`).getDay() === 5
-
-      if (isFriday) {
-        // Friday shows the change from previous day
+      if (item.date === startDate) {
+        // The Start Date shows its own change from previous day as the starting point (0 + change)
+        // OR should it start at 0? 
+        // The original code: Friday shows "fridayOptionLongChange". 
+        // Logic: The chart shows cumulative change within this cycle.
+        // Day 1 (Friday/Wed) change is (Day 1 - Day 0). Value = Change.
         return {
           date: item.date,
-          optionLongChange: fridayOptionLongChange,
-          optionShortChange: fridayOptionShortChange,
-          callLongChange: fridayCallLongChange,
-          putLongChange: fridayPutLongChange,
-          callShortChange: fridayCallShortChange,
-          putShortChange: fridayPutShortChange,
-          isFriday: true
+          optionLongChange: baselineOptionLongChange,
+          optionShortChange: baselineOptionShortChange,
+          callLongChange: baselineCallLongChange,
+          putLongChange: baselinePutLongChange,
+          callShortChange: baselineCallShortChange,
+          putShortChange: baselinePutShortChange,
+          isCycleStart: true
         }
       } else {
-        // Other days show cumulative change from Friday baseline
-        const dayOptionLongChange = currentOptionLong - fridayOptionLong
-        const dayOptionShortChange = currentOptionShort - fridayOptionShort
-        const dayCallLongChange = callLong - fridayData[`${selectedParticipant}_option_index_call_long`]
-        const dayPutLongChange = putLong - fridayData[`${selectedParticipant}_option_index_put_long`]
-        const dayCallShortChange = callShort - fridayData[`${selectedParticipant}_option_index_call_short`]
-        const dayPutShortChange = putShort - fridayData[`${selectedParticipant}_option_index_put_short`]
+        // Other days show cumulative change from Baseline
+        // Logic: (Current - Baseline) + BaselineChange 
+        // = (Current - Day0)
+        // Original code: currentOptionLong - fridayOptionLong + fridayOptionLongChange
+        // = currentOptionLong - (fridayOptionLong - fridayOptionLongChange)
+        // = currentOptionLong - prevOptionLong (Day 0 value)
+
+        // Let's stick to the original formula structure to be safe:
+        // cumulative = (current - baselineValue) + baselineChange
+
+        const dayOptionLongChange = currentOptionLong - baselineOptionLong
+        const dayOptionShortChange = currentOptionShort - baselineOptionShort
+
+        const dayCallLongChange = callLong - baselineCallLong
+        const dayPutLongChange = putLong - baselinePutLong
+        const dayCallShortChange = callShort - baselineCallShort
+        const dayPutShortChange = putShort - baselinePutShort
 
         return {
           date: item.date,
-          optionLongChange: fridayOptionLongChange + dayOptionLongChange,
-          optionShortChange: fridayOptionShortChange + dayOptionShortChange,
-          callLongChange: fridayCallLongChange + dayCallLongChange,
-          putLongChange: fridayPutLongChange + dayPutLongChange,
-          callShortChange: fridayCallShortChange + dayCallShortChange,
-          putShortChange: fridayPutShortChange + dayPutShortChange,
-          isFriday: false
+          optionLongChange: baselineOptionLongChange + dayOptionLongChange,
+          optionShortChange: baselineOptionShortChange + dayOptionShortChange,
+          callLongChange: baselineCallLongChange + dayCallLongChange,
+          putLongChange: baselinePutLongChange + dayPutLongChange,
+          callShortChange: baselineCallShortChange + dayCallShortChange,
+          putShortChange: baselinePutShortChange + dayPutShortChange,
+          isCycleStart: false
         }
       }
     })
   }, [chartData, selectedParticipant, startDate, endDate])
 
-  // Get available date ranges (Fridays)
-  const availableFridays = useMemo(() => {
-    const fridays = []
+  // Get available date ranges (Cycle Starts)
+  const availableCycleStarts = useMemo(() => {
+    const cycleStarts = []
     chartData.forEach(item => {
-      const [day, month, year] = item.date.split('-')
-      const date = new Date(`${year}-${month}-${day}`)
-      if (date.getDay() === 5) { // Friday
-        fridays.push(item.date)
+      if (isCycleStartDate(item.date)) {
+        cycleStarts.push(item.date)
       }
     })
-    return fridays.sort((a, b) => {
+    return cycleStarts.sort((a, b) => {
       const [dayA, monthA, yearA] = a.split('-')
       const [dayB, monthB, yearB] = b.split('-')
       const dateA = new Date(`${yearA}-${monthA}-${dayA}`)
@@ -211,145 +231,144 @@ const WeeklyOptionsCumulativeChart = ({ chartData }) => {
         <div>
           <h3 className="text-xl font-semibold">Weekly Options Cumulative Change</h3>
           <p className="text-sm text-gray-400 mt-1">
-            Cumulative change from Friday baseline: Option Long = Call Long + Put Short | Option Short = Put Long + Call Short
+            Cumulative change from Cycle Start baseline: Option Long = Call Long + Put Short | Option Short = Put Long + Call Short
           </p>
         </div>
-        
-                 <div className="flex flex-col sm:flex-row gap-4">
-           <select
-             value={selectedParticipant}
-             onChange={(e) => setSelectedParticipant(e.target.value)}
-             className="px-3 py-2 bg-dark-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 text-sm"
-           >
-             {participants.map(participant => (
-               <option key={participant} value={participant}>{participant}</option>
-             ))}
-           </select>
-           
-           <select
-             value={startDate}
-             onChange={(e) => setStartDate(e.target.value)}
-             className="px-3 py-2 bg-dark-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 text-sm"
-           >
-             <option value="">Select Start Date (Friday)</option>
-             {availableFridays.map(friday => (
-               <option key={friday} value={friday}>{friday}</option>
-             ))}
-           </select>
-           
-           <select
-             value={endDate}
-             onChange={(e) => setEndDate(e.target.value)}
-             className="px-3 py-2 bg-dark-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 text-sm"
-           >
-             <option value="">Select End Date</option>
-             {chartData
-               .filter(item => {
-                 if (!startDate) return true
-                 const [dayItem, monthItem, yearItem] = item.date.split('-')
-                 const [dayStart, monthStart, yearStart] = startDate.split('-')
-                 const itemDate = new Date(`${yearItem}-${monthItem}-${dayItem}`)
-                 const start = new Date(`${yearStart}-${monthStart}-${dayStart}`)
-                 return itemDate >= start
-               })
-               .map(item => item.date)
-               .sort((a, b) => {
-                 const [dayA, monthA, yearA] = a.split('-')
-                 const [dayB, monthB, yearB] = b.split('-')
-                 const dateA = new Date(`${yearA}-${monthA}-${dayA}`)
-                 const dateB = new Date(`${yearB}-${monthB}-${dayB}`)
-                 return dateA - dateB
-               })
-               .map(date => (
-                 <option key={date} value={date}>{date}</option>
-               ))
-             }
-           </select>
 
-           <button
-             onClick={() => setShowDetailed(!showDetailed)}
-             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-               showDetailed 
-                 ? 'bg-blue-600 text-white hover:bg-blue-700' 
-                 : 'bg-gray-600 text-gray-200 hover:bg-gray-700'
-             }`}
-           >
-             {showDetailed ? 'Hide Detailed' : 'See Detailed'}
-           </button>
-         </div>
+        <div className="flex flex-col sm:flex-row gap-4">
+          <select
+            value={selectedParticipant}
+            onChange={(e) => setSelectedParticipant(e.target.value)}
+            className="px-3 py-2 bg-dark-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 text-sm"
+          >
+            {participants.map(participant => (
+              <option key={participant} value={participant}>{participant}</option>
+            ))}
+          </select>
+
+          <select
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+            className="px-3 py-2 bg-dark-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 text-sm"
+          >
+            <option value="">Select Start Date</option>
+            {availableCycleStarts.map(date => (
+              <option key={date} value={date}>{date}</option>
+            ))}
+          </select>
+
+          <select
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+            className="px-3 py-2 bg-dark-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 text-sm"
+          >
+            <option value="">Select End Date</option>
+            {chartData
+              .filter(item => {
+                if (!startDate) return true
+                const [dayItem, monthItem, yearItem] = item.date.split('-')
+                const [dayStart, monthStart, yearStart] = startDate.split('-')
+                const itemDate = new Date(`${yearItem}-${monthItem}-${dayItem}`)
+                const start = new Date(`${yearStart}-${monthStart}-${dayStart}`)
+                return itemDate >= start
+              })
+              .map(item => item.date)
+              .sort((a, b) => {
+                const [dayA, monthA, yearA] = a.split('-')
+                const [dayB, monthB, yearB] = b.split('-')
+                const dateA = new Date(`${yearA}-${monthA}-${dayA}`)
+                const dateB = new Date(`${yearB}-${monthB}-${dayB}`)
+                return dateA - dateB
+              })
+              .map(date => (
+                <option key={date} value={date}>{date}</option>
+              ))
+            }
+          </select>
+
+          <button
+            onClick={() => setShowDetailed(!showDetailed)}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${showDetailed
+                ? 'bg-blue-600 text-white hover:bg-blue-700'
+                : 'bg-gray-600 text-gray-200 hover:bg-gray-700'
+              }`}
+          >
+            {showDetailed ? 'Hide Detailed' : 'See Detailed'}
+          </button>
+        </div>
       </div>
 
-             <ResponsiveContainer width="100%" height={350}>
-         <LineChart data={cumulativeData}>
-           <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-           <XAxis dataKey="date" stroke="#9ca3af" />
-           <YAxis stroke="#9ca3af" />
-           <Tooltip
-             contentStyle={{
-               backgroundColor: '#1f2937',
-               border: '1px solid #374151',
-               borderRadius: '8px',
-               color: '#e2e8f0',
-             }}
-           />
-           <Legend />
-           {!showDetailed ? (
-             <>
-               <Line
-                 type="monotone"
-                 dataKey="optionLongChange"
-                 stroke="#10b981"
-                 strokeWidth={3}
-                 dot={{ fill: '#10b981', strokeWidth: 2, r: 4 }}
-                 name="Option Long Change"
-               />
-               <Line
-                 type="monotone"
-                 dataKey="optionShortChange"
-                 stroke="#ef4444"
-                 strokeWidth={3}
-                 dot={{ fill: '#ef4444', strokeWidth: 2, r: 4 }}
-                 name="Option Short Change"
-               />
-             </>
-           ) : (
-             <>
-               <Line
-                 type="monotone"
-                 dataKey="callLongChange"
-                 stroke="#3b82f6"
-                 strokeWidth={2}
-                 dot={{ fill: '#3b82f6', strokeWidth: 2, r: 3 }}
-                 name="Call Long Change"
-               />
-               <Line
-                 type="monotone"
-                 dataKey="putLongChange"
-                 stroke="#8b5cf6"
-                 strokeWidth={2}
-                 dot={{ fill: '#8b5cf6', strokeWidth: 2, r: 3 }}
-                 name="Put Long Change"
-               />
-               <Line
-                 type="monotone"
-                 dataKey="callShortChange"
-                 stroke="#f59e0b"
-                 strokeWidth={2}
-                 dot={{ fill: '#f59e0b', strokeWidth: 2, r: 3 }}
-                 name="Call Short Change"
-               />
-               <Line
-                 type="monotone"
-                 dataKey="putShortChange"
-                 stroke="#ec4899"
-                 strokeWidth={2}
-                 dot={{ fill: '#ec4899', strokeWidth: 2, r: 3 }}
-                 name="Put Short Change"
-               />
-             </>
-           )}
-         </LineChart>
-       </ResponsiveContainer>
+      <ResponsiveContainer width="100%" height={350}>
+        <LineChart data={cumulativeData}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+          <XAxis dataKey="date" stroke="#9ca3af" />
+          <YAxis stroke="#9ca3af" />
+          <Tooltip
+            contentStyle={{
+              backgroundColor: '#1f2937',
+              border: '1px solid #374151',
+              borderRadius: '8px',
+              color: '#e2e8f0',
+            }}
+          />
+          <Legend />
+          {!showDetailed ? (
+            <>
+              <Line
+                type="monotone"
+                dataKey="optionLongChange"
+                stroke="#10b981"
+                strokeWidth={3}
+                dot={{ fill: '#10b981', strokeWidth: 2, r: 4 }}
+                name="Option Long Change"
+              />
+              <Line
+                type="monotone"
+                dataKey="optionShortChange"
+                stroke="#ef4444"
+                strokeWidth={3}
+                dot={{ fill: '#ef4444', strokeWidth: 2, r: 4 }}
+                name="Option Short Change"
+              />
+            </>
+          ) : (
+            <>
+              <Line
+                type="monotone"
+                dataKey="callLongChange"
+                stroke="#3b82f6"
+                strokeWidth={2}
+                dot={{ fill: '#3b82f6', strokeWidth: 2, r: 3 }}
+                name="Call Long Change"
+              />
+              <Line
+                type="monotone"
+                dataKey="putLongChange"
+                stroke="#8b5cf6"
+                strokeWidth={2}
+                dot={{ fill: '#8b5cf6', strokeWidth: 2, r: 3 }}
+                name="Put Long Change"
+              />
+              <Line
+                type="monotone"
+                dataKey="callShortChange"
+                stroke="#f59e0b"
+                strokeWidth={2}
+                dot={{ fill: '#f59e0b', strokeWidth: 2, r: 3 }}
+                name="Call Short Change"
+              />
+              <Line
+                type="monotone"
+                dataKey="putShortChange"
+                stroke="#ec4899"
+                strokeWidth={2}
+                dot={{ fill: '#ec4899', strokeWidth: 2, r: 3 }}
+                name="Put Short Change"
+              />
+            </>
+          )}
+        </LineChart>
+      </ResponsiveContainer>
     </div>
   )
 }

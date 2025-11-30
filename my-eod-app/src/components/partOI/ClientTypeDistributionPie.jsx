@@ -26,6 +26,7 @@ const ClientTypeDistributionPie = ({ clientDistribution, COLORS }) => (
             borderRadius: '8px',
             color: '#e2e8f0',
           }}
+          itemStyle={{ color: '#e2e8f0' }}
         />
       </PieChart>
     </ResponsiveContainer>

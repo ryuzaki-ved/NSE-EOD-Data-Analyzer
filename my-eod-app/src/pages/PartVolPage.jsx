@@ -49,45 +49,45 @@ const PartVolPage = () => {
           const dateB = new Date(`${yearB}-${monthB}-${dayB}`)
           return dateB - dateA
         })
-      
+
       const latestDate = allDates[0]
       const previousDate = allDates[1]
-      
+
       setInsightsLatestDate(latestDate)
       setInsightsPreviousDate(previousDate)
-      
+
       // Process data for each client type
       const clientTypes = ['Client', 'DII', 'FII', 'Pro']
       const processedData = []
-      
+
       clientTypes.forEach(clientType => {
         // Get volume data for latest and previous dates
         const latestVolData = data.find(item => item.date === latestDate && item.client_type === clientType)
         const previousVolData = data.find(item => item.date === previousDate && item.client_type === clientType)
-        
+
         // Get OI data for latest and previous dates
         const latestOiData = oiData.find(item => item.date === latestDate && item.client_type === clientType)
         const previousOiData = oiData.find(item => item.date === previousDate && item.client_type === clientType)
-        
+
         if (latestVolData && previousVolData && latestOiData && previousOiData) {
           // Calculate volume daily changes
           const callLongVolDiff = (latestVolData.option_index_call_long || 0) - (previousVolData.option_index_call_long || 0)
           const putLongVolDiff = (latestVolData.option_index_put_long || 0) - (previousVolData.option_index_put_long || 0)
           const callShortVolDiff = (latestVolData.option_index_call_short || 0) - (previousVolData.option_index_call_short || 0)
           const putShortVolDiff = (latestVolData.option_index_put_short || 0) - (previousVolData.option_index_put_short || 0)
-          
+
           // Calculate OI daily changes
           const callLongOiDiff = (latestOiData.option_index_call_long || 0) - (previousOiData.option_index_call_long || 0)
           const putLongOiDiff = (latestOiData.option_index_put_long || 0) - (previousOiData.option_index_put_long || 0)
           const callShortOiDiff = (latestOiData.option_index_call_short || 0) - (previousOiData.option_index_call_short || 0)
           const putShortOiDiff = (latestOiData.option_index_put_short || 0) - (previousOiData.option_index_put_short || 0)
-          
+
           // Initialize with latest day's volume (not differences)
           let adjustedCallLongVol = latestVolData.option_index_call_long || 0
           let adjustedPutLongVol = latestVolData.option_index_put_long || 0
           let adjustedCallShortVol = latestVolData.option_index_call_short || 0
           let adjustedPutShortVol = latestVolData.option_index_put_short || 0
-          
+
           // Apply conditional adjustments based on OI differences
           // Call Long OI
           if (callLongOiDiff >= 0) {
@@ -95,28 +95,28 @@ const PartVolPage = () => {
           } else {
             adjustedCallShortVol -= Math.abs(callLongOiDiff)
           }
-          
+
           // Put Long OI
           if (putLongOiDiff >= 0) {
             adjustedPutLongVol -= putLongOiDiff
           } else {
             adjustedPutShortVol -= Math.abs(putLongOiDiff)
           }
-          
+
           // Call Short OI
           if (callShortOiDiff >= 0) {
             adjustedCallShortVol -= callShortOiDiff
           } else {
             adjustedCallLongVol -= Math.abs(callShortOiDiff)
           }
-          
+
           // Put Short OI
           if (putShortOiDiff >= 0) {
             adjustedPutShortVol -= putShortOiDiff
           } else {
             adjustedPutLongVol -= Math.abs(putShortOiDiff)
           }
-          
+
           processedData.push({
             clientType,
             callLong: adjustedCallLongVol,
@@ -134,7 +134,7 @@ const PartVolPage = () => {
           })
         }
       })
-      
+
       setDeepInsightsData(processedData)
     }
   }, [data, oiData])
@@ -148,8 +148,8 @@ const PartVolPage = () => {
   }
 
   const clientTypes = ['ALL', ...new Set(data.map(item => item.client_type).filter(type => type !== 'TOTAL'))]
-  const filteredData = selectedClientType === 'ALL' ? 
-    data.filter(item => item.client_type !== 'TOTAL') : 
+  const filteredData = selectedClientType === 'ALL' ?
+    data.filter(item => item.client_type !== 'TOTAL') :
     data.filter(item => item.client_type === selectedClientType)
 
   // Calculate metrics
@@ -235,13 +235,13 @@ const PartVolPage = () => {
   }
 
   return (
-    <motion.div 
+    <motion.div
       className="space-y-8"
       initial="hidden"
       animate="visible"
       variants={containerVariants}
     >
-      <motion.div 
+      <motion.div
         className="flex flex-col sm:flex-row justify-between items-start sm:items-center"
         variants={itemVariants}
       >
@@ -258,7 +258,7 @@ const PartVolPage = () => {
       </motion.div>
 
       {/* Metrics Cards */}
-      <motion.div 
+      <motion.div
         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
         variants={containerVariants}
       >
@@ -289,7 +289,7 @@ const PartVolPage = () => {
       </motion.div>
 
       {/* Charts */}
-      <motion.div 
+      <motion.div
         className="grid lg:grid-cols-2 gap-8"
         variants={containerVariants}
       >
@@ -299,17 +299,17 @@ const PartVolPage = () => {
             <AreaChart data={dailyVolumeData}>
               <defs>
                 <linearGradient id="colorFuture" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#0ea5e9" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="#0ea5e9" stopOpacity={0}/>
+                  <stop offset="5%" stopColor="#0ea5e9" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#0ea5e9" stopOpacity={0} />
                 </linearGradient>
                 <linearGradient id="colorOption" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
+                  <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
-              <XAxis dataKey="date" stroke="#9ca3af" tick={{fill: '#9ca3af'}} axisLine={{stroke: '#4b5563'}} />
-              <YAxis stroke="#9ca3af" tick={{fill: '#9ca3af'}} axisLine={{stroke: '#4b5563'}} />
+              <XAxis dataKey="date" stroke="#9ca3af" tick={{ fill: '#9ca3af' }} axisLine={{ stroke: '#4b5563' }} />
+              <YAxis stroke="#9ca3af" tick={{ fill: '#9ca3af' }} axisLine={{ stroke: '#4b5563' }} />
               <Tooltip
                 contentStyle={{
                   backgroundColor: 'rgba(17, 24, 39, 0.9)',
@@ -366,13 +366,14 @@ const PartVolPage = () => {
                   color: '#e2e8f0',
                   backdropFilter: 'blur(4px)'
                 }}
+                itemStyle={{ color: '#e2e8f0' }}
               />
             </PieChart>
           </ResponsiveContainer>
         </motion.div>
       </motion.div>
 
-      <motion.div 
+      <motion.div
         className="grid lg:grid-cols-2 gap-8"
         variants={containerVariants}
       >
@@ -381,8 +382,8 @@ const PartVolPage = () => {
           <ResponsiveContainer width="100%" height={350}>
             <BarChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
-              <XAxis dataKey="date" stroke="#9ca3af" tick={{fill: '#9ca3af'}} axisLine={{stroke: '#4b5563'}} />
-              <YAxis stroke="#9ca3af" tick={{fill: '#9ca3af'}} axisLine={{stroke: '#4b5563'}} />
+              <XAxis dataKey="date" stroke="#9ca3af" tick={{ fill: '#9ca3af' }} axisLine={{ stroke: '#4b5563' }} />
+              <YAxis stroke="#9ca3af" tick={{ fill: '#9ca3af' }} axisLine={{ stroke: '#4b5563' }} />
               <Tooltip
                 contentStyle={{
                   backgroundColor: 'rgba(17, 24, 39, 0.9)',
@@ -406,8 +407,8 @@ const PartVolPage = () => {
           <ResponsiveContainer width="100%" height={350}>
             <LineChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
-              <XAxis dataKey="date" stroke="#9ca3af" tick={{fill: '#9ca3af'}} axisLine={{stroke: '#4b5563'}} />
-              <YAxis stroke="#9ca3af" tick={{fill: '#9ca3af'}} axisLine={{stroke: '#4b5563'}} />
+              <XAxis dataKey="date" stroke="#9ca3af" tick={{ fill: '#9ca3af' }} axisLine={{ stroke: '#4b5563' }} />
+              <YAxis stroke="#9ca3af" tick={{ fill: '#9ca3af' }} axisLine={{ stroke: '#4b5563' }} />
               <Tooltip
                 contentStyle={{
                   backgroundColor: 'rgba(17, 24, 39, 0.9)',
