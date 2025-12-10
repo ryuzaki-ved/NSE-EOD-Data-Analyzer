@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
+import SortedCustomTooltip from '../SortedCustomTooltip'
 
 const WeeklyOptionsCumulativeChart = ({ chartData }) => {
   const [selectedParticipant, setSelectedParticipant] = useState('FII')
@@ -289,8 +290,8 @@ const WeeklyOptionsCumulativeChart = ({ chartData }) => {
           <button
             onClick={() => setShowDetailed(!showDetailed)}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${showDetailed
-                ? 'bg-blue-600 text-white hover:bg-blue-700'
-                : 'bg-gray-600 text-gray-200 hover:bg-gray-700'
+              ? 'bg-blue-600 text-white hover:bg-blue-700'
+              : 'bg-gray-600 text-gray-200 hover:bg-gray-700'
               }`}
           >
             {showDetailed ? 'Hide Detailed' : 'See Detailed'}
@@ -303,14 +304,7 @@ const WeeklyOptionsCumulativeChart = ({ chartData }) => {
           <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
           <XAxis dataKey="date" stroke="#9ca3af" />
           <YAxis stroke="#9ca3af" />
-          <Tooltip
-            contentStyle={{
-              backgroundColor: '#1f2937',
-              border: '1px solid #374151',
-              borderRadius: '8px',
-              color: '#e2e8f0',
-            }}
-          />
+          <Tooltip content={<SortedCustomTooltip />} />
           <Legend />
           {!showDetailed ? (
             <>

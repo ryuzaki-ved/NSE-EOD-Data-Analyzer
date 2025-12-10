@@ -4,6 +4,7 @@ import DataTable from '../components/DataTable'
 import MetricCard from '../components/MetricCard'
 import { TrendingUp, TrendingDown, DollarSign, Activity, BarChart3, Eye, Target } from 'lucide-react'
 import { motion } from 'framer-motion'
+import SortedCustomTooltip from '../components/SortedCustomTooltip'
 
 const FIIDerivStatsPage = () => {
   const [data, setData] = useState([])
@@ -290,14 +291,7 @@ const FIIDerivStatsPage = () => {
               <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
               <XAxis dataKey="date" stroke="#94a3b8" tick={{ fill: '#94a3b8' }} axisLine={false} tickLine={false} />
               <YAxis stroke="#94a3b8" tick={{ fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: '#0f172a',
-                  border: '1px solid #1e293b',
-                  borderRadius: '12px',
-                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                }}
-              />
+              <Tooltip content={<SortedCustomTooltip formatter={(val) => `₹${val.toLocaleString('en-IN')}`} />} />
               <Legend />
               <Area
                 type="monotone"

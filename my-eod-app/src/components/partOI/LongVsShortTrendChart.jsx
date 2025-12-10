@@ -1,6 +1,8 @@
 import React from 'react'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 
+import SortedCustomTooltip from '../SortedCustomTooltip'
+
 const LongVsShortTrendChart = ({ chartData }) => (
   <div className="chart-card">
     <h3>Long vs Short Positions Trend</h3>
@@ -9,14 +11,7 @@ const LongVsShortTrendChart = ({ chartData }) => (
         <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
         <XAxis dataKey="date" stroke="#9ca3af" />
         <YAxis stroke="#9ca3af" />
-        <Tooltip
-          contentStyle={{
-            backgroundColor: '#1f2937',
-            border: '1px solid #374151',
-            borderRadius: '8px',
-            color: '#e2e8f0',
-          }}
-        />
+        <Tooltip content={<SortedCustomTooltip />} />
         <Legend />
         <Area
           type="monotone"

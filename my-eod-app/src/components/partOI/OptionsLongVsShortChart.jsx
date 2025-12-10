@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
+import SortedCustomTooltip from '../SortedCustomTooltip'
 
 const OptionsLongVsShortChart = ({ chartData }) => {
   const [selectedParticipant, setSelectedParticipant] = useState('FII')
@@ -55,19 +56,12 @@ const OptionsLongVsShortChart = ({ chartData }) => {
           ))}
         </select>
       </div>
-             <ResponsiveContainer width="100%" height={350}>
+      <ResponsiveContainer width="100%" height={350}>
         <LineChart data={optionsData}>
           <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
           <XAxis dataKey="date" stroke="#9ca3af" />
           <YAxis stroke="#9ca3af" />
-          <Tooltip
-            contentStyle={{
-              backgroundColor: '#1f2937',
-              border: '1px solid #374151',
-              borderRadius: '8px',
-              color: '#e2e8f0',
-            }}
-          />
+          <Tooltip content={<SortedCustomTooltip />} />
           <Legend />
           <Line
             type="monotone"

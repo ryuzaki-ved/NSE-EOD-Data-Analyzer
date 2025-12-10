@@ -5,6 +5,7 @@ import DataTable from '../components/DataTable'
 import MetricCard from '../components/MetricCard'
 import { Activity, TrendingUp, BarChart3, Users, Eye } from 'lucide-react'
 import DeepInsightsPartVol from '../components/DeepInsightsPartVol'
+import SortedCustomTooltip from '../components/SortedCustomTooltip'
 
 const PartVolPage = () => {
   const [data, setData] = useState([])
@@ -310,15 +311,7 @@ const PartVolPage = () => {
               <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
               <XAxis dataKey="date" stroke="#9ca3af" tick={{ fill: '#9ca3af' }} axisLine={{ stroke: '#4b5563' }} />
               <YAxis stroke="#9ca3af" tick={{ fill: '#9ca3af' }} axisLine={{ stroke: '#4b5563' }} />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: 'rgba(17, 24, 39, 0.9)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  borderRadius: '8px',
-                  color: '#e2e8f0',
-                  backdropFilter: 'blur(4px)'
-                }}
-              />
+              <Tooltip content={<SortedCustomTooltip />} />
               <Legend />
               <Area
                 type="monotone"
@@ -409,15 +402,7 @@ const PartVolPage = () => {
               <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
               <XAxis dataKey="date" stroke="#9ca3af" tick={{ fill: '#9ca3af' }} axisLine={{ stroke: '#4b5563' }} />
               <YAxis stroke="#9ca3af" tick={{ fill: '#9ca3af' }} axisLine={{ stroke: '#4b5563' }} />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: 'rgba(17, 24, 39, 0.9)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  borderRadius: '8px',
-                  color: '#e2e8f0',
-                  backdropFilter: 'blur(4px)'
-                }}
-              />
+              <Tooltip content={<SortedCustomTooltip />} />
               <Legend />
               <Line
                 type="monotone"
