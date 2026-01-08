@@ -1,6 +1,8 @@
 import React from 'react'
 import { Eye, Target, Calendar, TrendingUp, TrendingDown, Minus } from 'lucide-react'
-import { getRatioClass, formatRatio, formatDifference } from '../utils/partOIHelpers'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
+import { getRatioClass, formatRatio, formatDifference, getPreviousExpiryDate } from '../utils/partOIHelpers'
+import DateSelector from './DateSelector'
 
 // Color mapping for participants
 const PARTICIPANT_COLORS = {
@@ -19,8 +21,13 @@ const DeepInsights = ({
   generateDailyChangeInsights,
   groupedInsights = {},
   groupedDailyChangeInsights = {},
+
   data,
+  availableDates = [],
+  onDateChange,
+  onPrevDateChange
 }) => {
+  console.log('DeepInsights Component Rendered', { latestDate, previousDate });
   // Helper to get color for participant
   const getColor = (name) => PARTICIPANT_COLORS[name] || '#64748b' // fallback: slate-400
 
@@ -33,6 +40,19 @@ const DeepInsights = ({
         <h2 className="text-3xl font-bold gradient-text">Deep Insights</h2>
         <div className="px-3 py-1 bg-primary-500/20 rounded-full text-xs text-primary-400 border border-primary-500/30">
           PREMIUM INSIGHTS
+        </div>
+      </div>
+
+      {/* Date Selector for Deep Insights */}
+      <div className="flex justify-end mb-6">
+        <div className="bg-dark-900/50 p-2 rounded-xl border border-white/5 inline-block">
+          <DateSelector
+            selectedDate={latestDate}
+            previousDate={previousDate}
+            availableDates={availableDates}
+            onDateChange={onDateChange}
+            onPrevDateChange={onPrevDateChange}
+          />
         </div>
       </div>
 
@@ -883,35 +903,349 @@ const DeepInsights = ({
                                 <div className={`text-sm font-medium ${color}`}>
                                   {sentiment}
                                 </div>
-                                <div className="text-xs text-gray-400 mt-2">
-                                  Score Breakdown:
-                                </div>
-                                <div className="text-xs text-gray-300 space-y-1 mt-1">
-                                  <div>Call Long: {participantPercentages['Call Long'][participant] >= 0 ? '+' : ''}{participantPercentages['Call Long'][participant].toFixed(1)}%</div>
-                                  <div>Put Short: {participantPercentages['Put Short'][participant] >= 0 ? '+' : ''}{participantPercentages['Put Short'][participant].toFixed(1)}%</div>
-                                  <div>Call Short: -{participantPercentages['Call Short'][participant].toFixed(1)}%</div>
-                                  <div>Put Long: -{participantPercentages['Put Long'][participant].toFixed(1)}%</div>
-                                </div>
+
                               </div>
                             )
                           })}
                         </div>
                       </div>
 
-                      {/* Calculation Explanation */}
-                      <div className="p-4 bg-gradient-to-r from-purple-500/10 to-blue-500/10 rounded-lg border border-purple-500/20">
-                        <h6 className="text-sm font-semibold text-purple-400 mb-2">Score Calculation:</h6>
-                        <ul className="text-xs text-gray-300 space-y-1">
-                          <li>• <span className="text-green-400">Call Long % + Put Short %</span> = Bullish contribution (positive)</li>
-                          <li>• <span className="text-red-400">Call Short % + Put Long %</span> = Bearish contribution (negative)</li>
-                          <li>• Final Score = Bullish - Bearish contributions</li>
-                          <li>• Higher positive score = More bullish sentiment in position changes</li>
-                        </ul>
-                      </div>
+
                     </div>
                   )
                 })()}
+
+
               </div>
+            </div>
+          )
+        })()}
+      </div>
+
+      {/* Weekly Position Changes (Since Last Expiry) */}
+      <div className="mt-8 pt-6 border-t border-purple-500/20">
+        <div className="flex items-center space-x-2 mb-4">
+          <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
+          <h5 className="text-lg font-semibold text-purple-400">Weekly Position Changes</h5>
+        </div>
+
+        {(() => {
+          // Calculate weekly changes data (Since Previous Expiry)
+          const targetExpiryDate = getPreviousExpiryDate(latestDate)
+          console.log('Weekly Calculation:', { latestDate, targetExpiryDate, dataLength: data ? data.length : 0 });
+
+          if (!data || !latestDate || !targetExpiryDate) return <div className="text-gray-400">Waiting for weekly data...</div>
+
+          const latestData = data.filter(item => item.date === latestDate)
+          const expiryData = data.filter(item => item.date === targetExpiryDate)
+
+          if (latestData.length === 0) return <div className="text-gray-400">No data available for current date</div>
+          if (expiryData.length === 0) return (
+            <div className="text-gray-400 text-sm">
+              No data available for previous expiry ({targetExpiryDate}). <br />
+              This might be due to a holiday or missing data.
+            </div>
+          )
+
+          // Calculate weekly changes for each position type across all participants
+          const positionTypes = ['Call Long', 'Put Long', 'Call Short', 'Put Short']
+          const participants = ['Client', 'FII', 'DII', 'Pro']
+
+          const positionChanges = {
+            'Call Long': {},
+            'Put Long': {},
+            'Call Short': {},
+            'Put Short': {}
+          }
+
+          // Calculate changes for each position type
+          positionTypes.forEach(positionType => {
+            const fieldMap = {
+              'Call Long': 'option_index_call_long',
+              'Put Long': 'option_index_put_long',
+              'Call Short': 'option_index_call_short',
+              'Put Short': 'option_index_put_short'
+            }
+
+            const field = fieldMap[positionType]
+            let totalChange = 0
+
+            participants.forEach(participant => {
+              const latest = latestData.find(item => item.client_type === participant) || {}
+              const previous = expiryData.find(item => item.client_type === participant) || {}
+
+              const change = (latest[field] || 0) - (previous[field] || 0)
+              positionChanges[positionType][participant] = change
+              totalChange += Math.abs(change)
+            })
+
+            positionChanges[positionType].total = totalChange
+          })
+
+          // Calculate participant percentages for each position type (preserving signs)
+          const participantPercentages = {}
+          positionTypes.forEach(positionType => {
+            participantPercentages[positionType] = {}
+            const total = positionChanges[positionType].total
+
+            participants.forEach(participant => {
+              const change = positionChanges[positionType][participant]
+              // Preserve the sign of the change when calculating percentage
+              participantPercentages[positionType][participant] = total > 0 ? (change / total) * 100 : 0
+            })
+          })
+
+          // Calculate participant-wise sentiment scores (with proper sign handling)
+          const participantScores = {}
+          participants.forEach(participant => {
+            let score = 0
+
+            // Call Long: positive contribution (keep sign as is)
+            score += participantPercentages['Call Long'][participant]
+
+            // Put Short: positive contribution (keep sign as is)
+            score += participantPercentages['Put Short'][participant]
+
+            // Call Short: negative contribution (multiply by -1)
+            score -= participantPercentages['Call Short'][participant]
+
+            // Put Long: negative contribution (multiply by -1)
+            score -= participantPercentages['Put Long'][participant]
+
+            participantScores[participant] = score
+          })
+
+          return (
+            <div className="space-y-6">
+              <div className="text-sm text-gray-400 mb-2">
+                Comparing current positions ({latestDate}) with previous expiry ({targetExpiryDate})
+              </div>
+
+              {/* Position-wise Changes Table */}
+              <div className="bg-gradient-to-r from-purple-900/20 to-blue-900/20 border border-purple-500/30 rounded-lg p-4 backdrop-blur-sm">
+                <h6 className="text-lg font-semibold text-white mb-4">Position-wise Weekly Changes</h6>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-purple-500/30">
+                        <th className="text-left py-2 px-3 text-purple-400 font-semibold">Position Type</th>
+                        {participants.map(participant => (
+                          <th key={participant} className="text-center py-2 px-3 text-purple-400 font-semibold">
+                            {participant}
+                          </th>
+                        ))}
+                        <th className="text-center py-2 px-3 text-purple-400 font-semibold">Total Changes</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {positionTypes.map(positionType => (
+                        <tr key={positionType} className="border-b border-purple-500/20">
+                          <td className="py-3 px-3 text-white font-medium">{positionType}</td>
+                          {participants.map(participant => {
+                            const change = positionChanges[positionType][participant]
+                            const percentage = participantPercentages[positionType][participant]
+                            return (
+                              <td key={participant} className="text-center py-3 px-3">
+                                <div className={`font-semibold ${change >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                  {change >= 0 ? '+' : ''}{change.toLocaleString('en-IN')}
+                                </div>
+                                <div className="text-xs text-gray-400">
+                                  {percentage.toFixed(1)}%
+                                </div>
+                              </td>
+                            )
+                          })}
+                          <td className="text-center py-3 px-3">
+                            <div className="font-semibold text-cyan-400">
+                              {positionChanges[positionType].total.toLocaleString('en-IN')}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Participant-wise Sentiment Scores */}
+              <div className="bg-gradient-to-r from-purple-900/20 to-blue-900/20 border border-purple-500/30 rounded-lg p-4 backdrop-blur-sm">
+                <h6 className="text-lg font-semibold text-white mb-4">Participant Sentiment Scores (Weekly)</h6>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {participants.map(participant => {
+                    const score = participantScores[participant]
+                    let sentiment = ''
+                    let color = ''
+                    let icon = null
+
+                    if (score <= -10) {
+                      sentiment = 'Bearish'
+                      color = 'text-red-400'
+                      icon = <TrendingDown className="h-4 w-4 text-red-400" />
+                    } else if (score <= -5) {
+                      sentiment = 'Slightly Bearish'
+                      color = 'text-orange-400'
+                      icon = <TrendingDown className="h-4 w-4 text-orange-400" />
+                    } else if (score >= -5 && score <= 5) {
+                      sentiment = 'Neutral'
+                      color = 'text-gray-400'
+                      icon = <Minus className="h-4 w-4 text-gray-400" />
+                    } else if (score <= 10) {
+                      sentiment = 'Slightly Bullish'
+                      color = 'text-blue-400'
+                      icon = <TrendingUp className="h-4 w-4 text-blue-400" />
+                    } else {
+                      sentiment = 'Bullish'
+                      color = 'text-green-400'
+                      icon = <TrendingUp className="h-4 w-4 text-green-400" />
+                    }
+
+                    return (
+                      <div key={participant} className="bg-white/5 rounded-lg p-4 text-center">
+                        <div className="flex items-center justify-center space-x-2 mb-2">
+                          {icon}
+                          <h6 className="text-lg font-semibold text-white">{participant}</h6>
+                        </div>
+                        <div className={`text-2xl font-bold ${color} mb-1`}>
+                          {score.toFixed(2)}
+                        </div>
+                        <div className={`text-sm font-medium ${color}`}>
+                          {sentiment}
+                        </div>
+
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+
+
+
+              {/* Weekly Sentiment Trend Chart */}
+              <div className="bg-gradient-to-r from-purple-900/20 to-blue-900/20 border border-purple-500/30 rounded-lg p-4 backdrop-blur-sm mt-6">
+                <h6 className="text-lg font-semibold text-white mb-4">Weekly Sentiment Trend</h6>
+                <div className="h-[300px] w-full">
+                  {(() => {
+                    // 1. Identify date range: Expiry Date + 1 day ... Latest Date
+                    // Function to parse dd-mm-yyyy to Date object
+                    const parseDate = (dateStr) => {
+                      const [d, m, y] = dateStr.split('-');
+                      return new Date(`${y}-${m}-${d}`);
+                    };
+
+                    const expiryDateObj = parseDate(targetExpiryDate);
+                    const latestDateObj = parseDate(latestDate);
+
+                    // Filter data for the trend range
+                    const trendDataRaw = data.filter(item => {
+                      const itemDate = parseDate(item.date);
+                      return itemDate > expiryDateObj && itemDate <= latestDateObj;
+                    });
+
+                    // Get unique dates sorted
+                    const uniqueDates = [...new Set(trendDataRaw.map(item => item.date))];
+                    // Sort dates logic if needed, but assuming data might be mixed, explicit sort is safer
+                    uniqueDates.sort((a, b) => parseDate(a) - parseDate(b));
+
+                    // 2. Build Chart Data
+                    const chartData = uniqueDates.map(date => {
+                      const dayData = data.filter(item => item.date === date);
+
+                      // Calculate scores for this specific day vs Expiry
+                      const dayScores = { date };
+
+                      // Helper maps from outer scope
+                      // const positionTypes = ['Call Long', 'Put Long', 'Call Short', 'Put Short']
+                      // const participants = ['Client', 'FII', 'DII', 'Pro']
+
+                      // Calculate position changes for this day
+                      const dayPositionChanges = {};
+                      positionTypes.forEach(pt => dayPositionChanges[pt] = { total: 0 });
+
+                      positionTypes.forEach(positionType => {
+                        const fieldMap = {
+                          'Call Long': 'option_index_call_long',
+                          'Put Long': 'option_index_put_long',
+                          'Call Short': 'option_index_call_short',
+                          'Put Short': 'option_index_put_short'
+                        };
+                        const field = fieldMap[positionType];
+                        let totalChange = 0;
+
+                        participants.forEach(participant => {
+                          const current = dayData.find(item => item.client_type === participant) || {};
+                          const baseline = expiryData.find(item => item.client_type === participant) || {};
+                          const change = (current[field] || 0) - (baseline[field] || 0);
+
+                          dayPositionChanges[positionType][participant] = change;
+                          totalChange += Math.abs(change);
+                        });
+                        dayPositionChanges[positionType].total = totalChange;
+                      });
+
+                      // Calculate Percentages & Scores
+                      participants.forEach(participant => {
+                        let score = 0;
+
+                        // Calculate percentage for each type and add to score
+                        // Logic matching the main block
+
+                        // Call Long (+)
+                        const clTotal = dayPositionChanges['Call Long'].total;
+                        const clChange = dayPositionChanges['Call Long'][participant];
+                        const clPct = clTotal > 0 ? (clChange / clTotal) * 100 : 0;
+                        score += clPct;
+
+                        // Put Short (+)
+                        const psTotal = dayPositionChanges['Put Short'].total;
+                        const psChange = dayPositionChanges['Put Short'][participant];
+                        const psPct = psTotal > 0 ? (psChange / psTotal) * 100 : 0;
+                        score += psPct;
+
+                        // Call Short (-)
+                        const csTotal = dayPositionChanges['Call Short'].total;
+                        const csChange = dayPositionChanges['Call Short'][participant];
+                        const csPct = csTotal > 0 ? (csChange / csTotal) * 100 : 0;
+                        score -= csPct;
+
+                        // Put Long (-)
+                        const plTotal = dayPositionChanges['Put Long'].total;
+                        const plChange = dayPositionChanges['Put Long'][participant];
+                        const plPct = plTotal > 0 ? (plChange / plTotal) * 100 : 0;
+                        score -= plPct;
+
+                        dayScores[participant] = parseFloat(score.toFixed(2));
+                      });
+
+                      return dayScores;
+                    });
+
+                    return (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={chartData}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                          <XAxis dataKey="date" stroke="#9ca3af" fontSize={12} tickMargin={10} />
+                          {/* Domain set to handle both positive and negative scores reasonably */}
+                          <YAxis stroke="#9ca3af" fontSize={12} domain={['auto', 'auto']} />
+                          <Tooltip
+                            contentStyle={{ backgroundColor: '#1f2937', borderColor: '#374151', color: '#fff' }}
+                            itemStyle={{ color: '#fff' }}
+                            itemSorter={(item) => -item.value}
+                          />
+                          <Legend />
+                          <Line type="monotone" dataKey="Client" stroke="#3b82f6" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                          <Line type="monotone" dataKey="FII" stroke="#ef4444" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                          <Line type="monotone" dataKey="DII" stroke="#10b981" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                          <Line type="monotone" dataKey="Pro" stroke="#f59e0b" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    );
+                  })()}
+                </div>
+              </div>
+
+
             </div>
           )
         })()}
@@ -920,4 +1254,4 @@ const DeepInsights = ({
   )
 }
 
-export default DeepInsights 
+export default DeepInsights

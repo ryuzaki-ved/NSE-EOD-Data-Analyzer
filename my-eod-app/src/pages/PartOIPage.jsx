@@ -18,6 +18,8 @@ const PartOIPage = () => {
   const [data, setData] = useState([])
   const [loading, setLoading] = useState(true)
   const [selectedClientType, setSelectedClientType] = useState('ALL')
+  const [deepInsightsLatestDate, setDeepInsightsLatestDate] = useState('')
+  const [deepInsightsPreviousDate, setDeepInsightsPreviousDate] = useState('')
 
   useEffect(() => {
     const fetchData = async () => {
@@ -35,6 +37,24 @@ const PartOIPage = () => {
     fetchData()
   }, [])
 
+  // Initialize Deep Insights dates when data is loaded
+  useEffect(() => {
+    if (data.length > 0 && !deepInsightsLatestDate) {
+      const dates = [...new Set(data.map(item => item.date))].sort((a, b) => {
+        const [dayA, monthA, yearA] = a.split('-')
+        const [dayB, monthB, yearB] = b.split('-')
+        const dateA = new Date(`${yearA}-${monthA}-${dayA}`)
+        const dateB = new Date(`${yearB}-${monthB}-${dayB}`)
+        return dateB - dateA
+      })
+
+      if (dates.length > 0) {
+        setDeepInsightsLatestDate(dates[0])
+        setDeepInsightsPreviousDate(dates[1] || dates[0])
+      }
+    }
+  }, [data, deepInsightsLatestDate])
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -44,8 +64,8 @@ const PartOIPage = () => {
   }
 
   const clientTypes = ['ALL', ...new Set(data.map(item => item.client_type).filter(type => type !== 'TOTAL'))]
-  const filteredData = selectedClientType === 'ALL' ? 
-    data.filter(item => item.client_type !== 'TOTAL') : 
+  const filteredData = selectedClientType === 'ALL' ?
+    data.filter(item => item.client_type !== 'TOTAL') :
     data.filter(item => item.client_type === selectedClientType)
 
   // Calculate metrics
@@ -91,11 +111,11 @@ const PartOIPage = () => {
       short: item.total_short_contracts,
     }))
 
-  // Prepare ratio data for Deep Insights
-  const latestDateData = data.filter(item => item.date === latestDate && item.client_type !== 'TOTAL')
-  
-  // Get previous date data for daily changes
-  const sortedDates = [...new Set(data.map(item => item.date))].sort((a, b) => {
+  // Prepare ratio data for Deep Insights (using local Deep Insights state dates)
+  const deepInsightsLatestData = data.filter(item => item.date === deepInsightsLatestDate && item.client_type !== 'TOTAL')
+
+  // Get previous date data for daily changes (using local Deep Insights state dates)
+  const availableDates = [...new Set(data.map(item => item.date))].sort((a, b) => {
     // Convert DD-MM-YYYY to YYYY-MM-DD for proper date comparison
     const [dayA, monthA, yearA] = a.split('-')
     const [dayB, monthB, yearB] = b.split('-')
@@ -103,15 +123,15 @@ const PartOIPage = () => {
     const dateB = new Date(`${yearB}-${monthB}-${dayB}`)
     return dateB - dateA
   })
-  const previousDate = sortedDates[1] || sortedDates[0]
-  const previousDateData = data.filter(item => item.date === previousDate && item.client_type !== 'TOTAL')
-  
-  const ratioData = latestDateData.map(item => {
+
+  const deepInsightsPreviousData = data.filter(item => item.date === deepInsightsPreviousDate && item.client_type !== 'TOTAL')
+
+  const ratioData = deepInsightsLatestData.map(item => {
     const callBuyPutBuy = calculateRatio(item.option_index_call_long, item.option_index_put_long)
     const callBuyCallSell = calculateRatio(item.option_index_call_long, item.option_index_call_short)
     const putSellPutBuy = calculateRatio(item.option_index_put_short, item.option_index_put_long)
     const putSellCallSell = calculateRatio(item.option_index_put_short, item.option_index_call_short)
-    
+
     return {
       clientType: item.client_type,
       callBuyPutBuy,
@@ -123,24 +143,24 @@ const PartOIPage = () => {
   })
 
   // Prepare daily change data
-  const dailyChangeData = latestDateData.map(item => {
-    const prevItem = previousDateData.find(prev => prev.client_type === item.client_type) || {
+  const dailyChangeData = deepInsightsLatestData.map(item => {
+    const prevItem = deepInsightsPreviousData.find(prev => prev.client_type === item.client_type) || {
       option_index_call_long: 0,
       option_index_put_long: 0,
       option_index_call_short: 0,
       option_index_put_short: 0
     }
-    
+
     const callLongDiff = item.option_index_call_long - prevItem.option_index_call_long
     const putLongDiff = item.option_index_put_long - prevItem.option_index_put_long
     const callShortDiff = item.option_index_call_short - prevItem.option_index_call_short
     const putShortDiff = item.option_index_put_short - prevItem.option_index_put_short
-    
+
     const callBuyPutBuy = calculateRatio(callLongDiff, putLongDiff)
     const callBuyCallSell = calculateRatio(callLongDiff, callShortDiff)
     const putSellPutBuy = calculateRatio(putShortDiff, putLongDiff)
     const putSellCallSell = calculateRatio(putShortDiff, callShortDiff)
-    
+
     return {
       clientType: item.client_type,
       callLongDiff,
@@ -157,11 +177,11 @@ const PartOIPage = () => {
   // Generate insights based on ratios with rich formatting
   const generateInsights = () => {
     const insights = []
-    
+
     ratioData.forEach(({ clientType, callBuyPutBuy, callBuyCallSell, putSellPutBuy, putSellCallSell }) => {
       // Skip insights for 0.00 ratios
       if (callBuyPutBuy === 0 || callBuyCallSell === 0 || putSellPutBuy === 0 || putSellCallSell === 0) return
-      
+
       // Call Buy/Put Buy insights (Bullish vs Bearish bias)
       if (callBuyPutBuy > 1.5) {
         insights.push(
@@ -186,7 +206,7 @@ const PartOIPage = () => {
           </div>
         )
       }
-      
+
       // Call Buy/Call Sell insights (Long vs Short positioning)
       if (callBuyCallSell > 1.5) {
         insights.push(
@@ -211,7 +231,7 @@ const PartOIPage = () => {
           </div>
         )
       }
-      
+
       // Put Sell/Put Buy insights (Put writing vs Put buying)
       if (putSellPutBuy > 1.5) {
         insights.push(
@@ -238,7 +258,7 @@ const PartOIPage = () => {
           </div>
         )
       }
-      
+
       // Put Sell/Call Sell insights (Put vs Call writing preference)
       if (putSellCallSell > 1.2) {
         insights.push(
@@ -264,7 +284,7 @@ const PartOIPage = () => {
         )
       }
     })
-    
+
     return insights.length > 0 ? insights : [
       <div key="balanced" className="flex items-start space-x-3">
         <div className="w-2 h-2 bg-gray-400 rounded-full mt-2 flex-shrink-0"></div>
@@ -278,11 +298,11 @@ const PartOIPage = () => {
   // Generate daily change insights with rich formatting
   const generateDailyChangeInsights = () => {
     const insights = []
-    
+
     dailyChangeData.forEach(({ clientType, callBuyPutBuy, callBuyCallSell, putSellPutBuy, putSellCallSell, callLongDiff, putLongDiff, callShortDiff, putShortDiff }) => {
       // Skip insights for 0.00 ratios
       if (callBuyPutBuy === 0 || callBuyCallSell === 0 || putSellPutBuy === 0 || putSellCallSell === 0) return
-      
+
       // Detailed analysis for Call Buy / Put Buy (Negative Values)
       if (callLongDiff < 0 && putLongDiff >= 0) {
         // Numerator Negative (Call Buy Negative): Bearish
@@ -571,7 +591,7 @@ const PartOIPage = () => {
           </div>
         )
       }
-      
+
       // Daily position building/unwinding insights
       if (callLongDiff > 0 && putLongDiff < 0) {
         insights.push(
@@ -594,7 +614,7 @@ const PartOIPage = () => {
           </div>
         )
       }
-      
+
       // Aggressive position changes
       if (Math.abs(callLongDiff) > 100000 || Math.abs(putLongDiff) > 100000) {
         insights.push(
@@ -607,7 +627,7 @@ const PartOIPage = () => {
           </div>
         )
       }
-      
+
       // Unwinding insights
       if (callShortDiff < 0 && putShortDiff < 0) {
         insights.push(
@@ -621,7 +641,7 @@ const PartOIPage = () => {
         )
       }
     })
-    
+
     return insights.length > 0 ? insights : [
       <div key="minimal-changes" className="flex items-start space-x-3">
         <div className="w-2 h-2 bg-gray-400 rounded-full mt-2 flex-shrink-0"></div>
@@ -1093,13 +1113,13 @@ const PartOIPage = () => {
   }
 
   return (
-    <motion.div 
+    <motion.div
       className="space-y-8"
       initial="hidden"
       animate="visible"
       variants={containerVariants}
     >
-      <motion.div 
+      <motion.div
         className="flex flex-col sm:flex-row justify-between items-start sm:items-center"
         variants={itemVariants}
       >
@@ -1116,7 +1136,7 @@ const PartOIPage = () => {
       </motion.div>
 
       {/* Metrics Cards */}
-      <motion.div 
+      <motion.div
         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
         variants={containerVariants}
       >
@@ -1147,7 +1167,7 @@ const PartOIPage = () => {
       </motion.div>
 
       {/* Charts */}
-      <motion.div 
+      <motion.div
         className="grid lg:grid-cols-2 gap-8"
         variants={containerVariants}
       >
@@ -1159,7 +1179,7 @@ const PartOIPage = () => {
         </motion.div>
       </motion.div>
 
-      <motion.div 
+      <motion.div
         className="grid lg:grid-cols-2 gap-8"
         variants={containerVariants}
       >
@@ -1172,7 +1192,7 @@ const PartOIPage = () => {
       </motion.div>
 
       {/* Participant Comparison Charts */}
-      <motion.div 
+      <motion.div
         className="grid lg:grid-cols-2 gap-8"
         variants={containerVariants}
       >
@@ -1187,23 +1207,29 @@ const PartOIPage = () => {
       {/* Deep Insights Section */}
       <motion.div variants={itemVariants}>
         <DeepInsights
-          latestDate={latestDate}
-          previousDate={previousDate}
+          latestDate={deepInsightsLatestDate}
+          previousDate={deepInsightsPreviousDate}
           ratioData={ratioData}
           dailyChangeData={dailyChangeData}
-          getRatioClass={getRatioClass}
-          formatRatio={formatRatio}
-          formatDifference={formatDifference}
           generateInsights={generateInsights}
           generateDailyChangeInsights={generateDailyChangeInsights}
           groupedInsights={generateGroupedInsights()}
           groupedDailyChangeInsights={generateGroupedDailyChangeInsights()}
           data={data}
+          availableDates={availableDates}
+          onDateChange={(date) => {
+            setDeepInsightsLatestDate(date)
+            // Auto-update previous date to be the one immediately following the selected latest date
+            const currentIndex = availableDates.indexOf(date)
+            const nextDate = availableDates[currentIndex + 1] || availableDates[currentIndex]
+            setDeepInsightsPreviousDate(nextDate)
+          }}
+          onPrevDateChange={setDeepInsightsPreviousDate}
         />
       </motion.div>
 
       {/* Correlation Insights */}
-      <motion.div 
+      <motion.div
         className="grid lg:grid-cols-3 gap-8"
         variants={containerVariants}
       >
@@ -1217,8 +1243,8 @@ const PartOIPage = () => {
             <p className="text-sm text-gray-400 mb-4 relative z-10">
               Discover relationships between different market participants and their trading patterns.
             </p>
-            <a 
-              href="/correlation" 
+            <a
+              href="/correlation"
               className="inline-flex items-center px-4 py-2 bg-blue-500/20 text-blue-400 rounded-lg hover:bg-blue-500/30 transition-colors relative z-10"
             >
               View Full Analysis

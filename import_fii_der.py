@@ -9,10 +9,10 @@ db_path = 'eod_data.db'
 
 # Instrument multipliers
 INSTRUMENT_MULTIPLIERS = {
-    'BANKNIFTY': 35,
-    'NIFTY': 75,
-    'MIDCPNIFTY': 140,
-    'FINNIFTY': 65,
+    'BANKNIFTY': 30,
+    'NIFTY': 65,
+    'MIDCPNIFTY': 120,
+    'FINNIFTY': 60,
     'NIFTYNXT50': 25
 }
 

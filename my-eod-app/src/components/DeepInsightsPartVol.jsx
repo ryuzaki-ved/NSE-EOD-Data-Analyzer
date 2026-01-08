@@ -1,8 +1,16 @@
 import React from 'react'
 import { Eye, Target } from 'lucide-react'
 import { formatDifference } from '../utils/partOIHelpers'
+import DateSelector from './DateSelector'
 
-const DeepInsightsPartVol = ({ data, latestDate, previousDate }) => {
+const DeepInsightsPartVol = ({
+  data,
+  latestDate,
+  previousDate,
+  availableDates = [],
+  onDateChange,
+  onPrevDateChange
+}) => {
   if (!data || data.length === 0) {
     return null
   }
@@ -25,6 +33,20 @@ const DeepInsightsPartVol = ({ data, latestDate, previousDate }) => {
         <div className="px-3 py-1 bg-primary-500/20 rounded-full text-xs text-primary-400 border border-primary-500/30">
           PREMIUM INSIGHTS
         </div>
+
+      </div>
+
+      {/* Date Selector for Deep Insights */}
+      <div className="flex justify-end mb-6">
+        <div className="bg-dark-900/50 p-2 rounded-xl border border-white/5 inline-block">
+          <DateSelector
+            selectedDate={latestDate}
+            previousDate={previousDate}
+            availableDates={availableDates}
+            onDateChange={onDateChange}
+            onPrevDateChange={onPrevDateChange}
+          />
+        </div>
       </div>
 
       {/* Volume Analysis with OI Adjustments */}
@@ -34,7 +56,7 @@ const DeepInsightsPartVol = ({ data, latestDate, previousDate }) => {
           <h4 className="text-xl font-semibold">Index Options Intraday Volume (Open and Closed Intraday)</h4>
           <div className="text-sm text-gray-400">({previousDate} → {latestDate})</div>
         </div>
-        
+
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
@@ -82,7 +104,7 @@ const DeepInsightsPartVol = ({ data, latestDate, previousDate }) => {
             </tbody>
           </table>
         </div>
-        
+
         <div className="mt-4 text-xs text-gray-400">
           <p>* Values are adjusted based on OI changes: Positive OI changes subtract from same category, Negative OI changes subtract from opposite category</p>
         </div>

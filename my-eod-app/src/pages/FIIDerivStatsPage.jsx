@@ -5,6 +5,7 @@ import MetricCard from '../components/MetricCard'
 import { TrendingUp, TrendingDown, DollarSign, Activity, BarChart3, Eye, Target } from 'lucide-react'
 import { motion } from 'framer-motion'
 import SortedCustomTooltip from '../components/SortedCustomTooltip'
+import DateSelector from '../components/DateSelector'
 
 const FIIDerivStatsPage = () => {
   const [data, setData] = useState([])
@@ -441,13 +442,28 @@ const FIIDerivStatsPage = () => {
       {/* Deep Data Section */}
       <motion.div variants={itemVariants} className="glass-card p-8 border border-primary-500/20 bg-gradient-to-br from-dark-900/80 to-dark-800/80 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-primary-500/10 rounded-full blur-3xl -z-10"></div>
-        <div className="flex items-center space-x-3 mb-8">
-          <div className="p-3 rounded-xl bg-gradient-to-r from-primary-500 to-accent-purple shadow-lg shadow-primary-500/20">
-            <Eye className="h-6 w-6 text-white" />
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center space-x-3">
+            <div className="p-3 rounded-xl bg-gradient-to-r from-primary-500 to-accent-purple shadow-lg shadow-primary-500/20">
+              <Eye className="h-6 w-6 text-white" />
+            </div>
+            <h2 className="text-3xl font-bold bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">Deep Data</h2>
+            <div className="px-3 py-1 bg-primary-500/10 rounded-full text-xs font-semibold text-primary-400 border border-primary-500/20">
+              PREMIUM INSIGHTS
+            </div>
           </div>
-          <h2 className="text-3xl font-bold bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">Deep Data</h2>
-          <div className="px-3 py-1 bg-primary-500/10 rounded-full text-xs font-semibold text-primary-400 border border-primary-500/20">
-            PREMIUM INSIGHTS
+          <div className="bg-dark-900/50 p-2 rounded-xl border border-white/5">
+            <DateSelector
+              selectedDate={selectedDate}
+              previousDate={previousDate}
+              availableDates={availableDates}
+              onDateChange={(date) => {
+                setSelectedDate(date)
+                const currentIndex = availableDates.indexOf(date)
+                setPreviousDate(availableDates[currentIndex + 1] || availableDates[currentIndex])
+              }}
+              onPrevDateChange={setPreviousDate}
+            />
           </div>
         </div>
 
@@ -577,39 +593,6 @@ const FIIDerivStatsPage = () => {
                 <div>
                   <h4 className="text-xl font-semibold text-slate-200">Market Sentiment Analysis</h4>
                   <div className="text-xs text-purple-400 font-medium">DAY-OVER-DAY COMPARISON</div>
-                </div>
-              </div>
-
-              {/* Date Selection Dropdowns */}
-              <div className="flex items-center space-x-4 bg-dark-900/50 p-2 rounded-xl border border-white/5">
-                <div className="flex items-center space-x-2">
-                  <label className="text-xs text-slate-400 uppercase font-bold">Latest</label>
-                  <select
-                    value={selectedDate}
-                    onChange={(e) => {
-                      setSelectedDate(e.target.value)
-                      const currentIndex = availableDates.indexOf(e.target.value)
-                      setPreviousDate(availableDates[currentIndex + 1] || availableDates[currentIndex])
-                    }}
-                    className="px-2 py-1 bg-dark-800 border border-white/10 rounded-lg text-sm focus:ring-1 focus:ring-purple-500 outline-none text-slate-300"
-                  >
-                    {availableDates.map(date => (
-                      <option key={date} value={date}>{date}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="w-px h-4 bg-white/10"></div>
-                <div className="flex items-center space-x-2">
-                  <label className="text-xs text-slate-400 uppercase font-bold">Prev</label>
-                  <select
-                    value={previousDate}
-                    onChange={(e) => setPreviousDate(e.target.value)}
-                    className="px-2 py-1 bg-dark-800 border border-white/10 rounded-lg text-sm focus:ring-1 focus:ring-purple-500 outline-none text-slate-300"
-                  >
-                    {availableDates.map(date => (
-                      <option key={date} value={date}>{date}</option>
-                    ))}
-                  </select>
                 </div>
               </div>
             </div>

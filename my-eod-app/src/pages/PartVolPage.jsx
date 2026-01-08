@@ -138,7 +138,7 @@ const PartVolPage = () => {
 
       setDeepInsightsData(processedData)
     }
-  }, [data, oiData])
+  }, [data, oiData, insightsLatestDate, insightsPreviousDate])
 
   if (loading) {
     return (
@@ -431,6 +431,28 @@ const PartVolPage = () => {
           data={deepInsightsData}
           latestDate={insightsLatestDate}
           previousDate={insightsPreviousDate}
+          availableDates={[...new Set([...data.map(item => item.date), ...oiData.map(item => item.date)])].sort((a, b) => {
+            const [dayA, monthA, yearA] = a.split('-')
+            const [dayB, monthB, yearB] = b.split('-')
+            const dateA = new Date(`${yearA}-${monthA}-${dayA}`)
+            const dateB = new Date(`${yearB}-${monthB}-${dayB}`)
+            return dateB - dateA
+          })}
+          onDateChange={(date) => {
+            setInsightsLatestDate(date)
+            // Auto-update previous date
+            const allDates = [...new Set([...data.map(item => item.date), ...oiData.map(item => item.date)])]
+              .sort((a, b) => {
+                const [dayA, monthA, yearA] = a.split('-')
+                const [dayB, monthB, yearB] = b.split('-')
+                const dateA = new Date(`${yearA}-${monthA}-${dayA}`)
+                const dateB = new Date(`${yearB}-${monthB}-${dayB}`)
+                return dateB - dateA
+              })
+            const currentIndex = allDates.indexOf(date)
+            setInsightsPreviousDate(allDates[currentIndex + 1] || allDates[currentIndex])
+          }}
+          onPrevDateChange={setInsightsPreviousDate}
         />
       </motion.div>
 
