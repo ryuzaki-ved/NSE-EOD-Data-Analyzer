@@ -12,6 +12,8 @@ import OptionsLongVsShortChart from '../components/partOI/OptionsLongVsShortChar
 import WeeklyOptionsCumulativeChart from '../components/partOI/WeeklyOptionsCumulativeChart'
 import FutureIndexOIBarChart from '../components/partOI/FutureIndexOIBarChart'
 import OptionIndexOIBarChart from '../components/partOI/OptionIndexOIBarChart'
+import DailyFutureChangeChart from '../components/partOI/DailyFutureChangeChart'
+import MonthlyFutureCumulativeChart from '../components/partOI/MonthlyFutureCumulativeChart'
 import CorrelationInsights from '../components/CorrelationInsights'
 
 const PartOIPage = () => {
@@ -86,6 +88,9 @@ const PartOIPage = () => {
         existingDate[item.client_type + '_option_index_put_long'] = item.option_index_put_long
         existingDate[item.client_type + '_option_index_call_short'] = item.option_index_call_short
         existingDate[item.client_type + '_option_index_put_short'] = item.option_index_put_short
+        // Add future index data for new charts
+        existingDate[item.client_type + '_future_index_long'] = item.future_index_long
+        existingDate[item.client_type + '_future_index_short'] = item.future_index_short
       } else {
         const dateEntry = { date: item.date }
         dateEntry[item.client_type + '_long'] = item.total_long_contracts
@@ -95,6 +100,9 @@ const PartOIPage = () => {
         dateEntry[item.client_type + '_option_index_put_long'] = item.option_index_put_long
         dateEntry[item.client_type + '_option_index_call_short'] = item.option_index_call_short
         dateEntry[item.client_type + '_option_index_put_short'] = item.option_index_put_short
+        // Add future index data for new charts
+        dateEntry[item.client_type + '_future_index_long'] = item.future_index_long
+        dateEntry[item.client_type + '_future_index_short'] = item.future_index_short
         acc.push(dateEntry)
       }
     }
@@ -1179,18 +1187,6 @@ const PartOIPage = () => {
         </motion.div>
       </motion.div>
 
-      <motion.div
-        className="grid lg:grid-cols-2 gap-8"
-        variants={containerVariants}
-      >
-        <motion.div variants={itemVariants} className="glass-card p-6 rounded-xl border border-white/5">
-          <OptionsLongVsShortChart chartData={chartData} />
-        </motion.div>
-        <motion.div variants={itemVariants} className="glass-card p-6 rounded-xl border border-white/5">
-          <WeeklyOptionsCumulativeChart chartData={chartData} />
-        </motion.div>
-      </motion.div>
-
       {/* Participant Comparison Charts */}
       <motion.div
         className="grid lg:grid-cols-2 gap-8"
@@ -1201,6 +1197,31 @@ const PartOIPage = () => {
         </motion.div>
         <motion.div variants={itemVariants} className="glass-card p-6 rounded-xl border border-white/5">
           <OptionIndexOIBarChart clientDistribution={clientDistribution} data={data} latestDate={latestDate} />
+        </motion.div>
+      </motion.div>
+
+      {/* Future Change Charts */}
+      <motion.div
+        className="grid lg:grid-cols-2 gap-8"
+        variants={containerVariants}
+      >
+        <motion.div variants={itemVariants} className="glass-card p-6 rounded-xl border border-white/5">
+          <DailyFutureChangeChart chartData={chartData} />
+        </motion.div>
+        <motion.div variants={itemVariants} className="glass-card p-6 rounded-xl border border-white/5">
+          <MonthlyFutureCumulativeChart chartData={chartData} />
+        </motion.div>
+      </motion.div>
+
+      <motion.div
+        className="grid lg:grid-cols-2 gap-8"
+        variants={containerVariants}
+      >
+        <motion.div variants={itemVariants} className="glass-card p-6 rounded-xl border border-white/5">
+          <OptionsLongVsShortChart chartData={chartData} />
+        </motion.div>
+        <motion.div variants={itemVariants} className="glass-card p-6 rounded-xl border border-white/5">
+          <WeeklyOptionsCumulativeChart chartData={chartData} />
         </motion.div>
       </motion.div>
 
