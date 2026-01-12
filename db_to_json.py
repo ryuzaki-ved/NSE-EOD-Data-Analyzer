@@ -10,7 +10,7 @@ def export_table_to_json(table_name, conn, output_path):
     cursor.execute(f"SELECT * FROM {table_name}")
     rows = cursor.fetchall()
     column_names = [description[0] for description in cursor.description]
-cd .
+
     data = []
     for row in rows:
         data.append(dict(zip(column_names, row)))
