@@ -776,7 +776,72 @@ const DeepInsights = ({
                     positionChanges[positionType].total = totalChange
                   })
 
-                  // Calculate participant percentages for each position type (preserving signs)
+                  // STEP 1: Extract numeric day change values (ignore percentages)
+                  // Structure:
+                  // - Rows: Call Long, Put Long, Call Short, Put Short
+                  // - Columns: Client, FII, DII, Pro
+                  const dayChangeValues = {}
+                  positionTypes.forEach(positionType => {
+                    dayChangeValues[positionType] = {}
+                    participants.forEach(participant => {
+                      dayChangeValues[positionType][participant] = positionChanges[positionType][participant]
+                    })
+                  })
+
+                  // STEP 2: NORMALIZE EACH ROW SEPARATELY (-100 to +100)
+                  const normalizedRowValues = {}
+                  positionTypes.forEach(positionType => {
+                    normalizedRowValues[positionType] = {}
+                    
+                    // Sum all the ABSOLUTE values among all 4 participants for this position type
+                    let sumAbsoluteInRow = 0
+                    participants.forEach(participant => {
+                      sumAbsoluteInRow += Math.abs(dayChangeValues[positionType][participant])
+                    })
+
+                    // Normalize each participant's value as percentage of the sum (considering sum as 100%)
+                    participants.forEach(participant => {
+                      const rawValue = dayChangeValues[positionType][participant]
+                      // Formula: normalized_value = (absolute_value / sum_of_all_absolute_values) * 100
+                      // But preserve the sign of the original value
+                      const absoluteNormalized = sumAbsoluteInRow > 0 ? (Math.abs(rawValue) / sumAbsoluteInRow) * 100 : 0
+                      normalizedRowValues[positionType][participant] = rawValue >= 0 ? absoluteNormalized : -absoluteNormalized
+                    })
+                  })
+
+                  // Keep normalized row values for score calculation
+                  const normalizedRowValuesForScore = normalizedRowValues
+
+                  // STEP 3: CALCULATE SENTIMENT SCORE PER PARTICIPANT
+                  const rawParticipantScores = {}
+                  participants.forEach(participant => {
+                    // Score = Call_Long_Norm - Put_Long_Norm - Call_Short_Norm + Put_Short_Norm
+                    let score = 0
+                    score += normalizedRowValuesForScore['Call Long'][participant]      // Bullish
+                    score -= normalizedRowValuesForScore['Put Long'][participant]       // Bearish
+                    score -= normalizedRowValuesForScore['Call Short'][participant]     // Bearish
+                    score += normalizedRowValuesForScore['Put Short'][participant]      // Bullish
+                    rawParticipantScores[participant] = score
+                  })
+
+                  // STEP 4: FINAL NORMALIZATION (sum-based)
+                  // Sum all the ABSOLUTE scores among all 4 participants
+                  let sumAbsoluteScores = 0
+                  participants.forEach(participant => {
+                    sumAbsoluteScores += Math.abs(rawParticipantScores[participant])
+                  })
+
+                  // Normalize each score as percentage of the sum (considering sum as 100)
+                  const participantScores = {}
+                  participants.forEach(participant => {
+                    const rawScore = rawParticipantScores[participant]
+                    // Formula: normalized_score = (absolute_score / sum_of_all_absolute_scores) * 100
+                    // Preserve the sign of the original score
+                    const absoluteNormalized = sumAbsoluteScores > 0 ? (Math.abs(rawScore) / sumAbsoluteScores) * 100 : 0
+                    participantScores[participant] = rawScore >= 0 ? absoluteNormalized : -absoluteNormalized
+                  })
+
+                  // Calculate participant percentages for display (original calculation)
                   const participantPercentages = {}
                   positionTypes.forEach(positionType => {
                     participantPercentages[positionType] = {}
@@ -789,31 +854,14 @@ const DeepInsights = ({
                     })
                   })
 
-                  // Calculate participant-wise sentiment scores (with proper sign handling)
-                  const participantScores = {}
-                  participants.forEach(participant => {
-                    let score = 0
-
-                    // Call Long: positive contribution (keep sign as is)
-                    score += participantPercentages['Call Long'][participant]
-
-                    // Put Short: positive contribution (keep sign as is)
-                    score += participantPercentages['Put Short'][participant]
-
-                    // Call Short: negative contribution (multiply by -1)
-                    score -= participantPercentages['Call Short'][participant]
-
-                    // Put Long: negative contribution (multiply by -1)
-                    score -= participantPercentages['Put Long'][participant]
-
-                    participantScores[participant] = score
-                  })
-
                   return (
                     <div className="space-y-6">
                       {/* Position-wise Changes Table */}
                       <div className="bg-gradient-to-r from-purple-900/20 to-blue-900/20 border border-purple-500/30 rounded-lg p-4 backdrop-blur-sm">
-                        <h6 className="text-lg font-semibold text-white mb-4">Position-wise Day Changes</h6>
+                        <h6 className="text-lg font-semibold text-white mb-2">Position-wise Day Changes</h6>
+                        <p className="text-xs text-gray-400 mb-4">
+                          Each row is normalized from -100 to +100 based on the maximum absolute value in that row. This shows relative strength of changes across participants for each position type.
+                        </p>
 
                         <div className="overflow-x-auto">
                           <table className="w-full text-sm">
@@ -825,7 +873,7 @@ const DeepInsights = ({
                                     {participant}
                                   </th>
                                 ))}
-                                <th className="text-center py-2 px-3 text-purple-400 font-semibold">Total Changes</th>
+                                <th className="text-center py-2 px-3 text-purple-400 font-semibold">Absolute Total</th>
                               </tr>
                             </thead>
                             <tbody>
@@ -833,15 +881,22 @@ const DeepInsights = ({
                                 <tr key={positionType} className="border-b border-purple-500/20">
                                   <td className="py-3 px-3 text-white font-medium">{positionType}</td>
                                   {participants.map(participant => {
-                                    const change = positionChanges[positionType][participant]
+                                    const normalizedScore = normalizedRowValuesForScore[positionType][participant]
                                     const percentage = participantPercentages[positionType][participant]
+                                    const rawChange = positionChanges[positionType][participant]
                                     return (
                                       <td key={participant} className="text-center py-3 px-3">
-                                        <div className={`font-semibold ${change >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                          {change >= 0 ? '+' : ''}{change.toLocaleString('en-IN')}
+                                        <div className={`font-semibold ${rawChange >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                          {rawChange >= 0 ? '+' : ''}{rawChange.toLocaleString('en-IN')}
                                         </div>
                                         <div className="text-xs text-gray-400">
-                                          {percentage.toFixed(1)}%
+                                          <span className={normalizedScore >= 0 ? 'text-blue-400' : 'text-red-400'}>
+                                            {normalizedScore >= 0 ? '+' : ''}{normalizedScore.toFixed(1)}
+                                          </span>
+                                          {' | '}
+                                          <span className="text-gray-500">
+                                            {percentage >= 0 ? '+' : ''}{percentage.toFixed(1)}%
+                                          </span>
                                         </div>
                                       </td>
                                     )
@@ -860,7 +915,10 @@ const DeepInsights = ({
 
                       {/* Participant-wise Sentiment Scores */}
                       <div className="bg-gradient-to-r from-purple-900/20 to-blue-900/20 border border-purple-500/30 rounded-lg p-4 backdrop-blur-sm">
-                        <h6 className="text-lg font-semibold text-white mb-4">Participant Sentiment Scores</h6>
+                        <h6 className="text-lg font-semibold text-white mb-2">Participant Sentiment Scores</h6>
+                        <p className="text-xs text-gray-400 mb-4">
+                          Normalized Score Range: -100 to +100. Formula: Call Long - Put Long - Call Short + Put Short (each row-normalized separately, then scores normalized by max absolute score). Positive = Bullish, Negative = Bearish.
+                        </p>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                           {participants.map(participant => {
