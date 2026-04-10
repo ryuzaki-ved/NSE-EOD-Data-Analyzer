@@ -32,14 +32,14 @@ const DeepInsights = ({
   const getColor = (name) => PARTICIPANT_COLORS[name] || '#64748b' // fallback: slate-400
 
   return (
-    <div className="glass-card p-8 border-2 border-primary-500/30 bg-gradient-to-br from-primary-900/10 to-purple-900/10 glow-gold-border">
+    <div className="glass-card p-8 border border-white/[0.07]">
       <div className="flex items-center space-x-3 mb-6">
-        <div className="p-2 rounded-lg bg-gradient-to-r from-primary-500 to-purple-500">
-          <Eye className="h-6 w-6 text-white" />
+        <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+          <Eye className="h-6 w-6 text-emerald-400" />
         </div>
-        <h2 className="text-3xl font-bold gradient-text">Deep Insights</h2>
-        <div className="px-3 py-1 bg-primary-500/20 rounded-full text-xs text-primary-400 border border-primary-500/30">
-          PREMIUM INSIGHTS
+        <h2 className="text-2xl font-bold text-white tracking-tight">Deep Insights</h2>
+        <div className="badge-emerald">
+          POSITIONING ANALYSIS
         </div>
       </div>
 
@@ -57,9 +57,9 @@ const DeepInsights = ({
       </div>
 
       {/* Overall Positions Analysis */}
-      <div className="glass-card p-6 border border-primary-500/20 mb-8">
+      <div className="glass-card p-6 border border-white/[0.07] mb-8">
         <div className="flex items-center space-x-2 mb-4">
-          <Target className="h-5 w-5 text-primary-400" />
+          <Target className="h-5 w-5 text-slate-400" />
           <h4 className="text-xl font-semibold">Index Options Ratio Analysis (Overall Positions)</h4>
           <div className="text-sm text-gray-400">({latestDate})</div>
         </div>
@@ -78,7 +78,7 @@ const DeepInsights = ({
             <tbody>
               {ratioData.map((row, index) => (
                 <tr key={index} className="border-b border-gray-800 hover:bg-white/5 transition-colors">
-                  <td className="py-3 px-4 font-semibold text-primary-400">{row.clientType}</td>
+                  <td className="py-3 px-4 font-semibold text-cyan-400">{row.clientType}</td>
                   <td className={`py-3 px-4 text-center ${getRatioClass(row.callBuyPutBuy)}`}>
                     {formatRatio(row.callBuyPutBuy)}
                   </td>
@@ -116,7 +116,7 @@ const DeepInsights = ({
 
         {/* Market Positioning Insights - Grouped by participant with vertical lines */}
         <div className="mt-6 pt-6 border-t border-gray-700">
-          <h5 className="text-lg font-semibold text-purple-400 mb-4">Market Positioning Insights</h5>
+          <h5 className="text-base font-bold text-white mb-4">Market Positioning Insights</h5>
           <div className="flex flex-col gap-6">
             {Object.entries(groupedInsights).length > 0
               ? Object.entries(groupedInsights).map(([clientType, insights]) => (
@@ -141,7 +141,7 @@ const DeepInsights = ({
       </div>
 
       {/* Daily Changes Analysis */}
-      <div className="glass-card p-6 border border-cyan-500/20 mb-8">
+      <div className="glass-card p-6 border border-white/[0.07] mb-8">
         <div className="flex items-center space-x-2 mb-4">
           <Calendar className="h-5 w-5 text-cyan-400" />
           <h4 className="text-xl font-semibold">Positions made today (Daily Changes)</h4>
@@ -203,7 +203,7 @@ const DeepInsights = ({
 
         {/* Daily Change Insights - Grouped by participant with vertical lines */}
         <div className="pt-4 border-t border-gray-700">
-          <h5 className="text-lg font-semibold text-cyan-400 mb-4">Daily Position Change Insights</h5>
+          <h5 className="text-base font-bold text-white mb-4">Daily Position Change Insights</h5>
           <div className="flex flex-col gap-6">
             {Object.entries(groupedDailyChangeInsights).length > 0
               ? Object.entries(groupedDailyChangeInsights).map(([clientType, insights]) => (
@@ -217,7 +217,7 @@ const DeepInsights = ({
                     }}
                   >
                     {/* Use a neutral color for the participant name in the 2nd section */}
-                    <div className="font-bold mb-2" style={{ color: '#a589b4' }}>{clientType}</div>
+                    <div className="font-bold mb-2" style={{ color: getColor(clientType) }}>{clientType}</div>
                     <div className="flex flex-col gap-2">{insights}</div>
                   </div>
                 </div>
@@ -229,11 +229,11 @@ const DeepInsights = ({
       </div>
 
       {/* Score Sentiment Analysis */}
-      <div className="glass-card p-6 border border-purple-500/20">
+      <div className="glass-card p-6 border border-white/[0.07]">
         <div className="flex items-center space-x-2 mb-4">
-          <TrendingUp className="h-5 w-5 text-purple-400" />
-          <h4 className="text-xl font-semibold">Score Sentiment Analysis</h4>
-          <div className="text-sm text-gray-400">({latestDate})</div>
+          <TrendingUp className="h-5 w-5 text-emerald-400" />
+          <h4 className="text-lg font-bold text-white">Score Sentiment Analysis</h4>
+          <div className="text-xs text-slate-400">({latestDate})</div>
         </div>
 
         {(() => {
@@ -340,7 +340,7 @@ const DeepInsights = ({
               {/* Individual Participant Analysis Section */}
               <div className="space-y-4">
                 {/* Overall Market Sentiment Header/Summary */}
-                <div className="bg-gradient-to-r from-purple-900/30 to-blue-900/30 border border-purple-500/40 rounded-lg p-4 backdrop-blur-sm">
+                <div className="bg-[#0B0F19]/60 border border-white/[0.08] rounded-xl p-4">
                   <div className="flex items-center justify-between mb-4">
                     <h5 className="text-lg font-semibold text-white">Overall Market Sentiment</h5>
                     <div className="flex items-center space-x-2">
@@ -374,8 +374,8 @@ const DeepInsights = ({
                 {/* Individual Participant Breakdowns */}
                 <div className="mt-6">
                   <div className="flex items-center space-x-2 mb-4">
-                    <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
-                    <h5 className="text-lg font-semibold text-purple-400">Individual Participant Analysis</h5>
+                    <div className="w-2 h-2 bg-emerald-400 rounded-full"></div>
+                    <h5 className="text-base font-bold text-white">Individual Participant Analysis</h5>
                   </div>
 
                   <div className="space-y-4">
@@ -411,7 +411,7 @@ const DeepInsights = ({
                       }
 
                       return (
-                        <div key={participant} className="bg-gradient-to-r from-purple-900/20 to-blue-900/20 border border-purple-500/30 rounded-lg p-4 backdrop-blur-sm">
+                        <div key={participant} className="bg-[#0B0F19]/40 border border-white/[0.06] rounded-xl p-4">
                           <div className="flex items-center justify-between mb-3">
                             <h6 className="text-lg font-semibold text-white">{participant}</h6>
                             <div className="flex items-center space-x-2">
@@ -435,7 +435,7 @@ const DeepInsights = ({
                               </div>
                             </div>
                             <div className="text-center">
-                              <div className="text-purple-400 font-semibold">
+                              <div className="text-amber-400 font-semibold">
                                 {percentages.putLong.toFixed(1)}%
                               </div>
                               <div className="text-gray-400">Put Long</div>
@@ -469,8 +469,8 @@ const DeepInsights = ({
                 </div>
 
                 {/* Sentiment Explanation */}
-                <div className="mt-6 p-4 bg-gradient-to-r from-purple-500/10 to-blue-500/10 rounded-lg border border-purple-500/20">
-                  <h6 className="text-sm font-semibold text-purple-400 mb-2">How to Read Sentiment:</h6>
+                <div className="mt-6 p-4 bg-white/[0.02] rounded-xl border border-white/[0.06]">
+                  <h6 className="text-sm font-semibold text-slate-300 mb-2">How to Read Sentiment:</h6>
                   <ul className="text-xs text-gray-300 space-y-1">
                     <li>• <span className="text-green-400">Call Long + Put Short</span> = Bullish positions (positive score)</li>
                     <li>• <span className="text-red-400">Call Short + Put Long</span> = Bearish positions (negative score)</li>
@@ -481,10 +481,10 @@ const DeepInsights = ({
               </div>
 
               {/* Day Change Score Section */}
-              <div className="mt-8 pt-6 border-t border-purple-500/20">
+              <div className="mt-8 pt-6 border-t border-white/[0.06]">
                 <div className="flex items-center space-x-2 mb-4">
-                  <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
-                  <h5 className="text-lg font-semibold text-purple-400">Day Change Score</h5>
+                  <div className="w-2 h-2 bg-cyan-400 rounded-full"></div>
+                  <h5 className="text-base font-bold text-white">Day Change Score</h5>
                 </div>
 
                 {(() => {
@@ -600,7 +600,7 @@ const DeepInsights = ({
                   return (
                     <div className="space-y-4">
                       {/* Overall Day Change Sentiment Header/Summary */}
-                      <div className="bg-gradient-to-r from-purple-900/30 to-blue-900/30 border border-purple-500/40 rounded-lg p-4 backdrop-blur-sm">
+                      <div className="bg-[#0B0F19]/60 border border-white/[0.08] rounded-xl p-4">
                         <div className="flex items-center justify-between mb-4">
                           <h6 className="text-lg font-semibold text-white">Day Change Market Sentiment</h6>
                           <div className="flex items-center space-x-2">
@@ -665,7 +665,7 @@ const DeepInsights = ({
                           }
 
                           return (
-                            <div key={participant} className="bg-gradient-to-r from-purple-900/20 to-blue-900/20 border border-purple-500/30 rounded-lg p-4 backdrop-blur-sm">
+                            <div key={participant} className="bg-[#0B0F19]/40 border border-white/[0.06] rounded-xl p-4">
                               <div className="flex items-center justify-between mb-3">
                                 <h6 className="text-lg font-semibold text-white">{participant}</h6>
                                 <div className="flex items-center space-x-2">
@@ -726,10 +726,10 @@ const DeepInsights = ({
               </div>
 
               {/* Changed Contracts Mapping Section */}
-              <div className="mt-8 pt-6 border-t border-purple-500/20">
+              <div className="mt-8 pt-6 border-t border-white/[0.06]">
                 <div className="flex items-center space-x-2 mb-4">
-                  <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
-                  <h5 className="text-lg font-semibold text-purple-400">Changed Contracts Mapping</h5>
+                  <div className="w-2 h-2 bg-amber-400 rounded-full"></div>
+                  <h5 className="text-base font-bold text-white">Changed Contracts Mapping</h5>
                 </div>
 
                 {(() => {
@@ -857,7 +857,7 @@ const DeepInsights = ({
                   return (
                     <div className="space-y-6">
                       {/* Position-wise Changes Table */}
-                      <div className="bg-gradient-to-r from-purple-900/20 to-blue-900/20 border border-purple-500/30 rounded-lg p-4 backdrop-blur-sm">
+                      <div className="bg-[#0B0F19]/40 border border-white/[0.06] rounded-xl p-4">
                         <h6 className="text-lg font-semibold text-white mb-2">Position-wise Day Changes</h6>
                         <p className="text-xs text-gray-400 mb-4">
                           Each row is normalized from -100 to +100 based on the maximum absolute value in that row. This shows relative strength of changes across participants for each position type.
@@ -866,14 +866,14 @@ const DeepInsights = ({
                         <div className="overflow-x-auto">
                           <table className="w-full text-sm">
                             <thead>
-                              <tr className="border-b border-purple-500/30">
-                                <th className="text-left py-2 px-3 text-purple-400 font-semibold">Position Type</th>
+                              <tr className="border-b border-white/[0.06]">
+                                <th className="text-left py-2 px-3 text-slate-300 font-semibold">Position Type</th>
                                 {participants.map(participant => (
-                                  <th key={participant} className="text-center py-2 px-3 text-purple-400 font-semibold">
+                                  <th key={participant} className="text-center py-2 px-3 text-slate-300 font-semibold">
                                     {participant}
                                   </th>
                                 ))}
-                                <th className="text-center py-2 px-3 text-purple-400 font-semibold">Absolute Total</th>
+                                <th className="text-center py-2 px-3 text-slate-300 font-semibold">Absolute Total</th>
                               </tr>
                             </thead>
                             <tbody>
@@ -914,7 +914,7 @@ const DeepInsights = ({
                       </div>
 
                       {/* Participant-wise Sentiment Scores */}
-                      <div className="bg-gradient-to-r from-purple-900/20 to-blue-900/20 border border-purple-500/30 rounded-lg p-4 backdrop-blur-sm">
+                      <div className="bg-[#0B0F19]/40 border border-white/[0.06] rounded-xl p-4">
                         <h6 className="text-lg font-semibold text-white mb-2">Participant Sentiment Scores</h6>
                         <p className="text-xs text-gray-400 mb-4">
                           Normalized Score Range: -100 to +100. Formula: Call Long - Put Long - Call Short + Put Short (each row-normalized separately, then scores normalized by max absolute score). Positive = Bullish, Negative = Bearish.
@@ -981,10 +981,10 @@ const DeepInsights = ({
       </div>
 
       {/* Weekly Position Changes (Since Last Expiry) */}
-      <div className="mt-8 pt-6 border-t border-purple-500/20">
+      <div className="mt-8 pt-6 border-t border-white/[0.06]">
         <div className="flex items-center space-x-2 mb-4">
-          <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
-          <h5 className="text-lg font-semibold text-purple-400">Weekly Position Changes</h5>
+          <div className="w-2 h-2 bg-emerald-400 rounded-full"></div>
+          <h5 className="text-base font-bold text-white">Weekly Position Changes</h5>
         </div>
 
         {(() => {
@@ -1080,7 +1080,7 @@ const DeepInsights = ({
               </div>
 
               {/* Position-wise Changes Table */}
-              <div className="bg-gradient-to-r from-purple-900/20 to-blue-900/20 border border-purple-500/30 rounded-lg p-4 backdrop-blur-sm">
+              <div className="bg-[#0B0F19]/40 border border-white/[0.06] rounded-xl p-4">
                 <h6 className="text-lg font-semibold text-white mb-4">Position-wise Weekly Changes</h6>
 
                 <div className="overflow-x-auto">
@@ -1127,7 +1127,7 @@ const DeepInsights = ({
               </div>
 
               {/* Participant-wise Sentiment Scores */}
-              <div className="bg-gradient-to-r from-purple-900/20 to-blue-900/20 border border-purple-500/30 rounded-lg p-4 backdrop-blur-sm">
+              <div className="bg-[#0B0F19]/40 border border-white/[0.06] rounded-xl p-4">
                 <h6 className="text-lg font-semibold text-white mb-4">Participant Sentiment Scores (Weekly)</h6>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -1181,7 +1181,7 @@ const DeepInsights = ({
 
 
               {/* Weekly Sentiment Trend Chart */}
-              <div className="bg-gradient-to-r from-purple-900/20 to-blue-900/20 border border-purple-500/30 rounded-lg p-4 backdrop-blur-sm mt-6">
+              <div className="bg-[#0B0F19]/40 border border-white/[0.06] rounded-xl p-4 mt-6">
                 <h6 className="text-lg font-semibold text-white mb-4">Weekly Sentiment Trend</h6>
                 <div className="h-[300px] w-full">
                   {(() => {

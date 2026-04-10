@@ -88,34 +88,28 @@ const AdvancedMathematicalAnalysis = ({ participantData, fiiData }) => {
         return
       }
 
-      // Time Series Analysis
       const hurstExponent = calculateHurstExponent(values)
       const fftResults = performFFT(values)
       const cycles = detectCycles(values)
       
-      // Risk Metrics
       const returns = calculateReturns(values)
       const cvar = calculateCVaR(returns)
       const omegaRatio = calculateOmegaRatio(returns)
       const maxDrawdown = calculateMaxDrawdown(values)
+      const maxDrawdownDuration = calculateMaxDrawdownDuration(values)
       const calmarRatio = calculateCalmarRatio(returns, maxDrawdown)
       const sortinoRatio = calculateSortinoRatio(returns)
-      const maxDrawdownDuration = calculateMaxDrawdownDuration(values)
       
-      // Structural Break Detection
-      const chowTest = performChowTest(values, Math.floor(values.length / 2))
+      const chowTest = performChowTest(values)
       const cusumTest = performCUSUMTest(values)
       
-      // Monte Carlo Simulation
-      const monteCarlo = performMonteCarloSimulation(returns)
+      const monteCarlo = performMonteCarloSimulation(values, 100, 30)
       
-      // Rolling Statistics
       const rollingSkewness = calculateRollingStatistics(values, 10, 'skewness')
       const rollingKurtosis = calculateRollingStatistics(values, 10, 'kurtosis')
       
-      // Confidence Intervals
-      const confidenceInterval = calculateConfidenceInterval(values)
-      
+      const confidenceInterval = calculateConfidenceInterval(values, 0.95)
+
       setAnalysisResults({
         hurstExponent,
         fftResults,
@@ -171,11 +165,11 @@ const AdvancedMathematicalAnalysis = ({ participantData, fiiData }) => {
 
   const getHurstInterpretation = (hurst) => {
     if (hurst === null) return 'Insufficient data'
-    if (hurst > 0.6) return 'Strong trend persistence (mean-reverting)'
+    if (hurst > 0.6) return 'Strong trend persistence (momentum)'
     if (hurst > 0.55) return 'Moderate trend persistence'
-    if (hurst > 0.45) return 'Random walk'
-    if (hurst > 0.4) return 'Moderate anti-persistence'
-    return 'Strong anti-persistence (mean-reverting)'
+    if (hurst > 0.45) return 'Random walk behavior'
+    if (hurst > 0.4) return 'Moderate mean-reversion'
+    return 'Strong mean-reversion tendencies'
   }
 
   const getRiskLevel = (value, metric) => {
@@ -191,29 +185,43 @@ const AdvancedMathematicalAnalysis = ({ participantData, fiiData }) => {
     }
   }
 
+  const tabs = [
+    { id: 'time-series', label: 'Time Series & Cycles', icon: TrendingUp },
+    { id: 'risk-metrics', label: 'Risk Metrics', icon: Shield },
+    { id: 'structural-breaks', label: 'Structural Breaks', icon: AlertTriangle },
+    { id: 'monte-carlo', label: 'Monte Carlo', icon: Cpu },
+    { id: 'rolling-stats', label: 'Rolling Stats', icon: BarChart3 }
+  ]
+
   return (
-    <div className="space-y-8 animate-fade-in">
-      <div className="flex items-center space-x-3 mb-6">
-        <div className="p-2 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500">
-          <Brain className="h-6 w-6 text-white" />
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-3">
+          <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+            <Brain className="h-6 w-6 text-emerald-400" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold text-white tracking-tight">Quantitative Mathematical Analysis</h2>
+            <p className="text-xs text-slate-400 mt-0.5">Statistical regime detection, cycles, risk parameters & simulations</p>
+          </div>
         </div>
-        <h2 className="text-3xl font-bold gradient-text">Advanced Mathematical Analysis</h2>
-        <div className="px-3 py-1 bg-purple-500/20 rounded-full text-xs text-purple-400 border border-purple-500/30">
-          QUANTUM ANALYTICS
+        <div className="badge-emerald">
+          QUANTITATIVE MODELS
         </div>
       </div>
 
       {/* Controls */}
-      <div className="glass-card p-6 border border-purple-500/20">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="glass-card p-4 border border-white/[0.07]">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Participant:
+            <label className="block text-xs font-semibold text-slate-400 mb-1.5">
+              Participant Scope:
             </label>
             <select
               value={selectedParticipant}
               onChange={(e) => setSelectedParticipant(e.target.value)}
-              className="w-full px-3 py-2 bg-dark-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 text-white"
+              className="w-full px-3 py-1.5 bg-[#0B0F19] border border-white/[0.08] rounded-lg text-xs font-medium text-slate-300 focus:ring-1 focus:ring-emerald-500/40 focus:border-emerald-500/40 outline-none transition-colors"
             >
               {participants.map(participant => (
                 <option key={participant} value={participant}>{participant}</option>
@@ -222,13 +230,13 @@ const AdvancedMathematicalAnalysis = ({ participantData, fiiData }) => {
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Metric:
+            <label className="block text-xs font-semibold text-slate-400 mb-1.5">
+              Target Metric:
             </label>
             <select
               value={selectedMetric}
               onChange={(e) => setSelectedMetric(e.target.value)}
-              className="w-full px-3 py-2 bg-dark-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 text-white"
+              className="w-full px-3 py-1.5 bg-[#0B0F19] border border-white/[0.08] rounded-lg text-xs font-medium text-slate-300 focus:ring-1 focus:ring-emerald-500/40 focus:border-emerald-500/40 outline-none transition-colors"
             >
               {metrics.map(metric => (
                 <option key={metric.key} value={metric.key}>{metric.label}</option>
@@ -236,173 +244,141 @@ const AdvancedMathematicalAnalysis = ({ participantData, fiiData }) => {
             </select>
           </div>
           
-          <div className="flex items-end">
+          <div>
             <button
               onClick={performAdvancedAnalysis}
               disabled={loading}
-              className="w-full px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 text-white rounded-lg transition-colors"
+              className="w-full px-4 py-2 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/30 rounded-lg text-xs font-semibold tracking-wide transition-all disabled:opacity-50"
             >
-              {loading ? 'Analyzing...' : 'Run Analysis'}
+              {loading ? 'Re-running Models...' : 'Run Quantitative Models'}
             </button>
           </div>
         </div>
       </div>
 
       {/* Tab Navigation */}
-      <div className="flex flex-wrap gap-2 bg-dark-700 rounded-lg p-2">
-        <button
-          onClick={() => setActiveTab('time-series')}
-          className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-            activeTab === 'time-series'
-              ? 'bg-purple-500 text-white'
-              : 'text-gray-400 hover:text-white'
-          }`}
-        >
-          <TrendingUp className="h-4 w-4 inline mr-2" />
-          Time Series
-        </button>
-        <button
-          onClick={() => setActiveTab('risk-metrics')}
-          className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-            activeTab === 'risk-metrics'
-              ? 'bg-purple-500 text-white'
-              : 'text-gray-400 hover:text-white'
-          }`}
-        >
-          <Shield className="h-4 w-4 inline mr-2" />
-          Risk Metrics
-        </button>
-        <button
-          onClick={() => setActiveTab('structural-breaks')}
-          className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-            activeTab === 'structural-breaks'
-              ? 'bg-purple-500 text-white'
-              : 'text-gray-400 hover:text-white'
-          }`}
-        >
-          <AlertTriangle className="h-4 w-4 inline mr-2" />
-          Structural Breaks
-        </button>
-        <button
-          onClick={() => setActiveTab('monte-carlo')}
-          className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-            activeTab === 'monte-carlo'
-              ? 'bg-purple-500 text-white'
-              : 'text-gray-400 hover:text-white'
-          }`}
-        >
-          <Cpu className="h-4 w-4 inline mr-2" />
-          Monte Carlo
-        </button>
-        <button
-          onClick={() => setActiveTab('rolling-stats')}
-          className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-            activeTab === 'rolling-stats'
-              ? 'bg-purple-500 text-white'
-              : 'text-gray-400 hover:text-white'
-          }`}
-        >
-          <BarChart3 className="h-4 w-4 inline mr-2" />
-          Rolling Stats
-        </button>
+      <div className="flex overflow-x-auto gap-1.5 p-1 bg-[#0B0F19]/60 border border-white/[0.06] rounded-xl">
+        {tabs.map(tab => {
+          const Icon = tab.icon
+          const isActive = activeTab === tab.id
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center space-x-2 px-3.5 py-2 rounded-lg text-xs font-medium transition-all whitespace-nowrap ${
+                isActive
+                  ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-white/[0.04]'
+              }`}
+            >
+              <Icon className="h-3.5 w-3.5" />
+              <span>{tab.label}</span>
+            </button>
+          )
+        })}
       </div>
 
       {/* Time Series Analysis Tab */}
       {activeTab === 'time-series' && (
         <div className="space-y-6">
           {/* Hurst Exponent */}
-          <div className="glass-card p-6 border border-blue-500/20">
-            <h3 className="text-xl font-semibold mb-4 flex items-center">
-              <TrendingUp className="h-5 w-5 mr-2 text-blue-400" />
-              Hurst Exponent Analysis
+          <div className="glass-card p-6 border border-white/[0.07]">
+            <h3 className="text-base font-bold text-white tracking-tight mb-4 flex items-center">
+              <TrendingUp className="h-4 w-4 mr-2 text-emerald-400" />
+              Hurst Exponent Analysis (Memory & Long-Range Dependence)
             </h3>
             
             {loading ? (
-              <div className="text-center text-gray-400 py-8">
-                Loading analysis...
+              <div className="text-center text-slate-400 py-8 text-xs">
+                Computing mathematical models...
               </div>
             ) : analysisResults.hurstExponent !== null ? (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="p-4 bg-dark-700 rounded-lg">
-                  <div className="text-2xl font-bold text-blue-400 mb-2">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div className="p-4 bg-[#0B0F19]/60 rounded-xl border border-white/[0.06]">
+                  <div className="text-2xl font-bold font-mono text-emerald-400 mb-1">
                     {analysisResults.hurstExponent.toFixed(4)}
                   </div>
-                  <div className="text-sm text-gray-400 mb-3">
+                  <div className="text-xs text-slate-400 mb-4">
                     {getHurstInterpretation(analysisResults.hurstExponent)}
                   </div>
-                  <div className="space-y-2 text-sm">
+                  <div className="space-y-2 text-xs">
                     <div className="flex justify-between">
-                      <span className="text-gray-400">Trend Persistence:</span>
-                      <span className="text-white">
+                      <span className="text-slate-400">Trend Persistence:</span>
+                      <span className="font-semibold text-white">
                         {analysisResults.hurstExponent > 0.55 ? 'High' : 
-                         analysisResults.hurstExponent > 0.45 ? 'Medium' : 'Low'}
+                         analysisResults.hurstExponent > 0.45 ? 'Moderate' : 'Low'}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-400">Market Efficiency:</span>
-                      <span className="text-white">
-                        {Math.abs(analysisResults.hurstExponent - 0.5) < 0.05 ? 'Efficient' : 'Inefficient'}
+                      <span className="text-slate-400">Randomness Index:</span>
+                      <span className="font-semibold text-white">
+                        {Math.abs(analysisResults.hurstExponent - 0.5) < 0.05 ? 'Random Walk' : 'Regime-Driven'}
                       </span>
                     </div>
                   </div>
                 </div>
                 
-                <div className="p-4 bg-dark-700 rounded-lg">
-                  <h4 className="text-lg font-semibold text-white mb-3">Interpretation Guide</h4>
-                  <div className="space-y-2 text-sm">
+                <div className="p-4 bg-[#0B0F19]/60 rounded-xl border border-white/[0.06]">
+                  <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-3">Theoretical Thresholds</h4>
+                  <div className="space-y-2 text-xs">
                     <div className="flex justify-between">
-                      <span className="text-gray-400">H &gt; 0.6:</span>
-                      <span className="text-green-400">Strong trend persistence</span>
+                      <span className="text-slate-400">H &gt; 0.60:</span>
+                      <span className="text-emerald-400 font-medium">Strong trend persistence (autocorrelated)</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-400">H ≈ 0.5:</span>
-                      <span className="text-yellow-400">Random walk</span>
+                      <span className="text-slate-400">H ≈ 0.50:</span>
+                      <span className="text-amber-400 font-medium">Geometric Brownian motion (pure random)</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-400">H &lt; 0.4:</span>
-                      <span className="text-red-400">Anti-persistence</span>
+                      <span className="text-slate-400">H &lt; 0.40:</span>
+                      <span className="text-rose-400 font-medium">Anti-persistence (mean-reverting oscillations)</span>
                     </div>
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="text-center text-gray-400 py-8">
+              <div className="text-center text-slate-400 py-8 text-xs">
                 Insufficient data for Hurst exponent calculation (minimum 50 data points required)
               </div>
             )}
           </div>
 
           {/* FFT Analysis */}
-          <div className="glass-card p-6 border border-green-500/20">
-            <h3 className="text-xl font-semibold mb-4 flex items-center">
-              <Zap className="h-5 w-5 mr-2 text-green-400" />
-              Frequency Domain Analysis (FFT)
+          <div className="glass-card p-6 border border-white/[0.07]">
+            <h3 className="text-base font-bold text-white tracking-tight mb-4 flex items-center">
+              <Zap className="h-4 w-4 mr-2 text-cyan-400" />
+              Fast Fourier Transform (FFT) Frequency Domain Spectrum
             </h3>
             
             {analysisResults.fftResults && analysisResults.fftResults.frequencies.length > 0 && (
               <div className="space-y-6">
-                <div className="h-80">
+                <div className="h-[280px] w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={analysisResults.fftResults.frequencies.map((freq, i) => ({
                       frequency: freq,
                       amplitude: analysisResults.fftResults.amplitudes[i]
-                    })).slice(0, 50)}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                    })).slice(0, 50)} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#1E293B" vertical={false} />
                       <XAxis 
                         dataKey="frequency" 
-                        stroke="#9CA3AF"
-                        label={{ value: 'Frequency', position: 'insideBottom', offset: -10 }}
+                        stroke="#64748B"
+                        fontSize={11}
+                        tickLine={false}
                       />
                       <YAxis 
-                        stroke="#9CA3AF"
-                        label={{ value: 'Amplitude', angle: -90, position: 'insideLeft' }}
+                        stroke="#64748B"
+                        fontSize={11}
+                        tickLine={false}
                       />
                       <Tooltip 
-                        contentStyle={{ 
-                          backgroundColor: '#1F2937', 
-                          border: '1px solid #374151',
-                          borderRadius: '8px'
+                        contentStyle={{
+                          backgroundColor: 'rgba(11, 15, 25, 0.95)',
+                          border: '1px solid rgba(255, 255, 255, 0.1)',
+                          borderRadius: '12px',
+                          color: '#e2e8f0',
+                          backdropFilter: 'blur(12px)',
                         }}
+                        itemStyle={{ color: '#e2e8f0', fontSize: 12 }}
                       />
                       <Line 
                         type="monotone" 
@@ -410,24 +386,23 @@ const AdvancedMathematicalAnalysis = ({ participantData, fiiData }) => {
                         stroke="#10B981" 
                         strokeWidth={2}
                         dot={false}
+                        name="Spectral Amplitude"
                       />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
                 
                 {analysisResults.cycles && analysisResults.cycles.length > 0 && (
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                    <div className="p-4 bg-dark-700 rounded-lg">
-                      <h4 className="text-lg font-semibold text-white mb-3">Dominant Cycles</h4>
-                      <div className="space-y-2">
-                        {analysisResults.cycles.slice(0, 5).map((cycle, index) => (
-                          <div key={index} className="flex justify-between items-center">
-                            <span className="text-gray-400">Period {index + 1}:</span>
-                            <span className="text-white">{cycle.period.toFixed(1)} days</span>
-                            <span className="text-green-400">({(cycle.amplitude / Math.max(...analysisResults.fftResults.amplitudes) * 100).toFixed(1)}%)</span>
-                          </div>
-                        ))}
-                      </div>
+                  <div className="p-4 bg-[#0B0F19]/60 rounded-xl border border-white/[0.06]">
+                    <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-3">Dominant Spectral Cycles</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-xs">
+                      {analysisResults.cycles.slice(0, 5).map((cycle, index) => (
+                        <div key={index} className="flex justify-between items-center p-2.5 bg-white/[0.02] border border-white/[0.04] rounded-lg">
+                          <span className="text-slate-400">Harmonic {index + 1}:</span>
+                          <span className="font-mono text-white font-semibold">{cycle.period.toFixed(1)} days</span>
+                          <span className="text-emerald-400 font-mono">{(cycle.amplitude / Math.max(...analysisResults.fftResults.amplitudes) * 100).toFixed(0)}%</span>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 )}
@@ -441,27 +416,25 @@ const AdvancedMathematicalAnalysis = ({ participantData, fiiData }) => {
       {activeTab === 'risk-metrics' && (
         <div className="space-y-6">
           {loading ? (
-            <div className="text-center text-gray-400 py-8">
-              Loading risk analysis...
+            <div className="text-center text-slate-400 py-8 text-xs">
+              Calculating statistical risk distribution...
             </div>
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* CVaR */}
-              <div className="glass-card p-6 border border-red-500/20">
-                <h3 className="text-xl font-semibold mb-4 flex items-center">
-                  <Shield className="h-5 w-5 mr-2 text-red-400" />
-                  Conditional Value at Risk (CVaR)
-                </h3>
-                <div className="text-3xl font-bold text-red-400 mb-2">
+              <div className="glass-card p-5 border border-white/[0.07]">
+                <div className="flex items-center space-x-2 text-rose-400 mb-2">
+                  <Shield className="h-4 w-4" />
+                  <span className="text-xs font-semibold">CVaR (95%)</span>
+                </div>
+                <div className="text-2xl font-bold font-mono text-rose-400 mb-1">
                   {(analysisResults.cvar * 100).toFixed(2)}%
                 </div>
-                <div className="text-sm text-gray-400 mb-3">
-                  Expected loss in worst 5% of scenarios
-                </div>
-                <div className="text-sm text-white">
+                <div className="text-[11px] text-slate-400 mb-3">Expected tail loss</div>
+                <div className="text-xs text-slate-300">
                   Risk Level: <span className={`font-semibold ${
-                    getRiskLevel(analysisResults.cvar, 'cvar') === 'High' ? 'text-red-400' :
-                    getRiskLevel(analysisResults.cvar, 'cvar') === 'Medium' ? 'text-yellow-400' : 'text-green-400'
+                    getRiskLevel(analysisResults.cvar, 'cvar') === 'High' ? 'text-rose-400' :
+                    getRiskLevel(analysisResults.cvar, 'cvar') === 'Medium' ? 'text-amber-400' : 'text-emerald-400'
                   }`}>
                     {getRiskLevel(analysisResults.cvar, 'cvar')}
                   </span>
@@ -469,21 +442,19 @@ const AdvancedMathematicalAnalysis = ({ participantData, fiiData }) => {
               </div>
 
               {/* Omega Ratio */}
-              <div className="glass-card p-6 border border-green-500/20">
-                <h3 className="text-xl font-semibold mb-4 flex items-center">
-                  <Target className="h-5 w-5 mr-2 text-green-400" />
-                  Omega Ratio
-                </h3>
-                <div className="text-3xl font-bold text-green-400 mb-2">
+              <div className="glass-card p-5 border border-white/[0.07]">
+                <div className="flex items-center space-x-2 text-emerald-400 mb-2">
+                  <Target className="h-4 w-4" />
+                  <span className="text-xs font-semibold">Omega Ratio</span>
+                </div>
+                <div className="text-2xl font-bold font-mono text-emerald-400 mb-1">
                   {analysisResults.omegaRatio.toFixed(3)}
                 </div>
-                <div className="text-sm text-gray-400 mb-3">
-                  Risk-adjusted return measure
-                </div>
-                <div className="text-sm text-white">
+                <div className="text-[11px] text-slate-400 mb-3">Probability weighted gains/losses</div>
+                <div className="text-xs text-slate-300">
                   Quality: <span className={`font-semibold ${
-                    getRiskLevel(analysisResults.omegaRatio, 'omega') === 'Excellent' ? 'text-green-400' :
-                    getRiskLevel(analysisResults.omegaRatio, 'omega') === 'Good' ? 'text-yellow-400' : 'text-red-400'
+                    getRiskLevel(analysisResults.omegaRatio, 'omega') === 'Excellent' ? 'text-emerald-400' :
+                    getRiskLevel(analysisResults.omegaRatio, 'omega') === 'Good' ? 'text-amber-400' : 'text-rose-400'
                   }`}>
                     {getRiskLevel(analysisResults.omegaRatio, 'omega')}
                   </span>
@@ -491,21 +462,19 @@ const AdvancedMathematicalAnalysis = ({ participantData, fiiData }) => {
               </div>
 
               {/* Calmar Ratio */}
-              <div className="glass-card p-6 border border-blue-500/20">
-                <h3 className="text-xl font-semibold mb-4 flex items-center">
-                  <TrendingUp className="h-5 w-5 mr-2 text-blue-400" />
-                  Calmar Ratio
-                </h3>
-                <div className="text-3xl font-bold text-blue-400 mb-2">
+              <div className="glass-card p-5 border border-white/[0.07]">
+                <div className="flex items-center space-x-2 text-cyan-400 mb-2">
+                  <TrendingUp className="h-4 w-4" />
+                  <span className="text-xs font-semibold">Calmar Ratio</span>
+                </div>
+                <div className="text-2xl font-bold font-mono text-cyan-400 mb-1">
                   {analysisResults.calmarRatio.toFixed(3)}
                 </div>
-                <div className="text-sm text-gray-400 mb-3">
-                  Return per unit of maximum drawdown
-                </div>
-                <div className="text-sm text-white">
+                <div className="text-[11px] text-slate-400 mb-3">Return to max drawdown</div>
+                <div className="text-xs text-slate-300">
                   Performance: <span className={`font-semibold ${
-                    getRiskLevel(analysisResults.calmarRatio, 'calmar') === 'Excellent' ? 'text-green-400' :
-                    getRiskLevel(analysisResults.calmarRatio, 'calmar') === 'Good' ? 'text-yellow-400' : 'text-red-400'
+                    getRiskLevel(analysisResults.calmarRatio, 'calmar') === 'Excellent' ? 'text-emerald-400' :
+                    getRiskLevel(analysisResults.calmarRatio, 'calmar') === 'Good' ? 'text-amber-400' : 'text-rose-400'
                   }`}>
                     {getRiskLevel(analysisResults.calmarRatio, 'calmar')}
                   </span>
@@ -513,21 +482,19 @@ const AdvancedMathematicalAnalysis = ({ participantData, fiiData }) => {
               </div>
 
               {/* Sortino Ratio */}
-              <div className="glass-card p-6 border border-purple-500/20">
-                <h3 className="text-xl font-semibold mb-4 flex items-center">
-                  <Activity className="h-5 w-5 mr-2 text-purple-400" />
-                  Sortino Ratio
-                </h3>
-                <div className="text-3xl font-bold text-purple-400 mb-2">
+              <div className="glass-card p-5 border border-white/[0.07]">
+                <div className="flex items-center space-x-2 text-amber-400 mb-2">
+                  <Activity className="h-4 w-4" />
+                  <span className="text-xs font-semibold">Sortino Ratio</span>
+                </div>
+                <div className="text-2xl font-bold font-mono text-amber-400 mb-1">
                   {analysisResults.sortinoRatio.toFixed(3)}
                 </div>
-                <div className="text-sm text-gray-400 mb-3">
-                  Downside deviation adjusted return
-                </div>
-                <div className="text-sm text-white">
-                  Risk-Adjusted: <span className={`font-semibold ${
-                    analysisResults.sortinoRatio > 1.0 ? 'text-green-400' :
-                    analysisResults.sortinoRatio > 0.5 ? 'text-yellow-400' : 'text-red-400'
+                <div className="text-[11px] text-slate-400 mb-3">Downside deviation adjusted</div>
+                <div className="text-xs text-slate-300">
+                  Efficiency: <span className={`font-semibold ${
+                    analysisResults.sortinoRatio > 1.0 ? 'text-emerald-400' :
+                    analysisResults.sortinoRatio > 0.5 ? 'text-amber-400' : 'text-rose-400'
                   }`}>
                     {analysisResults.sortinoRatio > 1.0 ? 'Excellent' :
                      analysisResults.sortinoRatio > 0.5 ? 'Good' : 'Poor'}
@@ -538,30 +505,30 @@ const AdvancedMathematicalAnalysis = ({ participantData, fiiData }) => {
           )}
 
           {/* Additional Risk Metrics */}
-          <div className="glass-card p-6 border border-orange-500/20">
-            <h3 className="text-xl font-semibold mb-4 flex items-center">
-              <AlertTriangle className="h-5 w-5 mr-2 text-orange-400" />
-              Additional Risk Metrics
+          <div className="glass-card p-6 border border-white/[0.07]">
+            <h3 className="text-base font-bold text-white tracking-tight mb-4 flex items-center">
+              <AlertTriangle className="h-4 w-4 mr-2 text-amber-400" />
+              Drawdown & Statistical Confidence Bounds
             </h3>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-orange-400">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="p-4 bg-[#0B0F19]/60 rounded-xl border border-white/[0.06] text-center">
+                <div className="text-2xl font-bold font-mono text-rose-400 mb-1">
                   {analysisResults.maxDrawdown.toFixed(2)}%
                 </div>
-                <div className="text-sm text-gray-400">Maximum Drawdown</div>
+                <div className="text-xs text-slate-400">Maximum Historical Drawdown</div>
               </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-orange-400">
+              <div className="p-4 bg-[#0B0F19]/60 rounded-xl border border-white/[0.06] text-center">
+                <div className="text-2xl font-bold font-mono text-amber-400 mb-1">
                   {analysisResults.maxDrawdownDuration}
                 </div>
-                <div className="text-sm text-gray-400">Drawdown Duration (days)</div>
+                <div className="text-xs text-slate-400">Drawdown Duration (Days)</div>
               </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-orange-400">
+              <div className="p-4 bg-[#0B0F19]/60 rounded-xl border border-white/[0.06] text-center">
+                <div className="text-2xl font-bold font-mono text-emerald-400 mb-1">
                   {analysisResults.confidenceInterval ? 
                     `±${((analysisResults.confidenceInterval.upperBound - analysisResults.confidenceInterval.lowerBound) / 2).toFixed(2)}` : 'N/A'}
                 </div>
-                <div className="text-sm text-gray-400">95% Confidence Interval</div>
+                <div className="text-xs text-slate-400">95% Parametric Confidence Spread</div>
               </div>
             </div>
           </div>
@@ -572,156 +539,163 @@ const AdvancedMathematicalAnalysis = ({ participantData, fiiData }) => {
       {activeTab === 'structural-breaks' && (
         <div className="space-y-6">
           {loading ? (
-            <div className="text-center text-gray-400 py-8">
-              Loading structural break analysis...
+            <div className="text-center text-slate-400 py-8 text-xs">
+              Running econometric hypothesis testing...
             </div>
           ) : (
             <>
               {/* Chow Test */}
-              <div className="glass-card p-6 border border-red-500/20">
-                <h3 className="text-xl font-semibold mb-4 flex items-center">
-                  <GitBranch className="h-5 w-5 mr-2 text-red-400" />
-                  Chow Test for Structural Breaks
+              <div className="glass-card p-6 border border-white/[0.07]">
+                <h3 className="text-base font-bold text-white tracking-tight mb-4 flex items-center">
+                  <GitBranch className="h-4 w-4 mr-2 text-cyan-400" />
+                  Chow Test for Econometric Structural Breaks
                 </h3>
                 
                 {analysisResults.chowTest ? (
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div className="p-4 bg-dark-700 rounded-lg">
-                      <div className="text-2xl font-bold text-red-400 mb-2">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div className="p-4 bg-[#0B0F19]/60 rounded-xl border border-white/[0.06]">
+                      <div className="text-2xl font-bold font-mono text-cyan-400 mb-1">
                         {analysisResults.chowTest.chowStatistic.toFixed(4)}
                       </div>
-                      <div className="text-sm text-gray-400 mb-3">Chow Test Statistic</div>
-                      <div className="space-y-2 text-sm">
+                      <div className="text-xs text-slate-400 mb-3">F-Distributed Chow Statistic</div>
+                      <div className="space-y-2 text-xs">
                         <div className="flex justify-between">
-                          <span className="text-gray-400">P-Value:</span>
-                          <span className="text-white">{analysisResults.chowTest.pValue.toFixed(4)}</span>
+                          <span className="text-slate-400">p-value:</span>
+                          <span className="font-mono text-white">{analysisResults.chowTest.pValue.toFixed(4)}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-gray-400">Structural Break:</span>
+                          <span className="text-slate-400">Regime Shift:</span>
                           <span className={`font-semibold ${
-                            analysisResults.chowTest.hasBreak ? 'text-red-400' : 'text-green-400'
+                            analysisResults.chowTest.hasBreak ? 'text-rose-400' : 'text-emerald-400'
                           }`}>
-                            {analysisResults.chowTest.hasBreak ? 'Detected' : 'Not Detected'}
+                            {analysisResults.chowTest.hasBreak ? 'Break Detected (p < 0.05)' : 'Stationary Process'}
                           </span>
                         </div>
                       </div>
                     </div>
                     
-                    <div className="p-4 bg-dark-700 rounded-lg">
-                      <h4 className="text-lg font-semibold text-white mb-3">Interpretation</h4>
-                      <div className="text-sm text-gray-400">
+                    <div className="p-4 bg-[#0B0F19]/60 rounded-xl border border-white/[0.06]">
+                      <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Econometric Interpretation</h4>
+                      <p className="text-xs text-slate-400 leading-relaxed">
                         {analysisResults.chowTest.hasBreak ? 
-                          'A structural break has been detected, indicating a significant change in the underlying data generating process.' :
-                          'No structural break detected. The data appears to follow a consistent pattern.'
+                          'A statistically significant structural break is present. Market behavior shifted its underlying parameters at or near the mid-point.' :
+                          'No structural break detected. The participant position dynamics exhibit parameter stability across sample horizons.'
                         }
-                      </div>
+                      </p>
                     </div>
                   </div>
                 ) : (
-                  <div className="text-center text-gray-400 py-8">
-                    Insufficient data for Chow test analysis
+                  <div className="text-center text-slate-400 py-8 text-xs">
+                    Insufficient data for Chow test
                   </div>
                 )}
               </div>
 
               {/* CUSUM Test */}
-              <div className="glass-card p-6 border border-blue-500/20">
-                <h3 className="text-xl font-semibold mb-4 flex items-center">
-                  <Layers className="h-5 w-5 mr-2 text-blue-400" />
-                  CUSUM Test for Structural Breaks
+              <div className="glass-card p-6 border border-white/[0.07]">
+                <h3 className="text-base font-bold text-white tracking-tight mb-4 flex items-center">
+                  <Layers className="h-4 w-4 mr-2 text-amber-400" />
+                  CUSUM (Cumulative Sum) Stability Test
                 </h3>
                 
                 {analysisResults.cusumTest ? (
                   <div className="space-y-6">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      <div className="p-4 bg-dark-700 rounded-lg">
-                        <div className="text-2xl font-bold text-blue-400 mb-2">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                      <div className="p-4 bg-[#0B0F19]/60 rounded-xl border border-white/[0.06]">
+                        <div className="text-2xl font-bold font-mono text-amber-400 mb-1">
                           {analysisResults.cusumTest.maxDeviation.toFixed(4)}
                         </div>
-                        <div className="text-sm text-gray-400 mb-3">Maximum Deviation</div>
-                        <div className="space-y-2 text-sm">
+                        <div className="text-xs text-slate-400 mb-3">Peak Recursive Residual Deviation</div>
+                        <div className="space-y-2 text-xs">
                           <div className="flex justify-between">
-                            <span className="text-gray-400">Critical Value:</span>
-                            <span className="text-white">{analysisResults.cusumTest.criticalValue.toFixed(4)}</span>
+                            <span className="text-slate-400">Critical Boundary (95%):</span>
+                            <span className="font-mono text-white">±{analysisResults.cusumTest.criticalValue.toFixed(4)}</span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-gray-400">Break Detected:</span>
+                            <span className="text-slate-400">Boundary Breach:</span>
                             <span className={`font-semibold ${
-                              analysisResults.cusumTest.hasBreak ? 'text-red-400' : 'text-green-400'
+                              analysisResults.cusumTest.hasBreak ? 'text-rose-400' : 'text-emerald-400'
                             }`}>
-                              {analysisResults.cusumTest.hasBreak ? 'Yes' : 'No'}
+                              {analysisResults.cusumTest.hasBreak ? 'Yes — Instability' : 'No — Parameter Stable'}
                             </span>
                           </div>
                         </div>
                       </div>
                       
-                      <div className="p-4 bg-dark-700 rounded-lg">
-                        <h4 className="text-lg font-semibold text-white mb-3">Break Point</h4>
-                        <div className="text-sm text-gray-400">
+                      <div className="p-4 bg-[#0B0F19]/60 rounded-xl border border-white/[0.06]">
+                        <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Change Point</h4>
+                        <p className="text-xs text-slate-400 leading-relaxed">
                           {analysisResults.cusumTest.hasBreak ? 
-                            `Structural break detected at observation ${analysisResults.cusumTest.breakPoint + 1}` :
-                            'No structural break detected in the time series.'
+                            `Break triggered at observation #${analysisResults.cusumTest.breakPoint + 1} with cumulative deviation exceeding critical confidence envelopes.` :
+                            'CUSUM curve remains strictly bounded within the 95% critical lines, proving parameter constancy.'
                           }
-                        </div>
+                        </p>
                       </div>
                     </div>
 
-                    {/* CUSUM Chart */}
-                    <div className="h-80">
+                    <div className="h-[280px] w-full">
                       <ResponsiveContainer width="100%" height="100%">
                         <LineChart data={analysisResults.cusumTest.cusumValues.map((val, i) => ({
                           observation: i + 1,
                           cusum: val,
                           criticalUpper: analysisResults.cusumTest.criticalValue,
                           criticalLower: -analysisResults.cusumTest.criticalValue
-                        }))}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                        }))} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#1E293B" vertical={false} />
                           <XAxis 
                             dataKey="observation" 
-                            stroke="#9CA3AF"
-                            label={{ value: 'Observation', position: 'insideBottom', offset: -10 }}
+                            stroke="#64748B"
+                            fontSize={11}
+                            tickLine={false}
                           />
                           <YAxis 
-                            stroke="#9CA3AF"
-                            label={{ value: 'CUSUM', angle: -90, position: 'insideLeft' }}
+                            stroke="#64748B"
+                            fontSize={11}
+                            tickLine={false}
                           />
                           <Tooltip 
-                            contentStyle={{ 
-                              backgroundColor: '#1F2937', 
-                              border: '1px solid #374151',
-                              borderRadius: '8px'
+                            contentStyle={{
+                              backgroundColor: 'rgba(11, 15, 25, 0.95)',
+                              border: '1px solid rgba(255, 255, 255, 0.1)',
+                              borderRadius: '12px',
+                              color: '#e2e8f0',
+                              backdropFilter: 'blur(12px)',
                             }}
+                            itemStyle={{ color: '#e2e8f0', fontSize: 12 }}
                           />
                           <Line 
                             type="monotone" 
                             dataKey="cusum" 
-                            stroke="#3B82F6" 
+                            stroke="#38BDF8" 
                             strokeWidth={2}
                             dot={false}
+                            name="CUSUM Path"
                           />
                           <Line 
                             type="monotone" 
                             dataKey="criticalUpper" 
-                            stroke="#EF4444" 
+                            stroke="#F43F5E" 
                             strokeWidth={1}
-                            strokeDasharray="5 5"
+                            strokeDasharray="4 4"
                             dot={false}
+                            name="+95% Boundary"
                           />
                           <Line 
                             type="monotone" 
                             dataKey="criticalLower" 
-                            stroke="#EF4444" 
+                            stroke="#F43F5E" 
                             strokeWidth={1}
-                            strokeDasharray="5 5"
+                            strokeDasharray="4 4"
                             dot={false}
+                            name="-95% Boundary"
                           />
                         </LineChart>
                       </ResponsiveContainer>
                     </div>
                   </div>
                 ) : (
-                  <div className="text-center text-gray-400 py-8">
-                    Insufficient data for CUSUM test analysis
+                  <div className="text-center text-slate-400 py-8 text-xs">
+                    Insufficient observations for recursive residuals
                   </div>
                 )}
               </div>
@@ -734,99 +708,98 @@ const AdvancedMathematicalAnalysis = ({ participantData, fiiData }) => {
       {activeTab === 'monte-carlo' && (
         <div className="space-y-6">
           {loading ? (
-            <div className="text-center text-gray-400 py-8">
-              Loading Monte Carlo simulation...
+            <div className="text-center text-slate-400 py-8 text-xs">
+              Simulating 1,000 synthetic paths...
             </div>
           ) : (
-            <div className="glass-card p-6 border border-purple-500/20">
-              <h3 className="text-xl font-semibold mb-4 flex items-center">
-                <Cpu className="h-5 w-5 mr-2 text-purple-400" />
-                Monte Carlo Simulation Results
+            <div className="glass-card p-6 border border-white/[0.07]">
+              <h3 className="text-base font-bold text-white tracking-tight mb-4 flex items-center">
+                <Cpu className="h-4 w-4 mr-2 text-emerald-400" />
+                Monte Carlo Stochastic Path Projections
               </h3>
               
               {analysisResults.monteCarlo ? (
                 <div className="space-y-6">
-                  {/* Percentiles */}
-                  <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-                    <div className="text-center p-4 bg-dark-700 rounded-lg">
-                      <div className="text-2xl font-bold text-red-400">
-                        {analysisResults.monteCarlo.percentiles.p5.toFixed(3)}
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                    <div className="text-center p-3 bg-[#0B0F19]/60 border border-white/[0.06] rounded-xl">
+                      <div className="text-lg font-bold font-mono text-rose-400">
+                        {analysisResults.monteCarlo.percentiles.p5.toFixed(2)}
                       </div>
-                      <div className="text-sm text-gray-400">5th Percentile</div>
+                      <div className="text-[10px] text-slate-400">5th Percentile</div>
                     </div>
-                    <div className="text-center p-4 bg-dark-700 rounded-lg">
-                      <div className="text-2xl font-bold text-orange-400">
-                        {analysisResults.monteCarlo.percentiles.p25.toFixed(3)}
+                    <div className="text-center p-3 bg-[#0B0F19]/60 border border-white/[0.06] rounded-xl">
+                      <div className="text-lg font-bold font-mono text-amber-400">
+                        {analysisResults.monteCarlo.percentiles.p25.toFixed(2)}
                       </div>
-                      <div className="text-sm text-gray-400">25th Percentile</div>
+                      <div className="text-[10px] text-slate-400">25th Percentile</div>
                     </div>
-                    <div className="text-center p-4 bg-dark-700 rounded-lg">
-                      <div className="text-2xl font-bold text-yellow-400">
-                        {analysisResults.monteCarlo.percentiles.p50.toFixed(3)}
+                    <div className="text-center p-3 bg-[#0B0F19]/60 border border-white/[0.06] rounded-xl col-span-2 sm:col-span-1">
+                      <div className="text-lg font-bold font-mono text-emerald-400">
+                        {analysisResults.monteCarlo.percentiles.p50.toFixed(2)}
                       </div>
-                      <div className="text-sm text-gray-400">Median</div>
+                      <div className="text-[10px] text-slate-400">Median (50th)</div>
                     </div>
-                    <div className="text-center p-4 bg-dark-700 rounded-lg">
-                      <div className="text-2xl font-bold text-green-400">
-                        {analysisResults.monteCarlo.percentiles.p75.toFixed(3)}
+                    <div className="text-center p-3 bg-[#0B0F19]/60 border border-white/[0.06] rounded-xl">
+                      <div className="text-lg font-bold font-mono text-cyan-400">
+                        {analysisResults.monteCarlo.percentiles.p75.toFixed(2)}
                       </div>
-                      <div className="text-sm text-gray-400">75th Percentile</div>
+                      <div className="text-[10px] text-slate-400">75th Percentile</div>
                     </div>
-                    <div className="text-center p-4 bg-dark-700 rounded-lg">
-                      <div className="text-2xl font-bold text-blue-400">
-                        {analysisResults.monteCarlo.percentiles.p95.toFixed(3)}
+                    <div className="text-center p-3 bg-[#0B0F19]/60 border border-white/[0.06] rounded-xl">
+                      <div className="text-lg font-bold font-mono text-emerald-400">
+                        {analysisResults.monteCarlo.percentiles.p95.toFixed(2)}
                       </div>
-                      <div className="text-sm text-gray-400">95th Percentile</div>
+                      <div className="text-[10px] text-slate-400">95th Percentile</div>
                     </div>
                   </div>
 
-                  {/* Simulation Paths Chart */}
-                  <div className="h-80">
+                  <div className="h-[280px] w-full">
                     <ResponsiveContainer width="100%" height="100%">
                       <AreaChart data={analysisResults.monteCarlo.simulations[0].map((val, i) => ({
                         time: i,
                         value: val
-                      }))}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                      }))} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#1E293B" vertical={false} />
                         <XAxis 
                           dataKey="time" 
-                          stroke="#9CA3AF"
-                          label={{ value: 'Time Period', position: 'insideBottom', offset: -10 }}
+                          stroke="#64748B"
+                          fontSize={11}
+                          tickLine={false}
                         />
                         <YAxis 
-                          stroke="#9CA3AF"
-                          label={{ value: 'Value', angle: -90, position: 'insideLeft' }}
+                          stroke="#64748B"
+                          fontSize={11}
+                          tickLine={false}
                         />
                         <Tooltip 
-                          contentStyle={{ 
-                            backgroundColor: '#1F2937', 
-                            border: '1px solid #374151',
-                            borderRadius: '8px'
+                          contentStyle={{
+                            backgroundColor: 'rgba(11, 15, 25, 0.95)',
+                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                            borderRadius: '12px',
+                            color: '#e2e8f0',
+                            backdropFilter: 'blur(12px)',
                           }}
+                          itemStyle={{ color: '#e2e8f0', fontSize: 12 }}
                         />
                         <Area 
                           type="monotone" 
                           dataKey="value" 
-                          stroke="#8B5CF6" 
-                          fill="#8B5CF6"
-                          fillOpacity={0.3}
+                          stroke="#10B981" 
+                          fill="#10B981"
+                          fillOpacity={0.15}
                           strokeWidth={2}
+                          name="Sample Path"
                         />
                       </AreaChart>
                     </ResponsiveContainer>
                   </div>
 
-                  <div className="text-center text-gray-400">
-                    <div className="text-lg font-semibold text-white mb-2">
-                      Expected Final Value: {analysisResults.monteCarlo.meanFinalValue.toFixed(3)}
-                    </div>
-                    <div className="text-sm">
-                      Based on {analysisResults.monteCarlo.simulations.length} Monte Carlo simulations
-                    </div>
+                  <div className="text-center text-slate-400 text-xs">
+                    Expected Terminal Drift: <span className="font-mono text-emerald-400 font-semibold">{analysisResults.monteCarlo.meanFinalValue.toFixed(2)}</span> ({analysisResults.monteCarlo.simulations.length} stochastic iterations)
                   </div>
                 </div>
               ) : (
-                <div className="text-center text-gray-400 py-8">
+                <div className="text-center text-slate-400 py-8 text-xs">
                   No Monte Carlo simulation data available
                 </div>
               )}
@@ -839,140 +812,123 @@ const AdvancedMathematicalAnalysis = ({ participantData, fiiData }) => {
       {activeTab === 'rolling-stats' && (
         <div className="space-y-6">
           {loading ? (
-            <div className="text-center text-gray-400 py-8">
-              Loading rolling statistics...
+            <div className="text-center text-slate-400 py-8 text-xs">
+              Calculating rolling higher moments...
             </div>
           ) : (
-            <div className="glass-card p-6 border border-cyan-500/20">
-              <h3 className="text-xl font-semibold mb-4 flex items-center">
-                <BarChart3 className="h-5 w-5 mr-2 text-cyan-400" />
-                Rolling Statistics Analysis
+            <div className="glass-card p-6 border border-white/[0.07]">
+              <h3 className="text-base font-bold text-white tracking-tight mb-4 flex items-center">
+                <BarChart3 className="h-4 w-4 mr-2 text-cyan-400" />
+                Rolling Higher Statistical Moments (Skewness & Kurtosis)
               </h3>
               
               {analysisResults.rollingSkewness && analysisResults.rollingSkewness.length > 0 && (
                 <div className="space-y-6">
                   {/* Rolling Skewness */}
-                  <div className="h-80">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={analysisResults.rollingSkewness.map((val, i) => ({
-                        period: i + 10,
-                        skewness: val
-                      }))}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                        <XAxis 
-                          dataKey="period" 
-                          stroke="#9CA3AF"
-                          label={{ value: 'Time Period', position: 'insideBottom', offset: -10 }}
-                        />
-                        <YAxis 
-                          stroke="#9CA3AF"
-                          label={{ value: 'Skewness', angle: -90, position: 'insideLeft' }}
-                        />
-                        <Tooltip 
-                          contentStyle={{ 
-                            backgroundColor: '#1F2937', 
-                            border: '1px solid #374151',
-                            borderRadius: '8px'
-                          }}
-                        />
-                        <Line 
-                          type="monotone" 
-                          dataKey="skewness" 
-                          stroke="#06B6D4" 
-                          strokeWidth={2}
-                          dot={false}
-                        />
-                        <Line 
-                          type="monotone" 
-                          dataKey="zero" 
-                          stroke="#6B7280" 
-                          strokeWidth={1}
-                          strokeDasharray="5 5"
-                          dot={false}
-                        />
-                      </LineChart>
-                    </ResponsiveContainer>
+                  <div>
+                    <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Rolling Skewness (Asymmetry)</h4>
+                    <div className="h-[240px] w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={analysisResults.rollingSkewness.map((val, i) => ({
+                          period: i + 10,
+                          skewness: val,
+                          zero: 0
+                        }))} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#1E293B" vertical={false} />
+                          <XAxis 
+                            dataKey="period" 
+                            stroke="#64748B"
+                            fontSize={11}
+                            tickLine={false}
+                          />
+                          <YAxis 
+                            stroke="#64748B"
+                            fontSize={11}
+                            tickLine={false}
+                          />
+                          <Tooltip 
+                            contentStyle={{
+                              backgroundColor: 'rgba(11, 15, 25, 0.95)',
+                              border: '1px solid rgba(255, 255, 255, 0.1)',
+                              borderRadius: '12px',
+                              color: '#e2e8f0',
+                              backdropFilter: 'blur(12px)',
+                            }}
+                            itemStyle={{ color: '#e2e8f0', fontSize: 12 }}
+                          />
+                          <Line 
+                            type="monotone" 
+                            dataKey="skewness" 
+                            stroke="#38BDF8" 
+                            strokeWidth={2}
+                            dot={false}
+                            name="Skewness"
+                          />
+                          <Line 
+                            type="monotone" 
+                            dataKey="zero" 
+                            stroke="#475569" 
+                            strokeWidth={1}
+                            strokeDasharray="4 4"
+                            dot={false}
+                            name="Normal (0)"
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
                   </div>
 
                   {/* Rolling Kurtosis */}
-                  <div className="h-80">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={analysisResults.rollingKurtosis.map((val, i) => ({
-                        period: i + 10,
-                        kurtosis: val
-                      }))}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                        <XAxis 
-                          dataKey="period" 
-                          stroke="#9CA3AF"
-                          label={{ value: 'Time Period', position: 'insideBottom', offset: -10 }}
-                        />
-                        <YAxis 
-                          stroke="#9CA3AF"
-                          label={{ value: 'Kurtosis', angle: -90, position: 'insideLeft' }}
-                        />
-                        <Tooltip 
-                          contentStyle={{ 
-                            backgroundColor: '#1F2937', 
-                            border: '1px solid #374151',
-                            borderRadius: '8px'
-                          }}
-                        />
-                        <Line 
-                          type="monotone" 
-                          dataKey="kurtosis" 
-                          stroke="#10B981" 
-                          strokeWidth={2}
-                          dot={false}
-                        />
-                        <Line 
-                          type="monotone" 
-                          dataKey="zero" 
-                          stroke="#6B7280" 
-                          strokeWidth={1}
-                          strokeDasharray="5 5"
-                          dot={false}
-                        />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </div>
-
-                  {/* Statistics Summary */}
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div className="p-4 bg-dark-700 rounded-lg">
-                      <h4 className="text-lg font-semibold text-white mb-3">Skewness Analysis</h4>
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-gray-400">Average Skewness:</span>
-                          <span className="text-white">
-                            {(analysisResults.rollingSkewness.reduce((a, b) => a + b, 0) / analysisResults.rollingSkewness.length).toFixed(3)}
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-400">Distribution:</span>
-                          <span className="text-white">
-                            {Math.abs(analysisResults.rollingSkewness.reduce((a, b) => a + b, 0) / analysisResults.rollingSkewness.length) > 0.5 ? 'Skewed' : 'Symmetric'}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="p-4 bg-dark-700 rounded-lg">
-                      <h4 className="text-lg font-semibold text-white mb-3">Kurtosis Analysis</h4>
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-gray-400">Average Kurtosis:</span>
-                          <span className="text-white">
-                            {(analysisResults.rollingKurtosis.reduce((a, b) => a + b, 0) / analysisResults.rollingKurtosis.length).toFixed(3)}
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-400">Tail Behavior:</span>
-                          <span className="text-white">
-                            {analysisResults.rollingKurtosis.reduce((a, b) => a + b, 0) / analysisResults.rollingKurtosis.length > 3 ? 'Heavy Tails' : 'Normal Tails'}
-                          </span>
-                        </div>
-                      </div>
+                  <div>
+                    <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Rolling Kurtosis (Fat-Tail Risk)</h4>
+                    <div className="h-[240px] w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={analysisResults.rollingKurtosis.map((val, i) => ({
+                          period: i + 10,
+                          kurtosis: val,
+                          normal: 3
+                        }))} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#1E293B" vertical={false} />
+                          <XAxis 
+                            dataKey="period" 
+                            stroke="#64748B"
+                            fontSize={11}
+                            tickLine={false}
+                          />
+                          <YAxis 
+                            stroke="#64748B"
+                            fontSize={11}
+                            tickLine={false}
+                          />
+                          <Tooltip 
+                            contentStyle={{
+                              backgroundColor: 'rgba(11, 15, 25, 0.95)',
+                              border: '1px solid rgba(255, 255, 255, 0.1)',
+                              borderRadius: '12px',
+                              color: '#e2e8f0',
+                              backdropFilter: 'blur(12px)',
+                            }}
+                            itemStyle={{ color: '#e2e8f0', fontSize: 12 }}
+                          />
+                          <Line 
+                            type="monotone" 
+                            dataKey="kurtosis" 
+                            stroke="#10B981" 
+                            strokeWidth={2}
+                            dot={false}
+                            name="Kurtosis"
+                          />
+                          <Line 
+                            type="monotone" 
+                            dataKey="normal" 
+                            stroke="#475569" 
+                            strokeWidth={1}
+                            strokeDasharray="4 4"
+                            dot={false}
+                            name="Mesokurtic (3)"
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
                     </div>
                   </div>
                 </div>

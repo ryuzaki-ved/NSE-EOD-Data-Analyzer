@@ -1,57 +1,63 @@
 import React from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { TrendingUp, BarChart3, PieChart, Activity, Brain, Zap } from 'lucide-react'
+import { TrendingUp, BarChart3, PieChart, Activity, Brain, GitBranch, Layers } from 'lucide-react'
 import { motion } from 'framer-motion'
 
 const Navbar = () => {
   const location = useLocation()
 
   const navItems = [
-    { path: '/', label: 'Home', icon: TrendingUp },
+    { path: '/', label: 'Overview', icon: Layers },
     { path: '/fii-deriv-stats', label: 'FII Stats', icon: BarChart3 },
-    { path: '/part-oi', label: 'Part OI', icon: PieChart },
-    { path: '/part-vol', label: 'Part Vol', icon: Activity },
-    { path: '/correlation', label: 'Correlation', icon: Zap },
-    { path: '/advanced-math', label: 'Adv Math', icon: Brain },
+    { path: '/part-oi', label: 'Participant OI', icon: PieChart },
+    { path: '/part-vol', label: 'Participant Vol', icon: Activity },
+    { path: '/correlation', label: 'Correlation', icon: GitBranch },
+    { path: '/advanced-math', label: 'Statistical Models', icon: Brain },
   ]
 
   return (
     <motion.nav 
-      initial={{ y: -100, opacity: 0 }}
+      initial={{ y: -40, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.8, type: "spring", bounce: 0.4 }}
-      className="sticky top-4 z-50 mx-4 mb-8"
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      className="sticky top-3 z-50 mx-auto w-full max-w-7xl px-4 sm:px-6 mb-6"
     >
-      <div className="glass-card px-6 py-3 flex items-center justify-between max-w-7xl mx-auto bg-dark-900/60 border-primary-500/20">
-        <Link to="/" className="flex items-center space-x-3 group">
-          <div className="relative">
-            <div className="absolute inset-0 bg-primary-500 blur-lg opacity-50 group-hover:opacity-100 transition-opacity duration-500 rounded-full"></div>
-            <TrendingUp className="h-8 w-8 text-primary-400 relative z-10 transform group-hover:rotate-12 transition-transform duration-500" />
+      <div className="bg-[#0D121D]/90 backdrop-blur-2xl border border-white/[0.08] rounded-2xl px-4 sm:px-6 py-2.5 flex items-center justify-between shadow-terminal">
+        {/* Brand Logo */}
+        <Link to="/" className="flex items-center space-x-3 group select-none">
+          <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center group-hover:border-emerald-500/60 group-hover:shadow-[0_0_12px_rgba(16,185,129,0.3)] transition-all">
+            <TrendingUp className="h-4 w-4 text-emerald-400 transform group-hover:scale-110 transition-transform" />
           </div>
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-white via-primary-200 to-primary-400 bg-clip-text text-transparent tracking-tight">
-            EOD<span className="font-light text-primary-400">Analytics</span>
-          </h1>
+          <div className="flex items-center space-x-2">
+            <span className="text-base font-bold text-white tracking-tight">
+              NSE <span className="text-emerald-400 font-extrabold">EOD</span>
+            </span>
+            <span className="hidden sm:inline-block px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              TERMINAL
+            </span>
+          </div>
         </Link>
         
-        <div className="flex items-center space-x-1 overflow-x-auto no-scrollbar">
+        {/* Navigation Tabs */}
+        <div className="flex items-center space-x-1 overflow-x-auto no-scrollbar py-0.5">
           {navItems.map(({ path, label, icon: Icon }) => {
             const isActive = location.pathname === path;
             return (
               <Link
                 key={path}
                 to={path}
-                className="relative px-4 py-2 rounded-xl group transition-all duration-300"
+                className="relative px-3 sm:px-3.5 py-1.5 rounded-xl group transition-all duration-200"
               >
                 {isActive && (
                   <motion.div
                     layoutId="navbar-active"
-                    className="absolute inset-0 bg-primary-500/10 border border-primary-500/30 rounded-xl shadow-[0_0_20px_rgba(14,165,233,0.3)]"
-                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                    className="absolute inset-0 bg-emerald-500/10 border border-emerald-500/30 rounded-xl shadow-[0_0_16px_rgba(16,185,129,0.15)]"
+                    transition={{ type: "spring", bounce: 0.15, duration: 0.4 }}
                   />
                 )}
-                <span className={`relative z-10 flex items-center space-x-2 text-sm font-medium transition-colors duration-300 ${isActive ? 'text-primary-300' : 'text-slate-400 group-hover:text-white'}`}>
-                  <Icon className={`h-4 w-4 ${isActive ? 'text-primary-400' : 'text-slate-500 group-hover:text-primary-400'} transition-colors`} />
-                  <span className="hidden md:inline">{label}</span>
+                <span className={`relative z-10 flex items-center space-x-2 text-xs sm:text-sm font-medium transition-colors duration-200 ${isActive ? 'text-emerald-300 font-semibold' : 'text-slate-400 group-hover:text-slate-100'}`}>
+                  <Icon className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${isActive ? 'text-emerald-400' : 'text-slate-400 group-hover:text-slate-200'} transition-colors`} />
+                  <span className="whitespace-nowrap">{label}</span>
                 </span>
               </Link>
             )

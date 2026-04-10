@@ -43,8 +43,6 @@ const MonthlyFutureCumulativeChart = ({ chartData }) => {
         if (currentMonthData.length === 0) return []
 
         // Find the last day of the PREVIOUS month to use as baseline
-        // The first item of currentMonthData is the start of this month.
-        // We need the item immediately preceding it in the sorted full dataset.
         const firstCurrentMonthDate = currentMonthData[0].date
         const startIndexInFull = sortedData.findIndex(item => item.date === firstCurrentMonthDate)
 
@@ -57,11 +55,6 @@ const MonthlyFutureCumulativeChart = ({ chartData }) => {
             baseLong = prevMonthLastItem[`${selectedParticipant}_future_index_long`] || 0
             baseShort = prevMonthLastItem[`${selectedParticipant}_future_index_short`] || 0
         } else {
-            // If this is the start of the dataset, start from 0 change on day 1??
-            // Or strictly following user req "change of 1st day of month".
-            // Change = Current - Prev. If no Prev, Change is undefined or 0?
-            // Let's assume if no prev data, we treat the first day value as the starting point (cumulative 0)
-            // effectively checking change from "0" position or just resets.
             const baseItem = currentMonthData[0]
             baseLong = baseItem[`${selectedParticipant}_future_index_long`] || 0
             baseShort = baseItem[`${selectedParticipant}_future_index_short`] || 0
@@ -80,52 +73,58 @@ const MonthlyFutureCumulativeChart = ({ chartData }) => {
     }, [chartData, selectedParticipant])
 
     return (
-        <div className="chart-card h-full">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
+        <div className="w-full">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
                 <div>
-                    <h3 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-green-400 to-blue-500">
-                        Monthly Future Cumulative Change
-                    </h3>
-                    <p className="text-sm text-gray-400 mt-1">
-                        Cumulative change in Future Index from Month Start
+                    <h3 className="text-base font-bold text-white tracking-tight">Monthly Future Cumulative Change</h3>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                        Cumulative change in future index from month start
                     </p>
                 </div>
                 <select
                     value={selectedParticipant}
                     onChange={(e) => setSelectedParticipant(e.target.value)}
-                    className="px-3 py-1 bg-dark-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 text-sm"
+                    className="px-3 py-1.5 bg-[#0B0F19] border border-white/[0.08] rounded-lg text-xs font-medium text-slate-300 focus:ring-1 focus:ring-emerald-500/40 focus:border-emerald-500/40 outline-none transition-colors"
                 >
                     {participants.map(participant => (
                         <option key={participant} value={participant}>{participant}</option>
                     ))}
                 </select>
             </div>
-            <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={cumulativeData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                    <XAxis dataKey="date" stroke="#9ca3af" />
-                    <YAxis stroke="#9ca3af" />
-                    <Tooltip content={<SortedCustomTooltip />} />
-                    <Legend />
-                    <ReferenceLine y={0} stroke="#666" />
-                    <Line
-                        type="monotone"
-                        dataKey="longCumulative"
-                        name="Future Long Cumulative"
-                        stroke="#10b981"
-                        strokeWidth={3}
-                        dot={{ fill: '#10b981', r: 4 }}
-                    />
-                    <Line
-                        type="monotone"
-                        dataKey="shortCumulative"
-                        name="Future Short Cumulative"
-                        stroke="#ef4444"
-                        strokeWidth={3}
-                        dot={{ fill: '#ef4444', r: 4 }}
-                    />
-                </LineChart>
-            </ResponsiveContainer>
+            
+            <div className="h-[280px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={cumulativeData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#1E293B" vertical={false} />
+                        <XAxis dataKey="date" stroke="#64748B" fontSize={11} tickLine={false} />
+                        <YAxis stroke="#64748B" fontSize={11} tickLine={false} />
+                        <Tooltip content={<SortedCustomTooltip />} />
+                        <Legend 
+                            wrapperStyle={{ paddingTop: '12px' }}
+                            formatter={(value) => <span className="text-xs text-slate-300 font-medium">{value}</span>}
+                        />
+                        <ReferenceLine y={0} stroke="#334155" strokeWidth={1} />
+                        <Line
+                            type="monotone"
+                            dataKey="longCumulative"
+                            name="Future Long Cumulative"
+                            stroke="#10B981"
+                            strokeWidth={2.5}
+                            dot={{ fill: '#10B981', strokeWidth: 0, r: 3 }}
+                            activeDot={{ r: 5, stroke: '#10B981', strokeWidth: 2, fill: '#0B0F19' }}
+                        />
+                        <Line
+                            type="monotone"
+                            dataKey="shortCumulative"
+                            name="Future Short Cumulative"
+                            stroke="#F43F5E"
+                            strokeWidth={2.5}
+                            dot={{ fill: '#F43F5E', strokeWidth: 0, r: 3 }}
+                            activeDot={{ r: 5, stroke: '#F43F5E', strokeWidth: 2, fill: '#0B0F19' }}
+                        />
+                    </LineChart>
+                </ResponsiveContainer>
+            </div>
         </div>
     )
 }

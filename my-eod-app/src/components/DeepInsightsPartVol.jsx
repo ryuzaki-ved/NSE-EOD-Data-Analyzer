@@ -24,16 +24,15 @@ const DeepInsightsPartVol = ({
   }), { callLong: 0, putLong: 0, callShort: 0, putShort: 0 })
 
   return (
-    <div className="glass-card p-8 border-2 border-primary-500/30 bg-gradient-to-br from-primary-900/10 to-purple-900/10 glow-gold-border">
+    <div className="glass-card p-8 border border-white/[0.07]">
       <div className="flex items-center space-x-3 mb-6">
-        <div className="p-2 rounded-lg bg-gradient-to-r from-primary-500 to-purple-500">
-          <Eye className="h-6 w-6 text-white" />
+        <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+          <Eye className="h-6 w-6 text-emerald-400" />
         </div>
-        <h2 className="text-3xl font-bold gradient-text">Deep Insights</h2>
-        <div className="px-3 py-1 bg-primary-500/20 rounded-full text-xs text-primary-400 border border-primary-500/30">
-          PREMIUM INSIGHTS
+        <h2 className="text-2xl font-bold text-white tracking-tight">Deep Insights</h2>
+        <div className="badge-emerald">
+          VOLUME ANALYSIS
         </div>
-
       </div>
 
       {/* Date Selector for Deep Insights */}

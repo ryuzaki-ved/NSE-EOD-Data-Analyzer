@@ -5,6 +5,7 @@ const AnimatedBackground = () => {
 
   useEffect(() => {
     const canvas = canvasRef.current
+    if (!canvas) return
     const ctx = canvas.getContext('2d')
     let animationFrameId
     let width = window.innerWidth
@@ -14,35 +15,33 @@ const AnimatedBackground = () => {
     canvas.height = height
 
     const particles = []
-    const particleCount = 50
+    const particleCount = 45
     
     // Create particles
     for (let i = 0; i < particleCount; i++) {
       particles.push({
         x: Math.random() * width,
         y: Math.random() * height,
-        vx: (Math.random() - 0.5) * 0.5,
-        vy: (Math.random() - 0.5) * 0.5,
-        size: Math.random() * 2 + 1,
-        color: Math.random() > 0.5 ? '#0ea5e9' : '#8b5cf6' // Primary blue or purple
+        vx: (Math.random() - 0.5) * 0.35,
+        vy: (Math.random() - 0.5) * 0.35,
+        size: Math.random() * 1.8 + 0.8,
+        color: Math.random() > 0.4 ? 'rgba(16, 185, 129, 0.4)' : 'rgba(6, 182, 212, 0.4)'
       })
     }
 
-    const drawGrid = (offset) => {
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)'
+    const drawGrid = () => {
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.02)'
       ctx.lineWidth = 1
-      const gridSize = 50
+      const gridSize = 60
       
-      // Vertical lines
-      for (let x = offset % gridSize; x < width; x += gridSize) {
+      for (let x = 0; x < width; x += gridSize) {
         ctx.beginPath()
         ctx.moveTo(x, 0)
         ctx.lineTo(x, height)
         ctx.stroke()
       }
 
-      // Horizontal lines
-      for (let y = offset % gridSize; y < height; y += gridSize) {
+      for (let y = 0; y < height; y += gridSize) {
         ctx.beginPath()
         ctx.moveTo(0, y)
         ctx.lineTo(width, y)
@@ -50,45 +49,38 @@ const AnimatedBackground = () => {
       }
     }
 
-    let time = 0
     const render = () => {
-      time += 0.2
       ctx.clearRect(0, 0, width, height)
-      
-      // Draw moving grid
-      drawGrid(time)
+      drawGrid()
 
-      // Update and draw particles
       particles.forEach((p, i) => {
         p.x += p.vx
         p.y += p.vy
 
-        // Bounce off walls
         if (p.x < 0 || p.x > width) p.vx *= -1
         if (p.y < 0 || p.y > height) p.vy *= -1
 
-        // Draw particle
         ctx.beginPath()
         ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2)
         ctx.fillStyle = p.color
         ctx.fill()
 
-        // Connect particles
-        particles.forEach((p2, j) => {
-          if (i === j) return
+        // Connect nearby particles
+        for (let j = i + 1; j < particles.length; j++) {
+          const p2 = particles[j]
           const dx = p.x - p2.x
           const dy = p.y - p2.y
           const dist = Math.sqrt(dx * dx + dy * dy)
 
-          if (dist < 150) {
+          if (dist < 130) {
             ctx.beginPath()
-            ctx.strokeStyle = `rgba(139, 92, 246, ${0.1 * (1 - dist / 150)})`
+            ctx.strokeStyle = `rgba(16, 185, 129, ${0.06 * (1 - dist / 130)})`
             ctx.lineWidth = 0.5
             ctx.moveTo(p.x, p.y)
             ctx.lineTo(p2.x, p2.y)
             ctx.stroke()
           }
-        })
+        }
       })
 
       animationFrameId = requestAnimationFrame(render)
@@ -114,8 +106,7 @@ const AnimatedBackground = () => {
   return (
     <canvas
       ref={canvasRef}
-      className="fixed inset-0 z-0 pointer-events-none opacity-60"
-      style={{ background: 'radial-gradient(circle at 50% 50%, #0f172a 0%, #020617 100%)' }}
+      className="fixed inset-0 z-0 pointer-events-none opacity-70"
     />
   )
 }

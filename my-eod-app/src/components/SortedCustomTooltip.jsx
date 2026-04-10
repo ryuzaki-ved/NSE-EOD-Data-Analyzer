@@ -1,37 +1,40 @@
 import React from 'react'
 
 const SortedCustomTooltip = ({ active, payload, label, formatter }) => {
-    if (active && payload && payload.length) {
-        // Sort payload by value in descending order
-        // Create a copy to avoid mutating the original payload
-        const sortedPayload = [...payload].sort((a, b) => b.value - a.value);
+  if (active && payload && payload.length) {
+    const sortedPayload = [...payload].sort((a, b) => b.value - a.value);
 
-        return (
-            <div className="bg-slate-900 border border-slate-700 rounded-lg p-3 shadow-lg backdrop-blur-sm bg-opacity-90">
-                <p className="text-slate-300 font-medium mb-2 pb-2 border-b border-slate-700">{label}</p>
-                <div className="space-y-1">
-                    {sortedPayload.map((entry, index) => (
-                        <div key={`item-${index}`} className="flex items-center justify-between gap-4 text-sm">
-                            <div className="flex items-center gap-2">
-                                <div
-                                    className="w-2 h-2 rounded-full"
-                                    style={{ backgroundColor: entry.color || entry.fill || entry.stroke }}
-                                />
-                                <span className="text-slate-400" style={{ color: entry.color || entry.fill || entry.stroke }}>
-                                    {entry.name}:
-                                </span>
-                            </div>
-                            <span className="font-mono font-medium text-slate-200">
-                                {formatter ? formatter(entry.value) : entry.value.toLocaleString()}
-                            </span>
-                        </div>
-                    ))}
+    return (
+      <div className="bg-[#0D121D]/95 border border-white/[0.12] rounded-xl p-3.5 shadow-2xl backdrop-blur-xl min-w-[200px]">
+        <p className="text-xs font-mono font-semibold text-slate-300 mb-2.5 pb-1.5 border-b border-white/[0.08] tracking-wide">
+          {label}
+        </p>
+        <div className="space-y-1.5">
+          {sortedPayload.map((entry, index) => {
+            const entryColor = entry.color || entry.fill || entry.stroke || '#10b981'
+            return (
+              <div key={`item-${index}`} className="flex items-center justify-between gap-4 text-xs">
+                <div className="flex items-center gap-2">
+                  <div
+                    className="w-2 h-2 rounded-full shadow-sm"
+                    style={{ backgroundColor: entryColor, boxShadow: `0 0 6px ${entryColor}80` }}
+                  />
+                  <span className="text-slate-300 font-medium truncate max-w-[120px]">
+                    {entry.name}
+                  </span>
                 </div>
-            </div>
-        );
-    }
+                <span className="font-mono font-semibold text-slate-100 tabular-nums">
+                  {formatter ? formatter(entry.value) : new Intl.NumberFormat('en-IN').format(entry.value)}
+                </span>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    )
+  }
 
-    return null;
-};
+  return null
+}
 
-export default SortedCustomTooltip;
+export default SortedCustomTooltip

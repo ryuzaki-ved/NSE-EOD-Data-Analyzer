@@ -4,6 +4,7 @@ import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, Cartesia
 import DataTable from '../components/DataTable'
 import MetricCard from '../components/MetricCard'
 import { Users, TrendingUp, PieChart as PieChartIcon, Activity, Eye, Target, Calendar } from 'lucide-react'
+import AnimatedLoader from '../components/AnimatedLoader'
 import DeepInsights from '../components/DeepInsightsPartOI'
 import { calculateRatio, getRatioClass, formatRatio, formatIndianNumber, formatDifference } from '../utils/partOIHelpers'
 import LongVsShortTrendChart from '../components/partOI/LongVsShortTrendChart'
@@ -59,8 +60,8 @@ const PartOIPage = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-400"></div>
+      <div className="flex items-center justify-center min-h-[400px]">
+        <AnimatedLoader text="Loading Participant Open Interest..." />
       </div>
     )
   }
@@ -1128,17 +1129,20 @@ const PartOIPage = () => {
       variants={containerVariants}
     >
       <motion.div
-        className="flex flex-col sm:flex-row justify-between items-start sm:items-center"
+        className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
         variants={itemVariants}
       >
-        <h1 className="text-3xl font-bold gradient-text mb-4 sm:mb-0">Participant Open Interest</h1>
+        <div>
+          <h1 className="text-3xl font-bold text-white tracking-tight">Participant Open Interest</h1>
+          <p className="text-slate-400 text-sm mt-0.5">Participant positioning, futures and options open contracts</p>
+        </div>
         <select
           value={selectedClientType}
           onChange={(e) => setSelectedClientType(e.target.value)}
-          className="px-4 py-2 bg-dark-800/50 border border-white/10 rounded-lg focus:ring-2 focus:ring-primary-500 text-gray-200 backdrop-blur-sm"
+          className="px-3.5 py-2 bg-[#0B0F19] border border-white/[0.08] rounded-xl text-xs font-medium text-slate-300 focus:ring-1 focus:ring-emerald-500/40 focus:border-emerald-500/40 outline-none transition-colors"
         >
           {clientTypes.map(type => (
-            <option key={type} value={type}>{type}</option>
+            <option key={type} value={type}>{type === 'ALL' ? 'All Participants' : type}</option>
           ))}
         </select>
       </motion.div>
@@ -1258,17 +1262,23 @@ const PartOIPage = () => {
           <CorrelationInsights participantData={data} />
         </motion.div>
         <motion.div className="lg:col-span-1" variants={itemVariants}>
-          <div className="glass-card p-6 border border-blue-500/20 rounded-xl relative overflow-hidden group">
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-            <h3 className="text-lg font-semibold mb-4 text-blue-400 relative z-10">Correlation Analysis</h3>
-            <p className="text-sm text-gray-400 mb-4 relative z-10">
-              Discover relationships between different market participants and their trading patterns.
-            </p>
+          <div className="glass-card p-6 border border-white/[0.07] h-full flex flex-col justify-between">
+            <div>
+              <div className="flex items-center space-x-2 mb-3">
+                <div className="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                  <Activity className="h-4 w-4 text-emerald-400" />
+                </div>
+                <h3 className="text-base font-bold text-white tracking-tight">Cross-Participant Correlation</h3>
+              </div>
+              <p className="text-xs text-slate-400 leading-relaxed mb-4">
+                Discover statistically significant relationships, positioning alignments and divergence patterns between market participants.
+              </p>
+            </div>
             <a
               href="/correlation"
-              className="inline-flex items-center px-4 py-2 bg-blue-500/20 text-blue-400 rounded-lg hover:bg-blue-500/30 transition-colors relative z-10"
+              className="inline-flex items-center justify-center px-4 py-2 bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 rounded-xl hover:bg-emerald-500/25 transition-all text-xs font-semibold"
             >
-              View Full Analysis
+              Open Full Correlation Matrix →
             </a>
           </div>
         </motion.div>

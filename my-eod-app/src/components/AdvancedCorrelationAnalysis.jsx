@@ -37,8 +37,6 @@ const AdvancedCorrelationAnalysis = ({ participantData, fiiData }) => {
       const dates = getAvailableDates(participantData)
       setAvailableDates(dates)
       const latestDate = getLatestDate(participantData)
-      console.log('AdvancedCorrelationAnalysis - Available dates:', dates)
-      console.log('AdvancedCorrelationAnalysis - Latest date:', latestDate)
       setSelectedDate(latestDate)
     }
   }, [participantData])
@@ -48,11 +46,9 @@ const AdvancedCorrelationAnalysis = ({ participantData, fiiData }) => {
       const correlations = calculateParticipantCorrelations(participantData, selectedDate)
       setParticipantCorrelations(correlations)
       
-      // Calculate advanced data
       const advanced = calculateAdvancedCorrelations(participantData, selectedDate)
       setAdvancedData(advanced)
       
-      // Calculate momentum indicators
       const momentum = calculateMomentumIndicators(participantData, selectedDate)
       setMomentumData(momentum)
     }
@@ -77,7 +73,6 @@ const AdvancedCorrelationAnalysis = ({ participantData, fiiData }) => {
     { key: 'option_index_put_short', label: 'Option Put Short' }
   ]
 
-  // Prepare rolling correlation data (for historical analysis)
   const prepareRollingCorrelationData = () => {
     if (!participantData || participantData.length === 0) return []
 
@@ -99,156 +94,111 @@ const AdvancedCorrelationAnalysis = ({ participantData, fiiData }) => {
 
   const rollingCorrData = prepareRollingCorrelationData()
 
+  const tabs = [
+    { id: 'participant', label: 'Position Similarities', icon: TrendingUp },
+    { id: 'changes', label: 'Position Changes', icon: ArrowUpDown },
+    { id: 'momentum', label: 'Momentum Analysis', icon: TrendingDown },
+    { id: 'change-correlations', label: 'Change Correlations', icon: Activity },
+    { id: 'market', label: 'Market Correlations', icon: BarChart3 },
+    { id: 'rolling', label: 'Historical Rolling', icon: Calendar }
+  ]
+
   return (
-    <div className="space-y-8 animate-fade-in">
-      <div className="flex items-center space-x-3 mb-6">
-        <div className="p-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500">
-          <BarChart3 className="h-6 w-6 text-white" />
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-3">
+          <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+            <BarChart3 className="h-6 w-6 text-emerald-400" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold text-white tracking-tight">Advanced Correlation Analysis</h2>
+            <p className="text-xs text-slate-400 mt-0.5">Deep statistical alignment and market behavior analysis</p>
+          </div>
         </div>
-        <h2 className="text-3xl font-bold gradient-text">Advanced Correlation Analysis</h2>
-        <div className="px-3 py-1 bg-blue-500/20 rounded-full text-xs text-blue-400 border border-blue-500/30">
-          ADVANCED ANALYTICS
+        <div className="badge-emerald">
+          STATISTICAL ENGINE
         </div>
       </div>
 
       {/* Date Selection */}
-      <div className="glass-card p-6 border border-blue-500/20">
-        <div className="flex items-center space-x-3 mb-4">
-          <CalendarDays className="h-5 w-5 text-blue-400" />
-          <h3 className="text-lg font-semibold text-blue-400">Select Trading Date</h3>
+      <div className="glass-card p-4 border border-white/[0.07] flex items-center justify-between">
+        <div className="flex items-center space-x-3">
+          <CalendarDays className="h-4 w-4 text-emerald-400" />
+          <span className="text-xs font-semibold text-slate-300">Trading Session:</span>
+          <select
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            className="px-3 py-1.5 bg-[#0B0F19] border border-white/[0.08] rounded-lg text-xs font-medium text-slate-300 focus:ring-1 focus:ring-emerald-500/40 focus:border-emerald-500/40 outline-none transition-colors"
+          >
+            {availableDates.map(date => (
+              <option key={date} value={date}>
+                {date} {date === getLatestDate(participantData) ? '(Latest)' : ''}
+              </option>
+            ))}
+          </select>
         </div>
-        <div className="flex items-center space-x-4">
-          <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Trading Date:
-            </label>
-            <select
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className="w-full px-3 py-2 bg-dark-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 text-white"
-            >
-              {availableDates.map(date => (
-                <option key={date} value={date}>
-                  {date} {date === getLatestDate(participantData) ? '(Latest)' : ''}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="text-sm text-gray-400">
-            <div>Available Dates: {availableDates.length}</div>
-            <div>Latest: {getLatestDate(participantData)}</div>
-            {advancedData.previousDate && (
-              <div>Previous: {advancedData.previousDate}</div>
-            )}
-          </div>
+        <div className="text-xs text-slate-500 font-mono">
+          Available: <span className="text-slate-300">{availableDates.length}</span> sessions
         </div>
       </div>
 
       {/* Tab Navigation */}
-      <div className="flex space-x-1 bg-dark-700 rounded-lg p-1">
-        <button
-          onClick={() => setActiveTab('participant')}
-          className={`flex-1 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-            activeTab === 'participant'
-              ? 'bg-primary-500 text-white'
-              : 'text-gray-400 hover:text-white'
-          }`}
-        >
-          <TrendingUp className="h-4 w-4 inline mr-2" />
-          Position Similarities
-        </button>
-        <button
-          onClick={() => setActiveTab('changes')}
-          className={`flex-1 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-            activeTab === 'changes'
-              ? 'bg-primary-500 text-white'
-              : 'text-gray-400 hover:text-white'
-          }`}
-        >
-          <ArrowUpDown className="h-4 w-4 inline mr-2" />
-          Position Changes
-        </button>
-        <button
-          onClick={() => setActiveTab('momentum')}
-          className={`flex-1 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-            activeTab === 'momentum'
-              ? 'bg-primary-500 text-white'
-              : 'text-gray-400 hover:text-white'
-          }`}
-        >
-          <TrendingDown className="h-4 w-4 inline mr-2" />
-          Momentum Analysis
-        </button>
-        <button
-          onClick={() => setActiveTab('change-correlations')}
-          className={`flex-1 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-            activeTab === 'change-correlations'
-              ? 'bg-primary-500 text-white'
-              : 'text-gray-400 hover:text-white'
-          }`}
-        >
-          <Activity className="h-4 w-4 inline mr-2" />
-          Change Correlations
-        </button>
-        <button
-          onClick={() => setActiveTab('market')}
-          className={`flex-1 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-            activeTab === 'market'
-              ? 'bg-primary-500 text-white'
-              : 'text-white'
-          }`}
-        >
-          <BarChart3 className="h-4 w-4 inline mr-2" />
-          Market Correlations
-        </button>
-        <button
-          onClick={() => setActiveTab('rolling')}
-          className={`flex-1 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-            activeTab === 'rolling'
-              ? 'bg-primary-500 text-white'
-              : 'text-gray-400 hover:text-white'
-          }`}
-        >
-          <Calendar className="h-4 w-4 inline mr-2" />
-          Historical Rolling
-        </button>
+      <div className="flex overflow-x-auto gap-1.5 p-1 bg-[#0B0F19]/60 border border-white/[0.06] rounded-xl">
+        {tabs.map(tab => {
+          const Icon = tab.icon
+          const isActive = activeTab === tab.id
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center space-x-2 px-3.5 py-2 rounded-lg text-xs font-medium transition-all whitespace-nowrap ${
+                isActive
+                  ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-white/[0.04]'
+              }`}
+            >
+              <Icon className="h-3.5 w-3.5" />
+              <span>{tab.label}</span>
+            </button>
+          )
+        })}
       </div>
 
       {/* Position Similarities Tab */}
       {activeTab === 'participant' && (
         <div className="space-y-6">
-          {/* Similarity Matrix */}
-          <div className="glass-card p-6 border border-primary-500/20">
-            <h3 className="text-xl font-semibold mb-4 flex items-center">
-              <Target className="h-5 w-5 mr-2 text-primary-400" />
-              Current Position Similarity Matrix - {selectedDate}
+          <div className="glass-card p-6 border border-white/[0.07]">
+            <h3 className="text-base font-bold text-white tracking-tight mb-4 flex items-center">
+              <Target className="h-4 w-4 mr-2 text-emerald-400" />
+              Current Position Similarity Matrix — {selectedDate}
             </h3>
             
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full text-xs">
                 <thead>
-                  <tr className="border-b border-gray-700">
-                    <th className="text-left py-3 px-4 font-medium text-gray-300">Participant</th>
+                  <tr className="border-b border-white/[0.08]">
+                    <th className="text-left py-3 px-4 font-semibold text-slate-400 uppercase tracking-wider">Participant</th>
                     {participants.map(participant => (
-                      <th key={participant} className="text-center py-3 px-4 font-medium text-gray-300">
+                      <th key={participant} className="text-center py-3 px-4 font-semibold text-slate-400 uppercase tracking-wider">
                         {participant}
                       </th>
                     ))}
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-white/[0.04]">
                   {participants.map(participant1 => (
-                    <tr key={participant1} className="border-b border-gray-800 hover:bg-white/5">
-                      <td className="py-3 px-4 font-semibold text-primary-400">{participant1}</td>
+                    <tr key={participant1} className="hover:bg-white/[0.02] transition-colors">
+                      <td className="py-3 px-4 font-bold text-cyan-400">{participant1}</td>
                       {participants.map(participant2 => {
                         const similarity = participantCorrelations[participant1]?.[participant2]?.overall
                         return (
                           <td key={participant2} className="py-3 px-4 text-center">
-                            <div className={`${getCorrelationColorClass(similarity)}`}>
+                            <div className={`font-mono font-bold ${getCorrelationColorClass(similarity)}`}>
                               {formatCorrelation(similarity)}
                             </div>
-                            <div className="text-xs text-gray-500 mt-1">
-                              {similarity ? (similarity * 100).toFixed(1) + '% Similar' : 'N/A'}
+                            <div className="text-[10px] text-slate-500 mt-0.5">
+                              {similarity ? (similarity * 100).toFixed(1) + '% match' : 'N/A'}
                             </div>
                           </td>
                         )
@@ -265,46 +215,46 @@ const AdvancedCorrelationAnalysis = ({ participantData, fiiData }) => {
       {/* Position Changes Tab */}
       {activeTab === 'changes' && (
         <div className="space-y-6">
-          <div className="glass-card p-6 border border-green-500/20">
-            <h3 className="text-xl font-semibold mb-4 flex items-center">
-              <ArrowUpDown className="h-5 w-5 mr-2 text-green-400" />
-              Position Changes Analysis - {advancedData.previousDate} → {selectedDate}
+          <div className="glass-card p-6 border border-white/[0.07]">
+            <h3 className="text-base font-bold text-white tracking-tight mb-4 flex items-center">
+              <ArrowUpDown className="h-4 w-4 mr-2 text-emerald-400" />
+              Position Changes Analysis — {advancedData.previousDate} → {selectedDate}
             </h3>
             
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {participants.map(participant => {
                 const summary = getPositionChangeSummary(advancedData.positionChanges, participant)
                 if (!summary) return null
                 
                 return (
-                  <div key={participant} className="p-4 bg-dark-700 rounded-lg border border-gray-600">
-                    <h4 className="text-lg font-semibold text-white mb-3">{participant}</h4>
-                    <div className="space-y-2">
+                  <div key={participant} className="p-4 bg-[#0B0F19]/60 rounded-xl border border-white/[0.06]">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="text-sm font-bold text-white">{participant}</h4>
+                      <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                        summary.direction === 'bullish' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 
+                        summary.direction === 'bearish' ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20' : 
+                        'bg-slate-500/10 text-slate-400 border border-slate-500/20'
+                      }`}>
+                        {summary.direction.toUpperCase()}
+                      </span>
+                    </div>
+                    <div className="space-y-2 text-xs">
                       <div className="flex justify-between">
-                        <span className="text-gray-400">Net Position Change:</span>
-                        <span className={`font-semibold ${getPositionChangeColorClass(summary.netChange)}`}>
+                        <span className="text-slate-400">Net Change:</span>
+                        <span className={`font-mono font-semibold ${getPositionChangeColorClass(summary.netChange)}`}>
                           {formatPositionChange(summary.netChange)}
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-400">Long Change:</span>
-                        <span className={`font-semibold ${getPositionChangeColorClass(summary.longChange)}`}>
+                        <span className="text-slate-400">Long Change:</span>
+                        <span className={`font-mono font-semibold ${getPositionChangeColorClass(summary.longChange)}`}>
                           {formatPositionChange(summary.longChange)}
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-400">Short Change:</span>
-                        <span className={`font-semibold ${getPositionChangeColorClass(summary.shortChange)}`}>
+                        <span className="text-slate-400">Short Change:</span>
+                        <span className={`font-mono font-semibold ${getPositionChangeColorClass(summary.shortChange)}`}>
                           {formatPositionChange(summary.shortChange)}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">Direction:</span>
-                        <span className={`font-semibold ${
-                          summary.direction === 'bullish' ? 'text-green-400' : 
-                          summary.direction === 'bearish' ? 'text-red-400' : 'text-gray-400'
-                        }`}>
-                          {summary.direction.toUpperCase()}
                         </span>
                       </div>
                     </div>
@@ -315,44 +265,44 @@ const AdvancedCorrelationAnalysis = ({ participantData, fiiData }) => {
           </div>
 
           {/* Detailed Changes Table */}
-          <div className="glass-card p-6 border border-cyan-500/20">
-            <h3 className="text-xl font-semibold mb-4 flex items-center">
-              <Activity className="h-5 w-5 mr-2 text-cyan-400" />
+          <div className="glass-card p-6 border border-white/[0.07]">
+            <h3 className="text-base font-bold text-white tracking-tight mb-4 flex items-center">
+              <Activity className="h-4 w-4 mr-2 text-cyan-400" />
               Detailed Position Changes
             </h3>
             
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full text-xs">
                 <thead>
-                  <tr className="border-b border-gray-700">
-                    <th className="text-left py-3 px-4 font-medium text-gray-300">Participant</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-300">Metric</th>
-                    <th className="text-center py-3 px-4 font-medium text-gray-300">Previous</th>
-                    <th className="text-center py-3 px-4 font-medium text-gray-300">Current</th>
-                    <th className="text-center py-3 px-4 font-medium text-gray-300">Change</th>
-                    <th className="text-center py-3 px-4 font-medium text-gray-300">% Change</th>
+                  <tr className="border-b border-white/[0.08]">
+                    <th className="text-left py-3 px-4 font-semibold text-slate-400 uppercase tracking-wider">Participant</th>
+                    <th className="text-left py-3 px-4 font-semibold text-slate-400 uppercase tracking-wider">Metric</th>
+                    <th className="text-right py-3 px-4 font-semibold text-slate-400 uppercase tracking-wider">Previous</th>
+                    <th className="text-right py-3 px-4 font-semibold text-slate-400 uppercase tracking-wider">Current</th>
+                    <th className="text-right py-3 px-4 font-semibold text-slate-400 uppercase tracking-wider">Change</th>
+                    <th className="text-right py-3 px-4 font-semibold text-slate-400 uppercase tracking-wider">% Change</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-white/[0.04]">
                   {participants.map(participant => 
                     metrics.map(metric => {
                       const changeData = advancedData.positionChanges[participant]?.[metric.key]
                       if (!changeData) return null
                       
                       return (
-                        <tr key={`${participant}-${metric.key}`} className="border-b border-gray-800 hover:bg-white/5">
-                          <td className="py-3 px-4 font-semibold text-cyan-400">{participant}</td>
-                          <td className="py-3 px-4 text-gray-300">{metric.label}</td>
-                          <td className="py-3 px-4 text-center text-gray-400">
-                            {changeData.previous.toLocaleString()}
+                        <tr key={`${participant}-${metric.key}`} className="hover:bg-white/[0.02] transition-colors">
+                          <td className="py-3 px-4 font-bold text-cyan-400">{participant}</td>
+                          <td className="py-3 px-4 text-slate-300">{metric.label}</td>
+                          <td className="py-3 px-4 text-right font-mono text-slate-400 tabular-nums">
+                            {changeData.previous.toLocaleString('en-IN')}
                           </td>
-                          <td className="py-3 px-4 text-center text-white">
-                            {changeData.current.toLocaleString()}
+                          <td className="py-3 px-4 text-right font-mono text-white tabular-nums">
+                            {changeData.current.toLocaleString('en-IN')}
                           </td>
-                          <td className={`py-3 px-4 text-center font-semibold ${getPositionChangeColorClass(changeData.change)}`}>
+                          <td className={`py-3 px-4 text-right font-mono font-semibold tabular-nums ${getPositionChangeColorClass(changeData.change)}`}>
                             {formatPositionChange(changeData.change)}
                           </td>
-                          <td className={`py-3 px-4 text-center font-semibold ${getPositionChangeColorClass(changeData.changePercent)}`}>
+                          <td className={`py-3 px-4 text-right font-mono font-semibold tabular-nums ${getPositionChangeColorClass(changeData.changePercent)}`}>
                             {changeData.changePercent > 0 ? '+' : ''}{changeData.changePercent.toFixed(1)}%
                           </td>
                         </tr>
@@ -369,51 +319,51 @@ const AdvancedCorrelationAnalysis = ({ participantData, fiiData }) => {
       {/* Momentum Analysis Tab */}
       {activeTab === 'momentum' && (
         <div className="space-y-6">
-          <div className="glass-card p-6 border border-purple-500/20">
-            <h3 className="text-xl font-semibold mb-4 flex items-center">
-              <TrendingDown className="h-5 w-5 mr-2 text-purple-400" />
-              Momentum Indicators - {selectedDate}
+          <div className="glass-card p-6 border border-white/[0.07]">
+            <h3 className="text-base font-bold text-white tracking-tight mb-4 flex items-center">
+              <TrendingDown className="h-4 w-4 mr-2 text-emerald-400" />
+              Momentum Indicators — {selectedDate}
             </h3>
             
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {participants.map(participant => {
                 const momentum = momentumData[participant]
                 if (!momentum) return null
                 
                 return (
-                  <div key={participant} className="p-4 bg-dark-700 rounded-lg border border-gray-600">
-                    <h4 className="text-lg font-semibold text-white mb-3">{participant}</h4>
-                    <div className="space-y-3">
+                  <div key={participant} className="p-4 bg-[#0B0F19]/60 rounded-xl border border-white/[0.06]">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="text-sm font-bold text-white">{participant}</h4>
+                      <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                        momentum.overallDirection === 'bullish' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 
+                        momentum.overallDirection === 'bearish' ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20' : 
+                        'bg-slate-500/10 text-slate-400 border border-slate-500/20'
+                      }`}>
+                        {momentum.overallDirection.toUpperCase()}
+                      </span>
+                    </div>
+                    <div className="space-y-2 text-xs">
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-400">Momentum Score:</span>
-                        <span className={`text-lg font-bold ${
-                          momentum.momentumScore > 0 ? 'text-green-400' : 
-                          momentum.momentumScore < 0 ? 'text-red-400' : 'text-gray-400'
+                        <span className="text-slate-400">Score:</span>
+                        <span className={`font-mono font-bold ${
+                          momentum.momentumScore > 0 ? 'text-emerald-400' : 
+                          momentum.momentumScore < 0 ? 'text-rose-400' : 'text-slate-400'
                         }`}>
                           {momentum.momentumScore > 0 ? '+' : ''}{momentum.momentumScore.toFixed(1)}
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-400">Direction:</span>
+                        <span className="text-slate-400">Strength:</span>
                         <span className={`font-semibold ${
-                          momentum.overallDirection === 'bullish' ? 'text-green-400' : 
-                          momentum.overallDirection === 'bearish' ? 'text-red-400' : 'text-gray-400'
-                        }`}>
-                          {momentum.overallDirection.toUpperCase()}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">Strength:</span>
-                        <span className={`font-semibold ${
-                          momentum.strength === 'strong' ? 'text-yellow-400' : 
-                          momentum.strength === 'moderate' ? 'text-blue-400' : 'text-gray-400'
+                          momentum.strength === 'strong' ? 'text-amber-400' : 
+                          momentum.strength === 'moderate' ? 'text-cyan-400' : 'text-slate-400'
                         }`}>
                           {momentum.strength.toUpperCase()}
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-400">Net Change:</span>
-                        <span className={`font-semibold ${getPositionChangeColorClass(momentum.netPositionChange)}`}>
+                        <span className="text-slate-400">Net Change:</span>
+                        <span className={`font-mono font-semibold ${getPositionChangeColorClass(momentum.netPositionChange)}`}>
                           {formatPositionChange(momentum.netPositionChange)}
                         </span>
                       </div>
@@ -429,37 +379,37 @@ const AdvancedCorrelationAnalysis = ({ participantData, fiiData }) => {
       {/* Change Correlations Tab */}
       {activeTab === 'change-correlations' && (
         <div className="space-y-6">
-          <div className="glass-card p-6 border border-orange-500/20">
-            <h3 className="text-xl font-semibold mb-4 flex items-center">
-              <Activity className="h-5 w-5 mr-2 text-orange-400" />
-              Position Change Similarity Matrix - {advancedData.previousDate} → {selectedDate}
+          <div className="glass-card p-6 border border-white/[0.07]">
+            <h3 className="text-base font-bold text-white tracking-tight mb-4 flex items-center">
+              <Activity className="h-4 w-4 mr-2 text-amber-400" />
+              Position Change Similarity Matrix — {advancedData.previousDate} → {selectedDate}
             </h3>
             
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full text-xs">
                 <thead>
-                  <tr className="border-b border-gray-700">
-                    <th className="text-left py-3 px-4 font-medium text-gray-300">Participant</th>
+                  <tr className="border-b border-white/[0.08]">
+                    <th className="text-left py-3 px-4 font-semibold text-slate-400 uppercase tracking-wider">Participant</th>
                     {participants.map(participant => (
-                      <th key={participant} className="text-center py-3 px-4 font-medium text-gray-300">
+                      <th key={participant} className="text-center py-3 px-4 font-semibold text-slate-400 uppercase tracking-wider">
                         {participant}
                       </th>
                     ))}
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-white/[0.04]">
                   {participants.map(participant1 => (
-                    <tr key={participant1} className="border-b border-gray-800 hover:bg-white/5">
-                      <td className="py-3 px-4 font-semibold text-orange-400">{participant1}</td>
+                    <tr key={participant1} className="hover:bg-white/[0.02] transition-colors">
+                      <td className="py-3 px-4 font-bold text-amber-400">{participant1}</td>
                       {participants.map(participant2 => {
                         const similarity = advancedData.changeSimilarities[participant1]?.[participant2]?.overall
                         return (
                           <td key={participant2} className="py-3 px-4 text-center">
-                            <div className={`${getCorrelationColorClass(similarity)}`}>
+                            <div className={`font-mono font-bold ${getCorrelationColorClass(similarity)}`}>
                               {formatCorrelation(similarity)}
                             </div>
-                            <div className="text-xs text-gray-500 mt-1">
-                              {similarity ? (similarity * 100).toFixed(1) + '% Similar Changes' : 'N/A'}
+                            <div className="text-[10px] text-slate-500 mt-0.5">
+                              {similarity ? (similarity * 100).toFixed(1) + '% Match' : 'N/A'}
                             </div>
                           </td>
                         )
@@ -475,39 +425,37 @@ const AdvancedCorrelationAnalysis = ({ participantData, fiiData }) => {
 
       {/* Market Correlations Tab */}
       {activeTab === 'market' && (
-        <div className="glass-card p-6 border border-green-500/20">
-          <h3 className="text-xl font-semibold mb-4 flex items-center">
-            <TrendingUp className="h-5 w-5 mr-2 text-green-400" />
-            Market Indicator Correlations
+        <div className="glass-card p-6 border border-white/[0.07]">
+          <h3 className="text-base font-bold text-white tracking-tight mb-4 flex items-center">
+            <TrendingUp className="h-4 w-4 mr-2 text-emerald-400" />
+            Market Behavior Correlations
           </h3>
           
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full text-xs">
               <thead>
-                <tr className="border-b border-gray-700">
-                  <th className="text-left py-3 px-4 font-medium text-gray-300">Participant</th>
-                  <th className="text-center py-3 px-4 font-medium text-gray-300">FII Net Flow</th>
-                  <th className="text-center py-3 px-4 font-medium text-gray-300">FII Buy Amount</th>
-                  <th className="text-center py-3 px-4 font-medium text-gray-300">FII Sell Amount</th>
-                  <th className="text-center py-3 px-4 font-medium text-gray-300">FII OI Amount</th>
+                <tr className="border-b border-white/[0.08]">
+                  <th className="text-left py-3 px-4 font-semibold text-slate-400 uppercase tracking-wider">Participant</th>
+                  <th className="text-center py-3 px-4 font-semibold text-slate-400 uppercase tracking-wider">Market Sentiment</th>
+                  <th className="text-center py-3 px-4 font-semibold text-slate-400 uppercase tracking-wider">Market Consensus</th>
+                  <th className="text-center py-3 px-4 font-semibold text-slate-400 uppercase tracking-wider">Market Volatility</th>
+                  <th className="text-center py-3 px-4 font-semibold text-slate-400 uppercase tracking-wider">Market Liquidity</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-white/[0.04]">
                 {participants.map(participant => (
-                  <tr key={participant} className="border-b border-gray-800 hover:bg-white/5">
-                    <td className="py-3 px-4 font-semibold text-green-400">{participant}</td>
-                    {['FII_Net_Flow', 'FII_Buy_Amount', 'FII_Sell_Amount', 'FII_OI_Amount'].map(indicator => {
-                      const longCorr = marketCorrelations[participant]?.[indicator]?.total_long_contracts
-                      const shortCorr = marketCorrelations[participant]?.[indicator]?.total_short_contracts
-                      const avgCorr = longCorr && shortCorr ? (longCorr + shortCorr) / 2 : null
+                  <tr key={participant} className="hover:bg-white/[0.02] transition-colors">
+                    <td className="py-3 px-4 font-bold text-emerald-400">{participant}</td>
+                    {['Market_Sentiment', 'Market_Consensus', 'Market_Volatility', 'Market_Liquidity'].map(indicator => {
+                      const correlation = marketCorrelations[participant]?.[indicator]
                       
                       return (
                         <td key={indicator} className="py-3 px-4 text-center">
-                          <div className={`${getCorrelationColorClass(avgCorr)}`}>
-                            {formatCorrelation(avgCorr)}
+                          <div className={`font-mono font-bold ${getCorrelationColorClass(correlation?.correlation)}`}>
+                            {formatCorrelation(correlation?.correlation)}
                           </div>
-                          <div className="text-xs text-gray-500 mt-1">
-                            {getCorrelationStrength(avgCorr)}
+                          <div className="text-[10px] text-slate-400 mt-0.5">
+                            {correlation?.interpretation || 'N/A'}
                           </div>
                         </td>
                       )
@@ -523,21 +471,21 @@ const AdvancedCorrelationAnalysis = ({ participantData, fiiData }) => {
       {/* Rolling Correlations Tab */}
       {activeTab === 'rolling' && (
         <div className="space-y-6">
-          <div className="glass-card p-6 border border-purple-500/20">
-            <h3 className="text-xl font-semibold mb-4 flex items-center">
-              <Calendar className="h-5 w-5 mr-2 text-purple-400" />
+          <div className="glass-card p-6 border border-white/[0.07]">
+            <h3 className="text-base font-bold text-white tracking-tight mb-4 flex items-center">
+              <Calendar className="h-4 w-4 mr-2 text-cyan-400" />
               Historical Rolling Correlation Analysis
             </h3>
             
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-xs font-semibold text-slate-400 mb-1.5">
                   Participant:
                 </label>
                 <select
                   value={selectedParticipant}
                   onChange={(e) => setSelectedParticipant(e.target.value)}
-                  className="w-full px-3 py-2 bg-dark-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500"
+                  className="w-full px-3 py-1.5 bg-[#0B0F19] border border-white/[0.08] rounded-lg text-xs font-medium text-slate-300 focus:ring-1 focus:ring-emerald-500/40 focus:border-emerald-500/40 outline-none transition-colors"
                 >
                   {participants.map(participant => (
                     <option key={participant} value={participant}>{participant}</option>
@@ -546,13 +494,13 @@ const AdvancedCorrelationAnalysis = ({ participantData, fiiData }) => {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-xs font-semibold text-slate-400 mb-1.5">
                   Metric:
                 </label>
                 <select
                   value={selectedMetric}
                   onChange={(e) => setSelectedMetric(e.target.value)}
-                  className="w-full px-3 py-2 bg-dark-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500"
+                  className="w-full px-3 py-1.5 bg-[#0B0F19] border border-white/[0.08] rounded-lg text-xs font-medium text-slate-300 focus:ring-1 focus:ring-emerald-500/40 focus:border-emerald-500/40 outline-none transition-colors"
                 >
                   {metrics.map(metric => (
                     <option key={metric.key} value={metric.key}>{metric.label}</option>
@@ -561,13 +509,13 @@ const AdvancedCorrelationAnalysis = ({ participantData, fiiData }) => {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-xs font-semibold text-slate-400 mb-1.5">
                   Rolling Window:
                 </label>
                 <select
                   value={rollingWindow}
                   onChange={(e) => setRollingWindow(parseInt(e.target.value))}
-                  className="w-full px-3 py-2 bg-dark-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500"
+                  className="w-full px-3 py-1.5 bg-[#0B0F19] border border-white/[0.08] rounded-lg text-xs font-medium text-slate-300 focus:ring-1 focus:ring-emerald-500/40 focus:border-emerald-500/40 outline-none transition-colors"
                 >
                   <option value={3}>3 Days</option>
                   <option value={5}>5 Days</option>
@@ -578,35 +526,44 @@ const AdvancedCorrelationAnalysis = ({ participantData, fiiData }) => {
             </div>
 
             {rollingCorrData.length > 0 && (
-              <div className="h-80">
+              <div className="h-[300px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={rollingCorrData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                  <LineChart data={rollingCorrData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#1E293B" vertical={false} />
                     <XAxis 
                       dataKey="day" 
-                      stroke="#9CA3AF"
-                      label={{ value: 'Trading Day', position: 'insideBottom', offset: -10 }}
+                      stroke="#64748B"
+                      fontSize={11}
+                      tickLine={false}
                     />
                     <YAxis 
-                      stroke="#9CA3AF"
+                      stroke="#64748B"
                       domain={[-1, 1]}
-                      label={{ value: 'Correlation', angle: -90, position: 'insideLeft' }}
+                      fontSize={11}
+                      tickLine={false}
                     />
                     <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: '#1F2937', 
-                        border: '1px solid #374151',
-                        borderRadius: '8px'
+                      contentStyle={{
+                        backgroundColor: 'rgba(11, 15, 25, 0.95)',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        borderRadius: '12px',
+                        color: '#e2e8f0',
+                        backdropFilter: 'blur(12px)',
                       }}
+                      itemStyle={{ color: '#e2e8f0', fontSize: 12 }}
                     />
-                    <Legend />
+                    <Legend 
+                      wrapperStyle={{ paddingTop: '12px' }}
+                      formatter={(value) => <span className="text-xs text-slate-300 font-medium">{value}</span>}
+                    />
                     <Line 
                       type="monotone" 
                       dataKey="correlation" 
-                      stroke="#8B5CF6" 
-                      strokeWidth={2}
-                      dot={{ fill: '#8B5CF6', strokeWidth: 2, r: 4 }}
-                      activeDot={{ r: 6, stroke: '#8B5CF6', strokeWidth: 2 }}
+                      stroke="#38BDF8" 
+                      strokeWidth={2.5}
+                      dot={{ fill: '#38BDF8', strokeWidth: 0, r: 3 }}
+                      activeDot={{ r: 5, stroke: '#38BDF8', strokeWidth: 2, fill: '#0B0F19' }}
+                      name="Correlation"
                     />
                   </LineChart>
                 </ResponsiveContainer>
@@ -619,4 +576,4 @@ const AdvancedCorrelationAnalysis = ({ participantData, fiiData }) => {
   )
 }
 
-export default AdvancedCorrelationAnalysis 
+export default AdvancedCorrelationAnalysis

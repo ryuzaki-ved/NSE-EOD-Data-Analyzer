@@ -1,196 +1,204 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
-import { BarChart3, PieChart, Activity, TrendingUp, ArrowRight, Zap, Brain, Globe, Layers } from 'lucide-react'
+import { BarChart3, PieChart, Activity, GitBranch, Brain, ArrowRight, ShieldCheck, Database, Layers, ArrowUpRight, TrendingUp } from 'lucide-react'
 import { motion } from 'framer-motion'
 import InnovationBackground from '../components/InnovationBackground'
 import ThreeDCard from '../components/ThreeDCard'
 
 const HomePage = () => {
-  const features = [
+  const modules = [
     {
-      title: 'FII Derivatives',
-      subtitle: 'Institutional Flow',
-      description: 'Deep dive into Foreign Institutional Investor trading patterns with advanced visualization.',
+      id: 'fii-stats',
+      title: 'FII Derivatives Statistics',
+      subtitle: 'INSTITUTIONAL POSITIONING',
+      description: 'Granular tracking of Foreign Institutional Investor contract flows, net buy/sell turnover (₹ Cr), and historical open interest in Index & Stock derivatives.',
       icon: BarChart3,
       path: '/fii-deriv-stats',
-      color: 'from-blue-500 to-cyan-500',
-      accent: 'text-cyan-400'
+      tags: ['Futures OI', 'Options Turnover', 'Net Flow Dynamics'],
+      accentColor: 'text-rose-400',
+      badgeBg: 'bg-rose-500/10 border-rose-500/20 text-rose-400',
+      hoverBorder: 'group-hover:border-rose-500/40'
     },
     {
-      title: 'Participant OI',
-      subtitle: 'Market Sentiment',
-      description: 'Track open interest distribution across Client, DII, FII, and Pro categories.',
+      id: 'part-oi',
+      title: 'Participant Open Interest',
+      subtitle: 'CROSS-DESK POSITIONING',
+      description: 'Comprehensive breakdown of open interest across Client (Retail/HNI), DII, FII, and Pro desks with Long/Short ratios and cumulative buildup.',
       icon: PieChart,
       path: '/part-oi',
-      color: 'from-purple-500 to-pink-500',
-      accent: 'text-pink-400'
+      tags: ['Client vs Pro', 'PCR Metrics', 'Weekly Options Buildup'],
+      accentColor: 'text-emerald-400',
+      badgeBg: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400',
+      hoverBorder: 'group-hover:border-emerald-500/40'
     },
     {
-      title: 'Volume Analysis',
-      subtitle: 'Liquidity & Intensity',
-      description: 'Analyze volume concentration and trading intensity across market segments.',
+      id: 'part-vol',
+      title: 'Participant Trading Volume',
+      subtitle: 'LIQUIDITY & FLOW SHIFTS',
+      description: 'Segmented turnover distribution, trading intensity, and intraday volume adjustments comparing open and closed positions across all market participants.',
       icon: Activity,
       path: '/part-vol',
-      color: 'from-green-500 to-emerald-500',
-      accent: 'text-emerald-400'
+      tags: ['Intraday Volume', 'OI Adjustments', 'Desk Market Share'],
+      accentColor: 'text-cyan-400',
+      badgeBg: 'bg-cyan-500/10 border-cyan-500/20 text-cyan-400',
+      hoverBorder: 'group-hover:border-cyan-500/40'
     },
     {
-      title: 'Correlation Matrix',
-      subtitle: 'Hidden Relationships',
-      description: 'Uncover hidden relationships between market participants using statistical models.',
-      icon: Zap,
+      id: 'correlation',
+      title: 'Cross-Participant Correlation',
+      subtitle: 'STATISTICAL CO-MOVEMENT',
+      description: 'Pearson correlation matrices, rolling historical correlation windows, participant sentiment divergence, and counterparty positioning patterns.',
+      icon: GitBranch,
       path: '/correlation',
-      color: 'from-orange-500 to-red-500',
-      accent: 'text-orange-400'
+      tags: ['Pearson Matrix', 'Rolling Windows', 'Desk Divergence'],
+      accentColor: 'text-amber-400',
+      badgeBg: 'bg-amber-500/10 border-amber-500/20 text-amber-400',
+      hoverBorder: 'group-hover:border-amber-500/40'
     },
     {
-      title: 'Advanced Math',
-      subtitle: 'Predictive Modeling',
-      description: 'Z-Scores, PCR ratios, and statistical deviation analysis for alpha generation.',
+      id: 'advanced-math',
+      title: 'Statistical Models & Analytics',
+      subtitle: 'QUANTITATIVE INSIGHTS',
+      description: 'Z-Score deviation models, Historical Volatility, Put-Call Ratio (PCR) dynamics, return distribution metrics, and statistical risk statistics.',
       icon: Brain,
       path: '/advanced-math',
-      color: 'from-indigo-500 to-violet-500',
-      accent: 'text-violet-400'
+      tags: ['Z-Scores', 'Volatility Bands', 'Risk Metrics'],
+      accentColor: 'text-emerald-400',
+      badgeBg: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400',
+      hoverBorder: 'group-hover:border-emerald-500/40'
     }
   ]
 
+  const capabilities = [
+    { label: 'Data Source', value: 'Official NSE EOD Feeds', desc: 'Futures & Options Participant Bhavcopy' },
+    { label: 'Tracked Desks', value: 'Client • DII • FII • Pro', desc: 'Complete market participant coverage' },
+    { label: 'Contract Types', value: 'Index & Stock F&O', desc: 'Futures, Calls & Puts (Buy/Sell)' },
+    { label: 'Analytics Engine', value: '100% Client-Side Fast', desc: 'Instant filtering, sorting & date comparison' }
+  ]
+
   return (
-    <div className="relative min-h-screen overflow-hidden">
+    <div className="relative min-h-screen text-slate-100 selection:bg-emerald-500/20 selection:text-emerald-300">
       <InnovationBackground />
       
-      <div className="relative z-10 container mx-auto px-4 py-12 flex flex-col justify-center min-h-screen">
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         
-        {/* Hero Section */}
-        <div className="text-center mb-24 perspective-1000">
+        {/* Terminal Header & Status */}
+        <div className="text-center max-w-4xl mx-auto mb-16 sm:mb-20">
           <motion.div
-            initial={{ opacity: 0, rotateX: 90 }}
-            animate={{ opacity: 1, rotateX: 0 }}
-            transition={{ duration: 1, type: "spring" }}
-            className="inline-block mb-6"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#0D121D]/90 border border-white/[0.08] shadow-sm mb-6"
           >
-            <div className="px-4 py-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-md flex items-center space-x-2 shadow-[0_0_15px_rgba(255,255,255,0.1)]">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-              </span>
-              <span className="text-xs font-mono text-green-400 tracking-wider">SYSTEM ONLINE</span>
-            </div>
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <span className="text-[11px] font-mono uppercase tracking-widest text-emerald-400 font-semibold">
+              NSE EOD MARKET INTELLIGENCE TERMINAL
+            </span>
           </motion.div>
 
           <motion.h1 
-            className="text-7xl md:text-9xl font-black tracking-tighter mb-8"
-            initial={{ opacity: 0, y: 50 }}
+            className="text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-tight text-white mb-6 leading-[1.1]"
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
           >
-            <span className="bg-clip-text text-transparent bg-gradient-to-b from-white via-white to-white/50 drop-shadow-[0_0_30px_rgba(255,255,255,0.3)]">
-              MARKET
-            </span>
-            <br />
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary-400 via-purple-400 to-pink-400 drop-shadow-[0_0_30px_rgba(168,85,247,0.4)]">
-              INTELLIGENCE
-            </span>
+            Institutional Derivatives & Participant Intelligence
           </motion.h1>
 
           <motion.p 
-            className="text-xl md:text-2xl text-slate-400 max-w-3xl mx-auto mb-12 leading-relaxed font-light"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
+            className="text-base sm:text-lg md:text-xl text-slate-400 max-w-3xl mx-auto leading-relaxed font-normal"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
           >
-            Next-generation derivatives analytics platform powered by <span className="text-white font-semibold">quantum-statistical models</span> and real-time flow analysis.
+            Comprehensive End-of-Day derivatives market intelligence. Deep-dive into institutional positioning, participant open interest, liquidity flows, and cross-desk correlation metrics.
           </motion.p>
-
-          {/* Floating 3D Elements */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full pointer-events-none -z-10">
-            <motion.div 
-              animate={{ rotate: 360 }}
-              transition={{ duration: 50, repeat: Infinity, ease: "linear" }}
-              className="absolute top-0 right-10 w-64 h-64 border border-dashed border-white/5 rounded-full"
-            />
-            <motion.div 
-              animate={{ rotate: -360 }}
-              transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
-              className="absolute bottom-0 left-10 w-96 h-96 border border-dashed border-white/5 rounded-full"
-            />
-          </div>
         </div>
 
-        {/* 3D Cards Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 perspective-1000">
-          {features.map((feature, index) => (
-            <ThreeDCard key={feature.path} className="h-full">
-              <Link to={feature.path} className="block h-full">
-                <div className="relative h-full bg-dark-900/40 backdrop-blur-xl border border-white/10 rounded-2xl p-8 overflow-hidden group hover:border-white/20 transition-colors">
-                  {/* Holographic Gradient Background */}
-                  <div className={`absolute inset-0 bg-gradient-to-br ${feature.color} opacity-0 group-hover:opacity-10 transition-opacity duration-500`} />
-                  
-                  {/* 3D Content Layer */}
-                  <div style={{ transform: "translateZ(30px)" }} className="relative z-10">
-                    <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${feature.color} p-0.5 mb-6 shadow-lg group-hover:shadow-${feature.color.split('-')[1]}-500/50 transition-shadow duration-500`}>
-                      <div className="w-full h-full bg-dark-900 rounded-xl flex items-center justify-center">
-                        <feature.icon className={`h-8 w-8 ${feature.accent}`} />
+        {/* 5 Core Modules Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
+          {modules.map((mod, index) => (
+            <ThreeDCard key={mod.id} className="h-full">
+              <Link to={mod.path} className="block h-full group">
+                <div className={`h-full bg-[#0D121D]/90 backdrop-blur-xl border border-white/[0.08] ${mod.hoverBorder} rounded-2xl p-6 flex flex-col justify-between shadow-terminal hover:shadow-[0_12px_32px_-8px_rgba(0,0,0,0.6)] transition-all duration-300`}>
+                  <div>
+                    {/* Top Row: Icon & Subtitle */}
+                    <div className="flex items-center justify-between mb-4">
+                      <div className={`p-3 rounded-xl bg-white/[0.03] border border-white/[0.08] group-hover:bg-white/[0.06] transition-colors`}>
+                        <mod.icon className={`h-5 w-5 ${mod.accentColor}`} />
                       </div>
+                      <span className={`text-[10px] font-mono uppercase tracking-widest px-2.5 py-0.5 rounded-full border ${mod.badgeBg}`}>
+                        {mod.subtitle}
+                      </span>
                     </div>
 
-                    <h3 className="text-2xl font-bold text-white mb-1 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-white group-hover:to-slate-400 transition-all">
-                      {feature.title}
+                    {/* Title */}
+                    <h3 className="text-xl font-bold text-white mb-2 tracking-tight group-hover:text-emerald-300 transition-colors flex items-center justify-between">
+                      <span>{mod.title}</span>
+                      <ArrowUpRight className="h-4 w-4 text-slate-500 group-hover:text-emerald-400 transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
                     </h3>
-                    <p className={`text-xs font-mono uppercase tracking-widest mb-4 ${feature.accent} opacity-80`}>
-                      {feature.subtitle}
-                    </p>
-                    
-                    <p className="text-slate-400 text-sm leading-relaxed mb-6 group-hover:text-slate-300 transition-colors">
-                      {feature.description}
-                    </p>
 
-                    <div className="flex items-center text-white/50 group-hover:text-white transition-colors text-sm font-medium">
-                      <span>Access Module</span>
-                      <ArrowRight className="h-4 w-4 ml-2 transform group-hover:translate-x-1 transition-transform" />
-                    </div>
+                    {/* Description */}
+                    <p className="text-xs sm:text-sm text-slate-400 leading-relaxed mb-6 font-normal">
+                      {mod.description}
+                    </p>
                   </div>
 
-                  {/* Decorative Elements */}
-                  <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-gradient-to-br from-white/5 to-transparent rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700" />
+                  {/* Tags & Action Link */}
+                  <div className="pt-4 border-t border-white/[0.06]">
+                    <div className="flex flex-wrap gap-1.5 mb-3">
+                      {mod.tags.map((tag, i) => (
+                        <span key={i} className="text-[10px] font-mono px-2 py-0.5 rounded bg-white/[0.03] text-slate-400 border border-white/[0.05]">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                    <div className="flex items-center text-xs font-semibold text-slate-300 group-hover:text-emerald-400 transition-colors">
+                      <span>Open Workspace</span>
+                      <ArrowRight className="h-3.5 w-3.5 ml-1.5 transform group-hover:translate-x-1 transition-transform" />
+                    </div>
+                  </div>
                 </div>
               </Link>
             </ThreeDCard>
           ))}
         </div>
 
-        {/* Stats Dashboard */}
+        {/* Data Architecture & Specifications */}
         <motion.div 
-          initial={{ opacity: 0, y: 50 }}
+          initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="mt-32 relative"
+          transition={{ duration: 0.5 }}
+          className="bg-[#0D121D]/90 backdrop-blur-xl border border-white/[0.08] rounded-2xl p-6 sm:p-8 shadow-terminal"
         >
-          <div className="absolute inset-0 bg-gradient-to-r from-primary-500/10 via-purple-500/10 to-pink-500/10 blur-3xl -z-10" />
-          <div className="glass-card border border-white/10 p-1 rounded-3xl">
-            <div className="bg-dark-950/80 backdrop-blur-xl rounded-[20px] p-10 border border-white/5">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-12">
-                {[
-                  { label: 'Data Points Processed', value: '2.5M+', icon: Layers },
-                  { label: 'Market Coverage', value: '100%', icon: Globe },
-                  { label: 'Prediction Accuracy', value: '94.2%', icon: Brain },
-                  { label: 'Active Models', value: '12', icon: Activity }
-                ].map((stat, i) => (
-                  <div key={i} className="text-center group">
-                    <div className="flex justify-center mb-4">
-                      <div className="p-3 rounded-full bg-white/5 group-hover:bg-white/10 transition-colors">
-                        <stat.icon className="h-6 w-6 text-slate-400 group-hover:text-white transition-colors" />
-                      </div>
-                    </div>
-                    <div className="text-4xl font-bold text-white mb-2 font-mono tracking-tight group-hover:scale-110 transition-transform duration-300 inline-block">
-                      {stat.value}
-                    </div>
-                    <div className="text-xs text-slate-500 uppercase tracking-widest font-semibold">
-                      {stat.label}
-                    </div>
-                  </div>
-                ))}
-              </div>
+          <div className="flex items-center space-x-3 mb-6 pb-4 border-b border-white/[0.08]">
+            <div className="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+              <Database className="h-4 w-4 text-emerald-400" />
             </div>
+            <div>
+              <h4 className="text-base font-bold text-white tracking-tight">Platform Specifications & Architecture</h4>
+              <p className="text-xs text-slate-400 font-mono">Official NSE derivatives aggregation pipeline</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {capabilities.map((item, i) => (
+              <div key={i} className="bg-[#111726]/60 border border-white/[0.06] rounded-xl p-4">
+                <div className="text-[11px] font-mono uppercase tracking-wider text-slate-400 font-semibold mb-1">
+                  {item.label}
+                </div>
+                <div className="text-base font-bold text-white tracking-tight mb-1 font-mono">
+                  {item.value}
+                </div>
+                <div className="text-xs text-slate-400">
+                  {item.desc}
+                </div>
+              </div>
+            ))}
           </div>
         </motion.div>
 

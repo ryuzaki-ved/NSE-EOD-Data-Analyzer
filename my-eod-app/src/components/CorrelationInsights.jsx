@@ -36,17 +36,16 @@ const CorrelationInsights = ({ participantData }) => {
 
   if (loading) {
     return (
-      <div className="glass-card p-6 border border-blue-500/20">
-        <div className="animate-pulse">
-          <div className="h-4 bg-gray-600 rounded w-3/4 mb-4"></div>
-          <div className="h-3 bg-gray-600 rounded w-1/2 mb-2"></div>
-          <div className="h-3 bg-gray-600 rounded w-2/3"></div>
+      <div className="glass-card p-6 border border-white/[0.07]">
+        <div className="animate-pulse space-y-3">
+          <div className="h-4 bg-white/[0.05] rounded w-3/4"></div>
+          <div className="h-3 bg-white/[0.03] rounded w-1/2"></div>
+          <div className="h-3 bg-white/[0.03] rounded w-2/3"></div>
         </div>
       </div>
     )
   }
 
-  // Get top 3 participant similarities
   const getTopSimilarities = () => {
     const similarities = []
     const participants = ['Client', 'DII', 'FII', 'Pro']
@@ -79,26 +78,28 @@ const CorrelationInsights = ({ participantData }) => {
   const topSimilarities = getTopSimilarities()
 
   return (
-    <div className="glass-card p-6 border border-blue-500/20">
-      <div className="flex items-center space-x-3 mb-4">
-        <div className="p-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500">
-          <TrendingUp className="h-5 w-5 text-white" />
+    <div className="glass-card p-6 border border-white/[0.07]">
+      <div className="flex items-center space-x-3 mb-5">
+        <div className="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+          <TrendingUp className="h-5 w-5 text-emerald-400" />
         </div>
-        <h3 className="text-lg font-semibold text-blue-400">Quick Correlation Insights</h3>
+        <div>
+          <h3 className="text-base font-bold text-white tracking-tight">Quick Correlation Summary</h3>
+          <p className="text-xs text-slate-400">Key desk alignments for the selected session</p>
+        </div>
       </div>
 
       {/* Date and Instrument Selection */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-        {/* Date Selection */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">
-            <CalendarDays className="h-4 w-4 inline mr-1" />
-            Date: {selectedDate}
+          <label className="block text-xs font-semibold text-slate-400 mb-1.5 flex items-center">
+            <CalendarDays className="h-3.5 w-3.5 mr-1 text-slate-400" />
+            Trading Date
           </label>
           <select
             value={selectedDate}
             onChange={(e) => setSelectedDate(e.target.value)}
-            className="w-full px-3 py-2 bg-dark-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 text-white text-sm"
+            className="w-full px-3 py-1.5 bg-[#0B0F19] border border-white/[0.08] rounded-lg text-xs font-medium text-slate-300 focus:ring-1 focus:ring-emerald-500/40 focus:border-emerald-500/40 outline-none transition-colors"
           >
             {availableDates.map(date => (
               <option key={date} value={date}>
@@ -108,63 +109,61 @@ const CorrelationInsights = ({ participantData }) => {
           </select>
         </div>
 
-        {/* Instrument Type Selection */}
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">
-            <Filter className="h-4 w-4 inline mr-1" />
-            Instrument Type
+          <label className="block text-xs font-semibold text-slate-400 mb-1.5 flex items-center">
+            <Filter className="h-3.5 w-3.5 mr-1 text-slate-400" />
+            Instrument Scope
           </label>
           <select
             value={selectedInstrument}
             onChange={(e) => setSelectedInstrument(e.target.value)}
-            className="w-full px-3 py-2 bg-dark-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 text-white text-sm"
+            className="w-full px-3 py-1.5 bg-[#0B0F19] border border-white/[0.08] rounded-lg text-xs font-medium text-slate-300 focus:ring-1 focus:ring-emerald-500/40 focus:border-emerald-500/40 outline-none transition-colors"
           >
-            <option value="current">Current (All Instruments)</option>
+            <option value="current">All Instruments (Overall)</option>
             <option value="options">Options Only</option>
             <option value="futures">Futures Only</option>
           </select>
         </div>
       </div>
 
-             {/* Top Similarities */}
-       <div className="space-y-3">
-         <h4 className="text-sm font-medium text-gray-300">Top Participant Similarities:</h4>
-         {topSimilarities.map((item, index) => (
-           <div key={index} className="flex items-center justify-between p-3 bg-dark-700 rounded-lg">
-             <div className="flex-1">
-               <div className="text-sm font-medium text-white">{item.pair}</div>
-               <div className="text-xs text-gray-400">{item.strength} • {item.direction}</div>
-             </div>
-             <div className="flex items-center space-x-8">
-               <div className="text-center">
-                 <div className="text-xs text-gray-400 mb-1">Current</div>
-                 <div className={`text-sm font-bold ${getCorrelationColorClass(item.similarity)}`}>
-                   {formatCorrelation(item.similarity)}
-                 </div>
-               </div>
-               <div className="text-center">
-                 <div className="text-xs text-gray-400 mb-1">Day Change</div>
-                 <div className={`text-sm font-bold ${item.changeSimilarity ? getCorrelationColorClass(item.changeSimilarity) : 'text-gray-500'}`}>
-                   {item.changeSimilarity ? formatCorrelation(item.changeSimilarity) : 'N/A'}
-                 </div>
-               </div>
-             </div>
-           </div>
-         ))}
-       </div>
+      {/* Top Similarities */}
+      <div className="space-y-2.5">
+        <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Top Pair Alignments:</h4>
+        {topSimilarities.map((item, index) => (
+          <div key={index} className="flex items-center justify-between p-3.5 bg-[#0B0F19]/60 border border-white/[0.06] rounded-xl">
+            <div className="flex-1">
+              <div className="text-xs font-bold text-white">{item.pair}</div>
+              <div className="text-[10px] text-slate-400 mt-0.5 font-medium">{item.strength} • {item.direction}</div>
+            </div>
+            <div className="flex items-center space-x-6">
+              <div className="text-right">
+                <div className="text-[10px] text-slate-500 mb-0.5">Overall</div>
+                <div className={`text-xs font-mono font-bold ${getCorrelationColorClass(item.similarity)}`}>
+                  {formatCorrelation(item.similarity)}
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-[10px] text-slate-500 mb-0.5">Day Change</div>
+                <div className={`text-xs font-mono font-bold ${item.changeSimilarity ? getCorrelationColorClass(item.changeSimilarity) : 'text-slate-500'}`}>
+                  {item.changeSimilarity ? formatCorrelation(item.changeSimilarity) : 'N/A'}
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
 
       {/* Insights */}
-      <div className="mt-4 p-3 bg-blue-500/10 rounded-lg border border-blue-500/20">
-        <h4 className="text-sm font-medium text-blue-400 mb-2">💡 Key Insights:</h4>
-        <ul className="text-xs text-gray-400 space-y-1">
-          <li>• Higher values = More similar trading patterns</li>
-          <li>• Lower values = Different trading strategies</li>
-          <li>• Perfect similarity (1.0) = Identical position ratios</li>
-          <li>• Zero similarity (0.0) = Completely different approaches</li>
+      <div className="mt-4 p-3 bg-emerald-500/5 rounded-xl border border-emerald-500/15">
+        <h4 className="text-xs font-bold text-emerald-400 mb-1.5">Interpretation Key:</h4>
+        <ul className="text-[11px] text-slate-400 space-y-1">
+          <li>• <strong className="text-slate-300">High positive (&gt;0.7):</strong> Closely aligned trading bias</li>
+          <li>• <strong className="text-slate-300">Negative (&lt;0):</strong> Contrarian opposing positioning</li>
+          <li>• <strong className="text-slate-300">Near 0:</strong> Independent structural strategies</li>
         </ul>
       </div>
     </div>
   )
 }
 
-export default CorrelationInsights 
+export default CorrelationInsights

@@ -4,6 +4,7 @@ import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, Cartesia
 import DataTable from '../components/DataTable'
 import MetricCard from '../components/MetricCard'
 import { Activity, TrendingUp, BarChart3, Users, Eye } from 'lucide-react'
+import AnimatedLoader from '../components/AnimatedLoader'
 import DeepInsightsPartVol from '../components/DeepInsightsPartVol'
 import SortedCustomTooltip from '../components/SortedCustomTooltip'
 
@@ -43,7 +44,6 @@ const PartVolPage = () => {
       // Get sorted dates from combined data
       const allDates = [...new Set([...data.map(item => item.date), ...oiData.map(item => item.date)])]
         .sort((a, b) => {
-          // Convert DD-MM-YYYY to YYYY-MM-DD for proper date comparison
           const [dayA, monthA, yearA] = a.split('-')
           const [dayB, monthB, yearB] = b.split('-')
           const dateA = new Date(`${yearA}-${monthA}-${dayA}`)
@@ -57,61 +57,50 @@ const PartVolPage = () => {
       setInsightsLatestDate(latestDate)
       setInsightsPreviousDate(previousDate)
 
-      // Process data for each client type
       const clientTypes = ['Client', 'DII', 'FII', 'Pro']
       const processedData = []
 
       clientTypes.forEach(clientType => {
-        // Get volume data for latest and previous dates
         const latestVolData = data.find(item => item.date === latestDate && item.client_type === clientType)
         const previousVolData = data.find(item => item.date === previousDate && item.client_type === clientType)
 
-        // Get OI data for latest and previous dates
         const latestOiData = oiData.find(item => item.date === latestDate && item.client_type === clientType)
         const previousOiData = oiData.find(item => item.date === previousDate && item.client_type === clientType)
 
         if (latestVolData && previousVolData && latestOiData && previousOiData) {
-          // Calculate volume daily changes
           const callLongVolDiff = (latestVolData.option_index_call_long || 0) - (previousVolData.option_index_call_long || 0)
           const putLongVolDiff = (latestVolData.option_index_put_long || 0) - (previousVolData.option_index_put_long || 0)
           const callShortVolDiff = (latestVolData.option_index_call_short || 0) - (previousVolData.option_index_call_short || 0)
           const putShortVolDiff = (latestVolData.option_index_put_short || 0) - (previousVolData.option_index_put_short || 0)
 
-          // Calculate OI daily changes
           const callLongOiDiff = (latestOiData.option_index_call_long || 0) - (previousOiData.option_index_call_long || 0)
           const putLongOiDiff = (latestOiData.option_index_put_long || 0) - (previousOiData.option_index_put_long || 0)
           const callShortOiDiff = (latestOiData.option_index_call_short || 0) - (previousOiData.option_index_call_short || 0)
           const putShortOiDiff = (latestOiData.option_index_put_short || 0) - (previousOiData.option_index_put_short || 0)
 
-          // Initialize with latest day's volume (not differences)
           let adjustedCallLongVol = latestVolData.option_index_call_long || 0
           let adjustedPutLongVol = latestVolData.option_index_put_long || 0
           let adjustedCallShortVol = latestVolData.option_index_call_short || 0
           let adjustedPutShortVol = latestVolData.option_index_put_short || 0
 
-          // Apply conditional adjustments based on OI differences
-          // Call Long OI
           if (callLongOiDiff >= 0) {
             adjustedCallLongVol -= callLongOiDiff
           } else {
             adjustedCallShortVol -= Math.abs(callLongOiDiff)
           }
 
-          // Put Long OI
           if (putLongOiDiff >= 0) {
             adjustedPutLongVol -= putLongOiDiff
           } else {
             adjustedPutShortVol -= Math.abs(putLongOiDiff)
           }
 
-          // Call Short OI
           if (callShortOiDiff >= 0) {
             adjustedCallShortVol -= callShortOiDiff
           } else {
             adjustedCallLongVol -= Math.abs(callShortOiDiff)
           }
 
-          // Put Short OI
           if (putShortOiDiff >= 0) {
             adjustedPutShortVol -= putShortOiDiff
           } else {
@@ -142,8 +131,8 @@ const PartVolPage = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-400"></div>
+      <div className="flex items-center justify-center min-h-[400px]">
+        <AnimatedLoader text="Loading Participant Trading Volume..." />
       </div>
     )
   }
@@ -153,13 +142,11 @@ const PartVolPage = () => {
     data.filter(item => item.client_type !== 'TOTAL') :
     data.filter(item => item.client_type === selectedClientType)
 
-  // Calculate metrics
   const totalLongVolume = filteredData.reduce((sum, item) => sum + (item.total_long_contracts || 0), 0)
   const totalShortVolume = filteredData.reduce((sum, item) => sum + (item.total_short_contracts || 0), 0)
   const futureIndexVolume = filteredData.reduce((sum, item) => sum + (item.future_index_long || 0) + (item.future_index_short || 0), 0)
   const optionIndexVolume = filteredData.reduce((sum, item) => sum + (item.option_index_call_long || 0) + (item.option_index_put_long || 0), 0)
 
-  // Prepare chart data by date
   const chartData = data.reduce((acc, item) => {
     if (item.client_type !== 'TOTAL') {
       const existingDate = acc.find(d => d.date === item.date)
@@ -178,7 +165,6 @@ const PartVolPage = () => {
     return acc
   }, [])
 
-  // Client type volume distribution for latest date
   const latestDate = data.length > 0 ? data[data.length - 1].date : ''
   const volumeDistribution = data
     .filter(item => item.date === latestDate && item.client_type !== 'TOTAL')
@@ -187,7 +173,6 @@ const PartVolPage = () => {
       volume: item.total_long_contracts + item.total_short_contracts,
     }))
 
-  // Daily total volume trend
   const dailyVolumeData = data.reduce((acc, item) => {
     if (item.client_type === 'TOTAL') {
       acc.push({
@@ -200,7 +185,7 @@ const PartVolPage = () => {
     return acc
   }, [])
 
-  const COLORS = ['#0ea5e9', '#8b5cf6', '#10b981', '#f59e0b']
+  const COLORS = ['#38BDF8', '#818CF8', '#10B981', '#F59E0B']
 
   const columns = [
     { key: 'date', label: 'Date' },
@@ -218,19 +203,20 @@ const PartVolPage = () => {
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1
+        staggerChildren: 0.08
       }
     }
   }
 
   const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
+    hidden: { y: 15, opacity: 0 },
     visible: {
       y: 0,
       opacity: 1,
       transition: {
         type: "spring",
-        stiffness: 100
+        stiffness: 120,
+        damping: 15
       }
     }
   }
@@ -243,24 +229,27 @@ const PartVolPage = () => {
       variants={containerVariants}
     >
       <motion.div
-        className="flex flex-col sm:flex-row justify-between items-start sm:items-center"
+        className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
         variants={itemVariants}
       >
-        <h1 className="text-3xl font-bold gradient-text mb-4 sm:mb-0">Participant Trading Volume</h1>
+        <div>
+          <h1 className="text-3xl font-bold text-white tracking-tight">Participant Trading Volume</h1>
+          <p className="text-slate-400 text-sm mt-0.5">Execution volume distribution, contracts and derivatives turnover</p>
+        </div>
         <select
           value={selectedClientType}
           onChange={(e) => setSelectedClientType(e.target.value)}
-          className="px-4 py-2 bg-dark-800/50 border border-white/10 rounded-lg focus:ring-2 focus:ring-primary-500 text-gray-200 backdrop-blur-sm"
+          className="px-3.5 py-2 bg-[#0B0F19] border border-white/[0.08] rounded-xl text-xs font-medium text-slate-300 focus:ring-1 focus:ring-emerald-500/40 focus:border-emerald-500/40 outline-none transition-colors"
         >
           {clientTypes.map(type => (
-            <option key={type} value={type}>{type}</option>
+            <option key={type} value={type}>{type === 'ALL' ? 'All Participants' : type}</option>
           ))}
         </select>
       </motion.div>
 
       {/* Metrics Cards */}
       <motion.div
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
         variants={containerVariants}
       >
         <MetricCard
@@ -279,149 +268,171 @@ const PartVolPage = () => {
           title="Future Index Volume"
           value={futureIndexVolume}
           icon={BarChart3}
-          color="primary"
+          color="cyan"
         />
         <MetricCard
           title="Option Index Volume"
           value={optionIndexVolume}
           icon={Users}
-          color="purple"
+          color="amber"
         />
       </motion.div>
 
       {/* Charts */}
       <motion.div
-        className="grid lg:grid-cols-2 gap-8"
+        className="grid lg:grid-cols-2 gap-6"
         variants={containerVariants}
       >
-        <motion.div variants={itemVariants} className="glass-card p-6 rounded-xl border border-white/5">
-          <h3 className="text-xl font-semibold mb-6 text-gray-100">Daily Total Volume Trend</h3>
-          <ResponsiveContainer width="100%" height={350}>
-            <AreaChart data={dailyVolumeData}>
-              <defs>
-                <linearGradient id="colorFuture" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#0ea5e9" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#0ea5e9" stopOpacity={0} />
-                </linearGradient>
-                <linearGradient id="colorOption" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
-              <XAxis dataKey="date" stroke="#9ca3af" tick={{ fill: '#9ca3af' }} axisLine={{ stroke: '#4b5563' }} />
-              <YAxis stroke="#9ca3af" tick={{ fill: '#9ca3af' }} axisLine={{ stroke: '#4b5563' }} />
-              <Tooltip content={<SortedCustomTooltip />} />
-              <Legend />
-              <Area
-                type="monotone"
-                dataKey="future_volume"
-                stackId="1"
-                stroke="#0ea5e9"
-                fill="url(#colorFuture)"
-                name="Future Volume"
-              />
-              <Area
-                type="monotone"
-                dataKey="option_volume"
-                stackId="1"
-                stroke="#8b5cf6"
-                fill="url(#colorOption)"
-                name="Option Volume"
-              />
-            </AreaChart>
-          </ResponsiveContainer>
+        <motion.div variants={itemVariants} className="glass-card p-6 border border-white/[0.07]">
+          <h3 className="text-base font-bold text-white tracking-tight mb-4">Daily Total Volume Trend</h3>
+          <div className="h-[300px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={dailyVolumeData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="colorFuture" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#38BDF8" stopOpacity={0.25} />
+                    <stop offset="95%" stopColor="#38BDF8" stopOpacity={0} />
+                  </linearGradient>
+                  <linearGradient id="colorOption" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#818CF8" stopOpacity={0.25} />
+                    <stop offset="95%" stopColor="#818CF8" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#1E293B" vertical={false} />
+                <XAxis dataKey="date" stroke="#64748B" fontSize={11} tickLine={false} />
+                <YAxis stroke="#64748B" fontSize={11} tickLine={false} tickFormatter={(val) => `${(val / 1000).toFixed(0)}k`} />
+                <Tooltip content={<SortedCustomTooltip />} />
+                <Legend 
+                  wrapperStyle={{ paddingTop: '12px' }}
+                  formatter={(value) => <span className="text-xs text-slate-300 font-medium">{value}</span>}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="future_volume"
+                  stackId="1"
+                  stroke="#38BDF8"
+                  fill="url(#colorFuture)"
+                  strokeWidth={2}
+                  name="Futures Volume"
+                />
+                <Area
+                  type="monotone"
+                  dataKey="option_volume"
+                  stackId="1"
+                  stroke="#818CF8"
+                  fill="url(#colorOption)"
+                  strokeWidth={2}
+                  name="Options Volume"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
         </motion.div>
 
-        <motion.div variants={itemVariants} className="glass-card p-6 rounded-xl border border-white/5">
-          <h3 className="text-xl font-semibold mb-6 text-gray-100">Client Type Volume Distribution</h3>
-          <ResponsiveContainer width="100%" height={350}>
-            <PieChart>
-              <Pie
-                data={volumeDistribution}
-                cx="50%"
-                cy="50%"
-                outerRadius={100}
-                innerRadius={60}
-                paddingAngle={5}
-                dataKey="volume"
-                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-              >
-                {volumeDistribution.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} stroke="rgba(0,0,0,0.2)" />
-                ))}
-              </Pie>
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: 'rgba(17, 24, 39, 0.9)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  borderRadius: '8px',
-                  color: '#e2e8f0',
-                  backdropFilter: 'blur(4px)'
-                }}
-                itemStyle={{ color: '#e2e8f0' }}
-              />
-            </PieChart>
-          </ResponsiveContainer>
+        <motion.div variants={itemVariants} className="glass-card p-6 border border-white/[0.07]">
+          <h3 className="text-base font-bold text-white tracking-tight mb-4">Participant Volume Distribution</h3>
+          <div className="h-[300px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={volumeDistribution}
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={95}
+                  innerRadius={55}
+                  paddingAngle={4}
+                  dataKey="volume"
+                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                >
+                  {volumeDistribution.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} stroke="#080B11" strokeWidth={2} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: 'rgba(11, 15, 25, 0.95)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '12px',
+                    color: '#e2e8f0',
+                    backdropFilter: 'blur(12px)',
+                  }}
+                  itemStyle={{ color: '#e2e8f0', fontSize: 12 }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
         </motion.div>
       </motion.div>
 
       <motion.div
-        className="grid lg:grid-cols-2 gap-8"
+        className="grid lg:grid-cols-2 gap-6"
         variants={containerVariants}
       >
-        <motion.div variants={itemVariants} className="glass-card p-6 rounded-xl border border-white/5">
-          <h3 className="text-xl font-semibold mb-6 text-gray-100">Client Type Volume Comparison</h3>
-          <ResponsiveContainer width="100%" height={350}>
-            <BarChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
-              <XAxis dataKey="date" stroke="#9ca3af" tick={{ fill: '#9ca3af' }} axisLine={{ stroke: '#4b5563' }} />
-              <YAxis stroke="#9ca3af" tick={{ fill: '#9ca3af' }} axisLine={{ stroke: '#4b5563' }} />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: 'rgba(17, 24, 39, 0.9)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  borderRadius: '8px',
-                  color: '#e2e8f0',
-                  backdropFilter: 'blur(4px)'
-                }}
-              />
-              <Legend />
-              <Bar dataKey="Client_total" fill="#0ea5e9" name="Client" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="FII_total" fill="#10b981" name="FII" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="DII_total" fill="#8b5cf6" name="DII" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="Pro_total" fill="#f59e0b" name="Pro" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
+        <motion.div variants={itemVariants} className="glass-card p-6 border border-white/[0.07]">
+          <h3 className="text-base font-bold text-white tracking-tight mb-4">Participant Total Volume Comparison</h3>
+          <div className="h-[300px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={chartData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#1E293B" vertical={false} />
+                <XAxis dataKey="date" stroke="#64748B" fontSize={11} tickLine={false} />
+                <YAxis stroke="#64748B" fontSize={11} tickLine={false} tickFormatter={(val) => `${(val / 1000).toFixed(0)}k`} />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: 'rgba(11, 15, 25, 0.95)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '12px',
+                    color: '#e2e8f0',
+                    backdropFilter: 'blur(12px)',
+                  }}
+                  itemStyle={{ color: '#e2e8f0', fontSize: 12 }}
+                />
+                <Legend 
+                  wrapperStyle={{ paddingTop: '12px' }}
+                  formatter={(value) => <span className="text-xs text-slate-300 font-medium">{value}</span>}
+                />
+                <Bar dataKey="Client_total" fill="#38BDF8" name="Client" radius={[3, 3, 0, 0]} />
+                <Bar dataKey="FII_total" fill="#10B981" name="FII" radius={[3, 3, 0, 0]} />
+                <Bar dataKey="DII_total" fill="#818CF8" name="DII" radius={[3, 3, 0, 0]} />
+                <Bar dataKey="Pro_total" fill="#F59E0B" name="Pro" radius={[3, 3, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         </motion.div>
 
-        <motion.div variants={itemVariants} className="glass-card p-6 rounded-xl border border-white/5">
-          <h3 className="text-xl font-semibold mb-6 text-gray-100">FII Volume Trend</h3>
-          <ResponsiveContainer width="100%" height={350}>
-            <LineChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
-              <XAxis dataKey="date" stroke="#9ca3af" tick={{ fill: '#9ca3af' }} axisLine={{ stroke: '#4b5563' }} />
-              <YAxis stroke="#9ca3af" tick={{ fill: '#9ca3af' }} axisLine={{ stroke: '#4b5563' }} />
-              <Tooltip content={<SortedCustomTooltip />} />
-              <Legend />
-              <Line
-                type="monotone"
-                dataKey="FII_long"
-                stroke="#10b981"
-                strokeWidth={3}
-                dot={{ fill: '#10b981', strokeWidth: 2, r: 4 }}
-                name="FII Long Volume"
-              />
-              <Line
-                type="monotone"
-                dataKey="FII_short"
-                stroke="#ef4444"
-                strokeWidth={3}
-                dot={{ fill: '#ef4444', strokeWidth: 2, r: 4 }}
-                name="FII Short Volume"
-              />
-            </LineChart>
-          </ResponsiveContainer>
+        <motion.div variants={itemVariants} className="glass-card p-6 border border-white/[0.07]">
+          <h3 className="text-base font-bold text-white tracking-tight mb-4">FII Volume Long vs Short Trend</h3>
+          <div className="h-[300px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={chartData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#1E293B" vertical={false} />
+                <XAxis dataKey="date" stroke="#64748B" fontSize={11} tickLine={false} />
+                <YAxis stroke="#64748B" fontSize={11} tickLine={false} tickFormatter={(val) => `${(val / 1000).toFixed(0)}k`} />
+                <Tooltip content={<SortedCustomTooltip />} />
+                <Legend 
+                  wrapperStyle={{ paddingTop: '12px' }}
+                  formatter={(value) => <span className="text-xs text-slate-300 font-medium">{value}</span>}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="FII_long"
+                  stroke="#10B981"
+                  strokeWidth={2.5}
+                  dot={{ fill: '#10B981', strokeWidth: 0, r: 3 }}
+                  activeDot={{ r: 5, stroke: '#10B981', strokeWidth: 2, fill: '#0B0F19' }}
+                  name="FII Long Volume"
+                />
+                <Line
+                  type="monotone"
+                  dataKey="FII_short"
+                  stroke="#F43F5E"
+                  strokeWidth={2.5}
+                  dot={{ fill: '#F43F5E', strokeWidth: 0, r: 3 }}
+                  activeDot={{ r: 5, stroke: '#F43F5E', strokeWidth: 2, fill: '#0B0F19' }}
+                  name="FII Short Volume"
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
         </motion.div>
       </motion.div>
 
@@ -440,7 +451,6 @@ const PartVolPage = () => {
           })}
           onDateChange={(date) => {
             setInsightsLatestDate(date)
-            // Auto-update previous date
             const allDates = [...new Set([...data.map(item => item.date), ...oiData.map(item => item.date)])]
               .sort((a, b) => {
                 const [dayA, monthA, yearA] = a.split('-')
@@ -457,7 +467,7 @@ const PartVolPage = () => {
       </motion.div>
 
       {/* Data Table */}
-      <motion.div variants={itemVariants} className="glass-card rounded-xl border border-white/5 overflow-hidden">
+      <motion.div variants={itemVariants} className="glass-card border border-white/[0.07] overflow-hidden">
         <DataTable
           data={filteredData}
           columns={columns}

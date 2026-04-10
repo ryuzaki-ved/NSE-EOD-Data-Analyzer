@@ -4,27 +4,38 @@ export default {
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
-        primary: {
-          50: '#f0f9ff',
-          100: '#e0f2fe',
-          200: '#bae6fd',
-          300: '#7dd3fc',
-          400: '#38bdf8',
-          500: '#0ea5e9',
-          600: '#0284c7',
-          700: '#0369a1',
-          800: '#075985',
-          900: '#0c4a6e',
-          DEFAULT: '#0ea5e9',
+        // Institutional Dark Surfaces
+        surface: {
+          base: '#080B11',
+          card: '#0D121D',
+          hover: '#131927',
+          overlay: '#182133',
+          border: 'rgba(255, 255, 255, 0.08)',
         },
-        accent: {
-          purple: '#8b5cf6',
-          pink: '#ec4899',
-          cyan: '#06b6d4',
+        primary: {
+          50: '#ecfdf5',
+          100: '#d1fae5',
+          200: '#a7f3d0',
+          300: '#6ee7b7',
+          400: '#34d399',
+          500: '#10b981',
+          600: '#059669',
+          700: '#047857',
+          800: '#065f46',
+          900: '#064e3b',
+          DEFAULT: '#10b981',
+        },
+        brand: {
           emerald: '#10b981',
+          rose: '#f43f5e',
+          cyan: '#06b6d4',
+          amber: '#f59e0b',
+          slate: '#64748b',
+          ice: '#38bdf8',
         },
         dark: {
           50: '#f8fafc',
@@ -37,24 +48,26 @@ export default {
           700: '#334155',
           800: '#1e293b',
           900: '#0f172a',
-          950: '#020617',
+          950: '#080B11',
         }
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
-        mono: ['JetBrains Mono', 'monospace'],
+        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        mono: ['JetBrains Mono', 'ui-monospace', 'monospace'],
+      },
+      boxShadow: {
+        'terminal': '0 0 0 1px rgba(255, 255, 255, 0.07), 0 8px 24px -4px rgba(0, 0, 0, 0.5)',
+        'glow-emerald': '0 0 20px -3px rgba(16, 185, 129, 0.3)',
+        'glow-rose': '0 0 20px -3px rgba(244, 63, 94, 0.3)',
+        'glow-cyan': '0 0 20px -3px rgba(6, 182, 212, 0.3)',
       },
       animation: {
-        'fade-in': 'fadeIn 0.5s ease-in-out',
-        'slide-up': 'slideUp 0.3s ease-out',
-        'fade-in-up': 'fadeInUp 0.6s ease-out',
-        'slide-in-left': 'slideInLeft 0.6s ease-out',
-        'slide-in-right': 'slideInRight 0.6s ease-out',
-        'scale-in': 'scaleIn 0.5s ease-out',
-        'pulse-slow': 'pulse 2s ease-in-out infinite',
-        'float': 'float 3s ease-in-out infinite',
-        'page-enter': 'pageEnter 0.4s ease-out',
-        'bounce-delayed': 'bounce 1s infinite',
+        'fade-in': 'fadeIn 0.3s ease-out',
+        'slide-up': 'slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+        'fade-in-up': 'fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+        'scale-in': 'scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+        'pulse-subtle': 'pulseSubtle 2.5s ease-in-out infinite',
+        'scanline': 'scanline 4s linear infinite',
       },
       keyframes: {
         fadeIn: {
@@ -62,32 +75,24 @@ export default {
           '100%': { opacity: '1' },
         },
         slideUp: {
-          '0%': { transform: 'translateY(10px)', opacity: '0' },
+          '0%': { transform: 'translateY(8px)', opacity: '0' },
           '100%': { transform: 'translateY(0)', opacity: '1' },
         },
         fadeInUp: {
-          '0%': { opacity: '0', transform: 'translateY(30px)' },
+          '0%': { opacity: '0', transform: 'translateY(16px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
-        },
-        slideInLeft: {
-          '0%': { opacity: '0', transform: 'translateX(-30px)' },
-          '100%': { opacity: '1', transform: 'translateX(0)' },
-        },
-        slideInRight: {
-          '0%': { opacity: '0', transform: 'translateX(30px)' },
-          '100%': { opacity: '1', transform: 'translateX(0)' },
         },
         scaleIn: {
-          '0%': { opacity: '0', transform: 'scale(0.9)' },
+          '0%': { opacity: '0', transform: 'scale(0.96)' },
           '100%': { opacity: '1', transform: 'scale(1)' },
         },
-        float: {
-          '0%, 100%': { transform: 'translateY(0px)' },
-          '50%': { transform: 'translateY(-10px)' },
+        pulseSubtle: {
+          '0%, 100%': { opacity: '1' },
+          '50%': { opacity: '0.6' },
         },
-        pageEnter: {
-          '0%': { opacity: '0', transform: 'translateY(20px)' },
-          '100%': { opacity: '1', transform: 'translateY(0)' },
+        scanline: {
+          '0%': { transform: 'translateY(-100%)' },
+          '100%': { transform: 'translateY(1000%)' },
         },
       },
     },

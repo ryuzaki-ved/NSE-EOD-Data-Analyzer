@@ -227,20 +227,22 @@ const WeeklyOptionsCumulativeChart = ({ chartData }) => {
   }, [chartData])
 
   return (
-    <div className="chart-card">
+    <div className="w-full">
       <div className="flex flex-col space-y-4 mb-4">
-        <div>
-          <h3 className="text-xl font-semibold">Weekly Options Cumulative Change</h3>
-          <p className="text-sm text-gray-400 mt-1">
-            Cumulative change from Cycle Start baseline: Option Long = Call Long + Put Short | Option Short = Put Long + Call Short
-          </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-base font-bold text-white tracking-tight">Weekly Options Cumulative Change</h3>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Cumulative from cycle start — Option Long = Call Long + Put Short | Option Short = Put Long + Call Short
+            </p>
+          </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-4">
+        <div className="flex flex-wrap gap-2">
           <select
             value={selectedParticipant}
             onChange={(e) => setSelectedParticipant(e.target.value)}
-            className="px-3 py-2 bg-dark-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 text-sm"
+            className="px-3 py-1.5 bg-[#0B0F19] border border-white/[0.08] rounded-lg text-xs font-medium text-slate-300 focus:ring-1 focus:ring-emerald-500/40 focus:border-emerald-500/40 outline-none transition-colors"
           >
             {participants.map(participant => (
               <option key={participant} value={participant}>{participant}</option>
@@ -250,9 +252,9 @@ const WeeklyOptionsCumulativeChart = ({ chartData }) => {
           <select
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
-            className="px-3 py-2 bg-dark-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 text-sm"
+            className="px-3 py-1.5 bg-[#0B0F19] border border-white/[0.08] rounded-lg text-xs font-medium text-slate-300 focus:ring-1 focus:ring-emerald-500/40 focus:border-emerald-500/40 outline-none transition-colors"
           >
-            <option value="">Select Start Date</option>
+            <option value="">Cycle Start</option>
             {availableCycleStarts.map(date => (
               <option key={date} value={date}>{date}</option>
             ))}
@@ -261,9 +263,9 @@ const WeeklyOptionsCumulativeChart = ({ chartData }) => {
           <select
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
-            className="px-3 py-2 bg-dark-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 text-sm"
+            className="px-3 py-1.5 bg-[#0B0F19] border border-white/[0.08] rounded-lg text-xs font-medium text-slate-300 focus:ring-1 focus:ring-emerald-500/40 focus:border-emerald-500/40 outline-none transition-colors"
           >
-            <option value="">Select End Date</option>
+            <option value="">End Date</option>
             {chartData
               .filter(item => {
                 if (!startDate) return true
@@ -289,80 +291,87 @@ const WeeklyOptionsCumulativeChart = ({ chartData }) => {
 
           <button
             onClick={() => setShowDetailed(!showDetailed)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${showDetailed
-              ? 'bg-blue-600 text-white hover:bg-blue-700'
-              : 'bg-gray-600 text-gray-200 hover:bg-gray-700'
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 ${showDetailed
+              ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+              : 'bg-white/[0.04] text-slate-400 border border-white/[0.08] hover:bg-white/[0.08] hover:text-slate-300'
               }`}
           >
-            {showDetailed ? 'Hide Detailed' : 'See Detailed'}
+            {showDetailed ? '✓ Detailed View' : 'See Detailed'}
           </button>
         </div>
       </div>
 
-      <ResponsiveContainer width="100%" height={350}>
-        <LineChart data={cumulativeData}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-          <XAxis dataKey="date" stroke="#9ca3af" />
-          <YAxis stroke="#9ca3af" />
-          <Tooltip content={<SortedCustomTooltip />} />
-          <Legend />
-          {!showDetailed ? (
-            <>
-              <Line
-                type="monotone"
-                dataKey="optionLongChange"
-                stroke="#10b981"
-                strokeWidth={3}
-                dot={{ fill: '#10b981', strokeWidth: 2, r: 4 }}
-                name="Option Long Change"
-              />
-              <Line
-                type="monotone"
-                dataKey="optionShortChange"
-                stroke="#ef4444"
-                strokeWidth={3}
-                dot={{ fill: '#ef4444', strokeWidth: 2, r: 4 }}
-                name="Option Short Change"
-              />
-            </>
-          ) : (
-            <>
-              <Line
-                type="monotone"
-                dataKey="callLongChange"
-                stroke="#3b82f6"
-                strokeWidth={2}
-                dot={{ fill: '#3b82f6', strokeWidth: 2, r: 3 }}
-                name="Call Long Change"
-              />
-              <Line
-                type="monotone"
-                dataKey="putLongChange"
-                stroke="#8b5cf6"
-                strokeWidth={2}
-                dot={{ fill: '#8b5cf6', strokeWidth: 2, r: 3 }}
-                name="Put Long Change"
-              />
-              <Line
-                type="monotone"
-                dataKey="callShortChange"
-                stroke="#f59e0b"
-                strokeWidth={2}
-                dot={{ fill: '#f59e0b', strokeWidth: 2, r: 3 }}
-                name="Call Short Change"
-              />
-              <Line
-                type="monotone"
-                dataKey="putShortChange"
-                stroke="#ec4899"
-                strokeWidth={2}
-                dot={{ fill: '#ec4899', strokeWidth: 2, r: 3 }}
-                name="Put Short Change"
-              />
-            </>
-          )}
-        </LineChart>
-      </ResponsiveContainer>
+      <div className="h-[320px] w-full">
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={cumulativeData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#1E293B" vertical={false} />
+            <XAxis dataKey="date" stroke="#64748B" fontSize={11} tickLine={false} />
+            <YAxis stroke="#64748B" fontSize={11} tickLine={false} />
+            <Tooltip content={<SortedCustomTooltip />} />
+            <Legend 
+              wrapperStyle={{ paddingTop: '12px' }}
+              formatter={(value) => <span className="text-xs text-slate-300 font-medium">{value}</span>}
+            />
+            {!showDetailed ? (
+              <>
+                <Line
+                  type="monotone"
+                  dataKey="optionLongChange"
+                  stroke="#10B981"
+                  strokeWidth={2.5}
+                  dot={{ fill: '#10B981', strokeWidth: 0, r: 3 }}
+                  activeDot={{ r: 5, stroke: '#10B981', strokeWidth: 2, fill: '#0B0F19' }}
+                  name="Option Long Change"
+                />
+                <Line
+                  type="monotone"
+                  dataKey="optionShortChange"
+                  stroke="#F43F5E"
+                  strokeWidth={2.5}
+                  dot={{ fill: '#F43F5E', strokeWidth: 0, r: 3 }}
+                  activeDot={{ r: 5, stroke: '#F43F5E', strokeWidth: 2, fill: '#0B0F19' }}
+                  name="Option Short Change"
+                />
+              </>
+            ) : (
+              <>
+                <Line
+                  type="monotone"
+                  dataKey="callLongChange"
+                  stroke="#38BDF8"
+                  strokeWidth={2}
+                  dot={{ fill: '#38BDF8', strokeWidth: 0, r: 2.5 }}
+                  name="Call Long Change"
+                />
+                <Line
+                  type="monotone"
+                  dataKey="putLongChange"
+                  stroke="#818CF8"
+                  strokeWidth={2}
+                  dot={{ fill: '#818CF8', strokeWidth: 0, r: 2.5 }}
+                  name="Put Long Change"
+                />
+                <Line
+                  type="monotone"
+                  dataKey="callShortChange"
+                  stroke="#F59E0B"
+                  strokeWidth={2}
+                  dot={{ fill: '#F59E0B', strokeWidth: 0, r: 2.5 }}
+                  name="Call Short Change"
+                />
+                <Line
+                  type="monotone"
+                  dataKey="putShortChange"
+                  stroke="#FB7185"
+                  strokeWidth={2}
+                  dot={{ fill: '#FB7185', strokeWidth: 0, r: 2.5 }}
+                  name="Put Short Change"
+                />
+              </>
+            )}
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
     </div>
   )
 }
