@@ -1,41 +1,146 @@
-import React from 'react'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
+import React, { useState, useMemo } from 'react'
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer, ReferenceLine, Cell
+} from 'recharts'
+import ChartHeaderHUD from '../charts/ChartHeaderHUD'
+import {
+  filterByTimeframe, formatAxisDate, formatSignedCompact,
+  formatIndianCompact, getAxisInterval
+} from '../../utils/chartHelpers'
 
-const ClientVsProBarChart = ({ chartData }) => (
-  <div className="w-full">
-    <div className="flex items-center justify-between mb-4">
-      <div>
-        <h3 className="text-base font-bold text-white tracking-tight">Client vs Pro Comparison</h3>
-        <p className="text-xs text-slate-400 mt-0.5">Retail/HNI positioning against professional desks</p>
+const ClientVsProBarChart = ({ chartData }) => {
+  const [timeframe, setTimeframe] = useState('1M')
+  const [viewMode, setViewMode] = useState('spread')
+  const [hoveredSession, setHoveredSession] = useState(null)
+
+  const processedData = useMemo(() => {
+    if (!chartData) return []
+    return chartData.map(item => {
+      const clientLong = item.Client_long || 0
+      const proLong = item.Pro_long || 0
+      const clientShort = item.Client_short || 0
+      const proShort = item.Pro_short || 0
+
+      const clientNet = clientLong - clientShort
+      const proNet = proLong - proShort
+      const spreadDivergence = proNet - clientNet // Positive means Pro desk is more bullish than Retail
+
+      return {
+        date: item.date,
+        Client_long: clientLong,
+        Pro_long: proLong,
+        clientNet,
+        proNet,
+        spreadDivergence,
+      }
+    })
+  }, [chartData])
+
+  const filteredData = useMemo(() => {
+    return filterByTimeframe(processedData, timeframe)
+  }, [processedData, timeframe])
+
+  const axisInterval = getAxisInterval(filteredData.length)
+
+  const handleMouseMove = (state) => {
+    if (state && state.activePayload && state.activePayload.length > 0) {
+      const payload = state.activePayload[0].payload
+      setHoveredSession({
+        date: payload.date,
+        values: [
+          { label: 'Pro-Client Spread', value: payload.spreadDivergence, color: payload.spreadDivergence >= 0 ? '#10B981' : '#F43F5E' },
+          { label: 'Pro Net', value: payload.proNet, color: '#F59E0B' },
+          { label: 'Client Net', value: payload.clientNet, color: '#38BDF8' },
+        ],
+        bias: payload.spreadDivergence > 0 ? 'PRO DOMINANT' : payload.spreadDivergence < 0 ? 'RETAIL DOMINANT' : 'BALANCED',
+      })
+    }
+  }
+
+  return (
+    <div className="w-full">
+      <ChartHeaderHUD
+        title="Client vs Pro Desk Divergence"
+        subtitle="Institutional Pro desk positioning against retail Client flow"
+        tag="SMART MONEY SPREAD"
+        timeframe={timeframe}
+        onTimeframeChange={setTimeframe}
+        viewMode={viewMode}
+        viewOptions={[
+          { key: 'spread', label: 'Pro/Retail Spread' },
+          { key: 'gross', label: 'Long Comparison' },
+        ]}
+        onViewModeChange={setViewMode}
+        hoveredData={hoveredSession}
+      />
+
+      <div className="h-[280px] w-full mt-2">
+        <ResponsiveContainer width="100%" height="100%">
+          {viewMode === 'spread' ? (
+            <BarChart
+              data={filteredData}
+              margin={{ top: 10, right: 10, left: -10, bottom: 0 }}
+              onMouseMove={handleMouseMove}
+              onMouseLeave={() => setHoveredSession(null)}
+            >
+              <CartesianGrid strokeDasharray="3 3" stroke="#1E293B" vertical={false} />
+              <XAxis
+                dataKey="date"
+                stroke="#64748B"
+                fontSize={11}
+                tickLine={false}
+                tickFormatter={formatAxisDate}
+                interval={axisInterval}
+              />
+              <YAxis
+                stroke="#64748B"
+                fontSize={11}
+                tickLine={false}
+                tickFormatter={(val) => formatIndianCompact(val)}
+              />
+              <ReferenceLine y={0} stroke="#334155" strokeWidth={1.5} />
+              <Tooltip cursor={{ fill: 'rgba(255, 255, 255, 0.03)' }} content={() => null} />
+              <Bar dataKey="spreadDivergence" radius={[3, 3, 0, 0]} maxBarSize={28}>
+                {filteredData.map((entry, index) => (
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={entry.spreadDivergence >= 0 ? '#10B981' : '#F43F5E'}
+                  />
+                ))}
+              </Bar>
+            </BarChart>
+          ) : (
+            <BarChart
+              data={filteredData}
+              margin={{ top: 10, right: 10, left: -10, bottom: 0 }}
+              onMouseMove={handleMouseMove}
+              onMouseLeave={() => setHoveredSession(null)}
+            >
+              <CartesianGrid strokeDasharray="3 3" stroke="#1E293B" vertical={false} />
+              <XAxis
+                dataKey="date"
+                stroke="#64748B"
+                fontSize={11}
+                tickLine={false}
+                tickFormatter={formatAxisDate}
+                interval={axisInterval}
+              />
+              <YAxis
+                stroke="#64748B"
+                fontSize={11}
+                tickLine={false}
+                tickFormatter={(val) => formatIndianCompact(val)}
+              />
+              <Tooltip cursor={{ fill: 'rgba(255, 255, 255, 0.03)' }} content={() => null} />
+              <Bar dataKey="Pro_long" fill="#F59E0B" name="Pro Long" radius={[2, 2, 0, 0]} maxBarSize={18} />
+              <Bar dataKey="Client_long" fill="#38BDF8" name="Client Long" radius={[2, 2, 0, 0]} maxBarSize={18} />
+            </BarChart>
+          )}
+        </ResponsiveContainer>
       </div>
     </div>
-    
-    <div className="h-[320px] w-full">
-      <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={chartData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#1E293B" vertical={false} />
-          <XAxis dataKey="date" stroke="#64748B" fontSize={11} tickLine={false} />
-          <YAxis stroke="#64748B" fontSize={11} tickLine={false} tickFormatter={(val) => `${(val / 1000).toFixed(0)}k`} />
-          <Tooltip
-            contentStyle={{
-              backgroundColor: 'rgba(11, 15, 25, 0.95)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              borderRadius: '12px',
-              color: '#e2e8f0',
-              backdropFilter: 'blur(12px)',
-            }}
-            itemStyle={{ color: '#e2e8f0', fontSize: 12 }}
-          />
-          <Legend 
-            wrapperStyle={{ paddingTop: '12px' }}
-            formatter={(value) => <span className="text-xs text-slate-300 font-medium">{value}</span>}
-          />
-          <Bar dataKey="Client_long" fill="#38BDF8" name="Client Long" radius={[4, 4, 0, 0]} />
-          <Bar dataKey="Pro_long" fill="#F59E0B" name="Pro Long" radius={[4, 4, 0, 0]} />
-        </BarChart>
-      </ResponsiveContainer>
-    </div>
-  </div>
-)
+  )
+}
 
 export default ClientVsProBarChart

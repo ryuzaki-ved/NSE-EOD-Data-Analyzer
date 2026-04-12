@@ -1,12 +1,20 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { motion } from 'framer-motion'
-import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
+import {
+  LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis,
+  CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, ReferenceLine
+} from 'recharts'
 import DataTable from '../components/DataTable'
 import MetricCard from '../components/MetricCard'
-import { Activity, TrendingUp, BarChart3, Users, Eye } from 'lucide-react'
+import { Activity, TrendingUp, BarChart3, Users } from 'lucide-react'
 import AnimatedLoader from '../components/AnimatedLoader'
 import DeepInsightsPartVol from '../components/DeepInsightsPartVol'
 import SortedCustomTooltip from '../components/SortedCustomTooltip'
+import ChartHeaderHUD from '../components/charts/ChartHeaderHUD'
+import {
+  filterByTimeframe, formatAxisDate, formatSignedCompact,
+  formatIndianCompact, getAxisInterval
+} from '../utils/chartHelpers'
 
 const PartVolPage = () => {
   const [data, setData] = useState([])
@@ -16,6 +24,11 @@ const PartVolPage = () => {
   const [deepInsightsData, setDeepInsightsData] = useState([])
   const [insightsLatestDate, setInsightsLatestDate] = useState('')
   const [insightsPreviousDate, setInsightsPreviousDate] = useState('')
+  const [volTimeframe, setVolTimeframe] = useState('1M')
+  const [hoveredVolSession, setHoveredVolSession] = useState(null)
+  const [fiiVolTimeframe, setFiiVolTimeframe] = useState('1M')
+  const [fiiVolMode, setFiiVolMode] = useState('net')
+  const [hoveredFiiSession, setHoveredFiiSession] = useState(null)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -41,7 +54,6 @@ const PartVolPage = () => {
   // Process deep insights data when both datasets are loaded
   useEffect(() => {
     if (data.length > 0 && oiData.length > 0) {
-      // Get sorted dates from combined data
       const allDates = [...new Set([...data.map(item => item.date), ...oiData.map(item => item.date)])]
         .sort((a, b) => {
           const [dayA, monthA, yearA] = a.split('-')
@@ -68,11 +80,6 @@ const PartVolPage = () => {
         const previousOiData = oiData.find(item => item.date === previousDate && item.client_type === clientType)
 
         if (latestVolData && previousVolData && latestOiData && previousOiData) {
-          const callLongVolDiff = (latestVolData.option_index_call_long || 0) - (previousVolData.option_index_call_long || 0)
-          const putLongVolDiff = (latestVolData.option_index_put_long || 0) - (previousVolData.option_index_put_long || 0)
-          const callShortVolDiff = (latestVolData.option_index_call_short || 0) - (previousVolData.option_index_call_short || 0)
-          const putShortVolDiff = (latestVolData.option_index_put_short || 0) - (previousVolData.option_index_put_short || 0)
-
           const callLongOiDiff = (latestOiData.option_index_call_long || 0) - (previousOiData.option_index_call_long || 0)
           const putLongOiDiff = (latestOiData.option_index_put_long || 0) - (previousOiData.option_index_put_long || 0)
           const callShortOiDiff = (latestOiData.option_index_call_short || 0) - (previousOiData.option_index_call_short || 0)
@@ -129,61 +136,68 @@ const PartVolPage = () => {
     }
   }, [data, oiData, insightsLatestDate, insightsPreviousDate])
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <AnimatedLoader text="Loading Participant Trading Volume..." />
-      </div>
-    )
-  }
-
-  const clientTypes = ['ALL', ...new Set(data.map(item => item.client_type).filter(type => type !== 'TOTAL'))]
-  const filteredData = selectedClientType === 'ALL' ?
+  const clientTypes = useMemo(() => ['ALL', ...new Set(data.map(item => item.client_type).filter(type => type !== 'TOTAL'))], [data])
+  
+  const filteredData = useMemo(() => selectedClientType === 'ALL' ?
     data.filter(item => item.client_type !== 'TOTAL') :
-    data.filter(item => item.client_type === selectedClientType)
+    data.filter(item => item.client_type === selectedClientType), [data, selectedClientType])
 
-  const totalLongVolume = filteredData.reduce((sum, item) => sum + (item.total_long_contracts || 0), 0)
-  const totalShortVolume = filteredData.reduce((sum, item) => sum + (item.total_short_contracts || 0), 0)
-  const futureIndexVolume = filteredData.reduce((sum, item) => sum + (item.future_index_long || 0) + (item.future_index_short || 0), 0)
-  const optionIndexVolume = filteredData.reduce((sum, item) => sum + (item.option_index_call_long || 0) + (item.option_index_put_long || 0), 0)
+  const totalLongVolume = useMemo(() => filteredData.reduce((sum, item) => sum + (item.total_long_contracts || 0), 0), [filteredData])
+  const totalShortVolume = useMemo(() => filteredData.reduce((sum, item) => sum + (item.total_short_contracts || 0), 0), [filteredData])
+  const futureIndexVolume = useMemo(() => filteredData.reduce((sum, item) => sum + (item.future_index_long || 0) + (item.future_index_short || 0), 0), [filteredData])
+  const optionIndexVolume = useMemo(() => filteredData.reduce((sum, item) => sum + (item.option_index_call_long || 0) + (item.option_index_put_long || 0), 0), [filteredData])
 
-  const chartData = data.reduce((acc, item) => {
-    if (item.client_type !== 'TOTAL') {
-      const existingDate = acc.find(d => d.date === item.date)
-      if (existingDate) {
-        existingDate[item.client_type + '_long'] = item.total_long_contracts
-        existingDate[item.client_type + '_short'] = item.total_short_contracts
-        existingDate[item.client_type + '_total'] = item.total_long_contracts + item.total_short_contracts
-      } else {
-        const dateEntry = { date: item.date }
-        dateEntry[item.client_type + '_long'] = item.total_long_contracts
-        dateEntry[item.client_type + '_short'] = item.total_short_contracts
-        dateEntry[item.client_type + '_total'] = item.total_long_contracts + item.total_short_contracts
-        acc.push(dateEntry)
+  const chartData = useMemo(() => {
+    return data.reduce((acc, item) => {
+      if (item.client_type !== 'TOTAL') {
+        const existingDate = acc.find(d => d.date === item.date)
+        if (existingDate) {
+          existingDate[item.client_type + '_long'] = item.total_long_contracts
+          existingDate[item.client_type + '_short'] = item.total_short_contracts
+          existingDate[item.client_type + '_total'] = item.total_long_contracts + item.total_short_contracts
+          if (item.client_type === 'FII') {
+            existingDate.FII_net_vol = item.total_long_contracts - item.total_short_contracts
+          }
+        } else {
+          const dateEntry = { date: item.date }
+          dateEntry[item.client_type + '_long'] = item.total_long_contracts
+          dateEntry[item.client_type + '_short'] = item.total_short_contracts
+          dateEntry[item.client_type + '_total'] = item.total_long_contracts + item.total_short_contracts
+          if (item.client_type === 'FII') {
+            dateEntry.FII_net_vol = item.total_long_contracts - item.total_short_contracts
+          }
+          acc.push(dateEntry)
+        }
       }
-    }
-    return acc
-  }, [])
+      return acc
+    }, [])
+  }, [data])
 
-  const latestDate = data.length > 0 ? data[data.length - 1].date : ''
-  const volumeDistribution = data
+  const latestDate = useMemo(() => data.length > 0 ? data[data.length - 1].date : '', [data])
+  
+  const volumeDistribution = useMemo(() => data
     .filter(item => item.date === latestDate && item.client_type !== 'TOTAL')
     .map(item => ({
       name: item.client_type,
       volume: item.total_long_contracts + item.total_short_contracts,
-    }))
+    })), [data, latestDate])
 
-  const dailyVolumeData = data.reduce((acc, item) => {
-    if (item.client_type === 'TOTAL') {
-      acc.push({
-        date: item.date,
-        total_volume: item.total_long_contracts + item.total_short_contracts,
-        future_volume: item.future_index_long + item.future_index_short + item.future_stock_long + item.future_stock_short,
-        option_volume: item.option_index_call_long + item.option_index_put_long + item.option_stock_call_long + item.option_stock_put_long,
-      })
-    }
-    return acc
-  }, [])
+  const rawDailyVolumeData = useMemo(() => {
+    return data.reduce((acc, item) => {
+      if (item.client_type === 'TOTAL') {
+        acc.push({
+          date: item.date,
+          total_volume: item.total_long_contracts + item.total_short_contracts,
+          future_volume: item.future_index_long + item.future_index_short + item.future_stock_long + item.future_stock_short,
+          option_volume: item.option_index_call_long + item.option_index_put_long + item.option_stock_call_long + item.option_stock_put_long,
+        })
+      }
+      return acc
+    }, [])
+  }, [data])
+
+  const filteredDailyVolData = useMemo(() => filterByTimeframe(rawDailyVolumeData, volTimeframe), [rawDailyVolumeData, volTimeframe])
+  const filteredFiiVolData = useMemo(() => filterByTimeframe(chartData, fiiVolTimeframe), [chartData, fiiVolTimeframe])
 
   const COLORS = ['#38BDF8', '#818CF8', '#10B981', '#F59E0B']
 
@@ -202,9 +216,7 @@ const PartVolPage = () => {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
-      transition: {
-        staggerChildren: 0.08
-      }
+      transition: { staggerChildren: 0.08 }
     }
   }
 
@@ -213,12 +225,12 @@ const PartVolPage = () => {
     visible: {
       y: 0,
       opacity: 1,
-      transition: {
-        type: "spring",
-        stiffness: 120,
-        damping: 15
-      }
+      transition: { type: "spring", stiffness: 120, damping: 15 }
     }
+  }
+
+  if (loading) {
+    return <AnimatedLoader message="INITIALIZING VOLUME TELEMETRY ENGINE" />
   }
 
   return (
@@ -278,41 +290,73 @@ const PartVolPage = () => {
         />
       </motion.div>
 
-      {/* Charts */}
+      {/* Advanced Decluttered Charts */}
       <motion.div
         className="grid lg:grid-cols-2 gap-6"
         variants={containerVariants}
       >
+        {/* Daily Total Volume Trend */}
         <motion.div variants={itemVariants} className="glass-card p-6 border border-white/[0.07]">
-          <h3 className="text-base font-bold text-white tracking-tight mb-4">Daily Total Volume Trend</h3>
-          <div className="h-[300px] w-full">
+          <ChartHeaderHUD
+            title="Daily Market Volume Trend"
+            subtitle="Breakdown of Futures vs Options market activity"
+            tag="MARKET TURNOVER"
+            timeframe={volTimeframe}
+            onTimeframeChange={setVolTimeframe}
+            hoveredData={hoveredVolSession}
+          />
+          <div className="h-[280px] w-full mt-2">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={dailyVolumeData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+              <AreaChart
+                data={filteredDailyVolData}
+                margin={{ top: 10, right: 10, left: -10, bottom: 0 }}
+                onMouseMove={(state) => {
+                  if (state && state.activePayload && state.activePayload.length > 0) {
+                    const payload = state.activePayload[0].payload
+                    setHoveredVolSession({
+                      date: payload.date,
+                      values: [
+                        { label: 'Futures Vol', value: payload.future_volume, color: '#38BDF8' },
+                        { label: 'Options Vol', value: payload.option_volume, color: '#818CF8' },
+                      ],
+                    })
+                  }
+                }}
+                onMouseLeave={() => setHoveredVolSession(null)}
+              >
                 <defs>
                   <linearGradient id="colorFuture" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#38BDF8" stopOpacity={0.25} />
+                    <stop offset="5%" stopColor="#38BDF8" stopOpacity={0.3} />
                     <stop offset="95%" stopColor="#38BDF8" stopOpacity={0} />
                   </linearGradient>
                   <linearGradient id="colorOption" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#818CF8" stopOpacity={0.25} />
+                    <stop offset="5%" stopColor="#818CF8" stopOpacity={0.3} />
                     <stop offset="95%" stopColor="#818CF8" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#1E293B" vertical={false} />
-                <XAxis dataKey="date" stroke="#64748B" fontSize={11} tickLine={false} />
-                <YAxis stroke="#64748B" fontSize={11} tickLine={false} tickFormatter={(val) => `${(val / 1000).toFixed(0)}k`} />
-                <Tooltip content={<SortedCustomTooltip />} />
-                <Legend 
-                  wrapperStyle={{ paddingTop: '12px' }}
-                  formatter={(value) => <span className="text-xs text-slate-300 font-medium">{value}</span>}
+                <XAxis
+                  dataKey="date"
+                  stroke="#64748B"
+                  fontSize={11}
+                  tickLine={false}
+                  tickFormatter={formatAxisDate}
+                  interval={getAxisInterval(filteredDailyVolData.length)}
                 />
+                <YAxis
+                  stroke="#64748B"
+                  fontSize={11}
+                  tickLine={false}
+                  tickFormatter={(val) => formatIndianCompact(val)}
+                />
+                <Tooltip cursor={{ stroke: '#475569', strokeDasharray: '3 3' }} content={() => null} />
                 <Area
                   type="monotone"
                   dataKey="future_volume"
                   stackId="1"
                   stroke="#38BDF8"
                   fill="url(#colorFuture)"
-                  strokeWidth={2}
+                  strokeWidth={1.5}
                   name="Futures Volume"
                 />
                 <Area
@@ -321,7 +365,7 @@ const PartVolPage = () => {
                   stackId="1"
                   stroke="#818CF8"
                   fill="url(#colorOption)"
-                  strokeWidth={2}
+                  strokeWidth={1.5}
                   name="Options Volume"
                 />
               </AreaChart>
@@ -329,9 +373,18 @@ const PartVolPage = () => {
           </div>
         </motion.div>
 
+        {/* Participant Volume Distribution */}
         <motion.div variants={itemVariants} className="glass-card p-6 border border-white/[0.07]">
-          <h3 className="text-base font-bold text-white tracking-tight mb-4">Participant Volume Distribution</h3>
-          <div className="h-[300px] w-full">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="text-base font-bold text-white tracking-tight">Participant Volume Distribution</h3>
+              <p className="text-xs text-slate-400 font-mono">Market volume share on latest date: {latestDate}</p>
+            </div>
+            <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-semibold text-emerald-400">
+              MARKET SHARE
+            </span>
+          </div>
+          <div className="h-[280px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
@@ -339,7 +392,7 @@ const PartVolPage = () => {
                   cx="50%"
                   cy="50%"
                   outerRadius={95}
-                  innerRadius={55}
+                  innerRadius={65}
                   paddingAngle={4}
                   dataKey="volume"
                   label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
@@ -348,89 +401,173 @@ const PartVolPage = () => {
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} stroke="#080B11" strokeWidth={2} />
                   ))}
                 </Pie>
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: 'rgba(11, 15, 25, 0.95)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    borderRadius: '12px',
-                    color: '#e2e8f0',
-                    backdropFilter: 'blur(12px)',
-                  }}
-                  itemStyle={{ color: '#e2e8f0', fontSize: 12 }}
-                />
+                <Tooltip content={<SortedCustomTooltip formatter={(val) => formatIndianCompact(val)} />} />
               </PieChart>
             </ResponsiveContainer>
           </div>
         </motion.div>
       </motion.div>
 
+      {/* FII Volume Trend & Comparison */}
       <motion.div
         className="grid lg:grid-cols-2 gap-6"
         variants={containerVariants}
       >
         <motion.div variants={itemVariants} className="glass-card p-6 border border-white/[0.07]">
-          <h3 className="text-base font-bold text-white tracking-tight mb-4">Participant Total Volume Comparison</h3>
-          <div className="h-[300px] w-full">
+          <ChartHeaderHUD
+            title="FII Execution Volume Dynamics"
+            subtitle="Long vs Short execution volume across trading days"
+            tag="FII TRADING"
+            timeframe={fiiVolTimeframe}
+            onTimeframeChange={setFiiVolTimeframe}
+            viewMode={fiiVolMode}
+            viewOptions={[
+              { key: 'net', label: 'Net Vol Delta' },
+              { key: 'curves', label: 'Long vs Short' },
+            ]}
+            onViewModeChange={setFiiVolMode}
+            hoveredData={hoveredFiiSession}
+          />
+          <div className="h-[280px] w-full mt-2">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1E293B" vertical={false} />
-                <XAxis dataKey="date" stroke="#64748B" fontSize={11} tickLine={false} />
-                <YAxis stroke="#64748B" fontSize={11} tickLine={false} tickFormatter={(val) => `${(val / 1000).toFixed(0)}k`} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: 'rgba(11, 15, 25, 0.95)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    borderRadius: '12px',
-                    color: '#e2e8f0',
-                    backdropFilter: 'blur(12px)',
+              {fiiVolMode === 'net' ? (
+                <BarChart
+                  data={filteredFiiVolData}
+                  margin={{ top: 10, right: 10, left: -10, bottom: 0 }}
+                  onMouseMove={(state) => {
+                    if (state && state.activePayload && state.activePayload.length > 0) {
+                      const payload = state.activePayload[0].payload
+                      const netVol = (payload.FII_long || 0) - (payload.FII_short || 0)
+                      setHoveredFiiSession({
+                        date: payload.date,
+                        values: [
+                          { label: 'Net Vol', value: netVol, color: netVol >= 0 ? '#10B981' : '#F43F5E' },
+                          { label: 'Long Vol', value: payload.FII_long || 0, color: '#38BDF8' },
+                          { label: 'Short Vol', value: payload.FII_short || 0, color: '#F59E0B' },
+                        ],
+                        bias: netVol >= 0 ? 'NET BUY VOL' : 'NET SELL VOL',
+                      })
+                    }
                   }}
-                  itemStyle={{ color: '#e2e8f0', fontSize: 12 }}
-                />
-                <Legend 
-                  wrapperStyle={{ paddingTop: '12px' }}
-                  formatter={(value) => <span className="text-xs text-slate-300 font-medium">{value}</span>}
-                />
-                <Bar dataKey="Client_total" fill="#38BDF8" name="Client" radius={[3, 3, 0, 0]} />
-                <Bar dataKey="FII_total" fill="#10B981" name="FII" radius={[3, 3, 0, 0]} />
-                <Bar dataKey="DII_total" fill="#818CF8" name="DII" radius={[3, 3, 0, 0]} />
-                <Bar dataKey="Pro_total" fill="#F59E0B" name="Pro" radius={[3, 3, 0, 0]} />
-              </BarChart>
+                  onMouseLeave={() => setHoveredFiiSession(null)}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="#1E293B" vertical={false} />
+                  <XAxis
+                    dataKey="date"
+                    stroke="#64748B"
+                    fontSize={11}
+                    tickLine={false}
+                    tickFormatter={formatAxisDate}
+                    interval={getAxisInterval(filteredFiiVolData.length)}
+                  />
+                  <YAxis
+                    stroke="#64748B"
+                    fontSize={11}
+                    tickLine={false}
+                    tickFormatter={(val) => formatIndianCompact(val)}
+                  />
+                  <ReferenceLine y={0} stroke="#334155" strokeWidth={1.5} />
+                  <Tooltip cursor={{ fill: 'rgba(255, 255, 255, 0.03)' }} content={() => null} />
+                  <Bar dataKey="FII_net_vol" radius={[3, 3, 0, 0]} maxBarSize={28}>
+                    {filteredFiiVolData.map((entry, index) => {
+                      const net = (entry.FII_long || 0) - (entry.FII_short || 0)
+                      return (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={net >= 0 ? '#10B981' : '#F43F5E'}
+                        />
+                      )
+                    })}
+                  </Bar>
+                </BarChart>
+              ) : (
+                <LineChart
+                  data={filteredFiiVolData}
+                  margin={{ top: 10, right: 10, left: -10, bottom: 0 }}
+                  onMouseMove={(state) => {
+                    if (state && state.activePayload && state.activePayload.length > 0) {
+                      const payload = state.activePayload[0].payload
+                      setHoveredFiiSession({
+                        date: payload.date,
+                        values: [
+                          { label: 'Long Vol', value: payload.FII_long || 0, color: '#10B981' },
+                          { label: 'Short Vol', value: payload.FII_short || 0, color: '#F43F5E' },
+                        ],
+                      })
+                    }
+                  }}
+                  onMouseLeave={() => setHoveredFiiSession(null)}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="#1E293B" vertical={false} />
+                  <XAxis
+                    dataKey="date"
+                    stroke="#64748B"
+                    fontSize={11}
+                    tickLine={false}
+                    tickFormatter={formatAxisDate}
+                    interval={getAxisInterval(filteredFiiVolData.length)}
+                  />
+                  <YAxis
+                    stroke="#64748B"
+                    fontSize={11}
+                    tickLine={false}
+                    tickFormatter={(val) => formatIndianCompact(val)}
+                  />
+                  <Tooltip cursor={{ stroke: '#475569', strokeDasharray: '3 3' }} content={() => null} />
+                  <Line
+                    type="monotone"
+                    dataKey="FII_long"
+                    stroke="#10B981"
+                    strokeWidth={2}
+                    dot={{ fill: '#10B981', strokeWidth: 0, r: 2.5 }}
+                    activeDot={{ r: 4.5, stroke: '#10B981', strokeWidth: 2, fill: '#0B0F19' }}
+                    name="FII Long Volume"
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="FII_short"
+                    stroke="#F43F5E"
+                    strokeWidth={2}
+                    dot={{ fill: '#F43F5E', strokeWidth: 0, r: 2.5 }}
+                    activeDot={{ r: 4.5, stroke: '#F43F5E', strokeWidth: 2, fill: '#0B0F19' }}
+                    name="FII Short Volume"
+                  />
+                </LineChart>
+              )}
             </ResponsiveContainer>
           </div>
         </motion.div>
 
+        {/* Participant Total Volume Comparison */}
         <motion.div variants={itemVariants} className="glass-card p-6 border border-white/[0.07]">
-          <h3 className="text-base font-bold text-white tracking-tight mb-4">FII Volume Long vs Short Trend</h3>
-          <div className="h-[300px] w-full">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="text-base font-bold text-white tracking-tight">Participant Total Volume Turnover</h3>
+              <p className="text-xs text-slate-400 font-mono">Gross volume comparison across desks</p>
+            </div>
+            <span className="px-2 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-[10px] font-semibold text-cyan-400">
+              CROSS-DESK
+            </span>
+          </div>
+          <div className="h-[280px] w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+              <BarChart data={filteredFiiVolData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#1E293B" vertical={false} />
-                <XAxis dataKey="date" stroke="#64748B" fontSize={11} tickLine={false} />
-                <YAxis stroke="#64748B" fontSize={11} tickLine={false} tickFormatter={(val) => `${(val / 1000).toFixed(0)}k`} />
-                <Tooltip content={<SortedCustomTooltip />} />
-                <Legend 
-                  wrapperStyle={{ paddingTop: '12px' }}
-                  formatter={(value) => <span className="text-xs text-slate-300 font-medium">{value}</span>}
+                <XAxis
+                  dataKey="date"
+                  stroke="#64748B"
+                  fontSize={11}
+                  tickLine={false}
+                  tickFormatter={formatAxisDate}
+                  interval={getAxisInterval(filteredFiiVolData.length)}
                 />
-                <Line
-                  type="monotone"
-                  dataKey="FII_long"
-                  stroke="#10B981"
-                  strokeWidth={2.5}
-                  dot={{ fill: '#10B981', strokeWidth: 0, r: 3 }}
-                  activeDot={{ r: 5, stroke: '#10B981', strokeWidth: 2, fill: '#0B0F19' }}
-                  name="FII Long Volume"
-                />
-                <Line
-                  type="monotone"
-                  dataKey="FII_short"
-                  stroke="#F43F5E"
-                  strokeWidth={2.5}
-                  dot={{ fill: '#F43F5E', strokeWidth: 0, r: 3 }}
-                  activeDot={{ r: 5, stroke: '#F43F5E', strokeWidth: 2, fill: '#0B0F19' }}
-                  name="FII Short Volume"
-                />
-              </LineChart>
+                <YAxis stroke="#64748B" fontSize={11} tickLine={false} tickFormatter={(val) => formatIndianCompact(val)} />
+                <Tooltip content={<SortedCustomTooltip formatter={(val) => formatIndianCompact(val)} />} />
+                <Bar dataKey="Client_total" fill="#38BDF8" name="Client" radius={[2, 2, 0, 0]} maxBarSize={14} />
+                <Bar dataKey="FII_total" fill="#10B981" name="FII" radius={[2, 2, 0, 0]} maxBarSize={14} />
+                <Bar dataKey="DII_total" fill="#818CF8" name="DII" radius={[2, 2, 0, 0]} maxBarSize={14} />
+                <Bar dataKey="Pro_total" fill="#F59E0B" name="Pro" radius={[2, 2, 0, 0]} maxBarSize={14} />
+              </BarChart>
             </ResponsiveContainer>
           </div>
         </motion.div>
@@ -451,27 +588,27 @@ const PartVolPage = () => {
           })}
           onDateChange={(date) => {
             setInsightsLatestDate(date)
-            const allDates = [...new Set([...data.map(item => item.date), ...oiData.map(item => item.date)])]
-              .sort((a, b) => {
-                const [dayA, monthA, yearA] = a.split('-')
-                const [dayB, monthB, yearB] = b.split('-')
-                const dateA = new Date(`${yearA}-${monthA}-${dayA}`)
-                const dateB = new Date(`${yearB}-${monthB}-${dayB}`)
-                return dateB - dateA
-              })
+            const allDates = [...new Set([...data.map(item => item.date), ...oiData.map(item => item.date)])].sort((a, b) => {
+              const [dayA, monthA, yearA] = a.split('-')
+              const [dayB, monthB, yearB] = b.split('-')
+              const dateA = new Date(`${yearA}-${monthA}-${dayA}`)
+              const dateB = new Date(`${yearB}-${monthB}-${dayB}`)
+              return dateB - dateA
+            })
             const currentIndex = allDates.indexOf(date)
-            setInsightsPreviousDate(allDates[currentIndex + 1] || allDates[currentIndex])
+            const nextDate = allDates[currentIndex + 1] || allDates[currentIndex]
+            setInsightsPreviousDate(nextDate)
           }}
           onPrevDateChange={setInsightsPreviousDate}
         />
       </motion.div>
 
       {/* Data Table */}
-      <motion.div variants={itemVariants} className="glass-card border border-white/[0.07] overflow-hidden">
+      <motion.div variants={itemVariants}>
         <DataTable
           data={filteredData}
           columns={columns}
-          title="Participant Trading Volume Data"
+          title="Participant Volume Records"
           defaultSortKey="date"
           defaultSortDirection="desc"
         />

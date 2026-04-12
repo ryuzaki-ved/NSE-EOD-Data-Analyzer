@@ -1,5 +1,8 @@
-import React, { useState, useEffect } from 'react'
-import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
+import React, { useState, useEffect, useMemo } from 'react'
+import {
+  LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis,
+  CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, ReferenceLine
+} from 'recharts'
 import DataTable from '../components/DataTable'
 import MetricCard from '../components/MetricCard'
 import AnimatedLoader from '../components/AnimatedLoader'
@@ -7,6 +10,13 @@ import { TrendingUp, TrendingDown, DollarSign, Activity, Eye, Target } from 'luc
 import { motion } from 'framer-motion'
 import SortedCustomTooltip from '../components/SortedCustomTooltip'
 import DateSelector from '../components/DateSelector'
+import ChartHeaderHUD from '../components/charts/ChartHeaderHUD'
+import {
+  filterByTimeframe, formatAxisDate, formatSignedCompact,
+  formatIndianCompact, formatRupeesCompact, formatSignedRupeesCompact, getAxisInterval
+} from '../utils/chartHelpers'
+
+const SUMMARY_INSTRUMENTS = ['INDEX FUTURES', 'INDEX OPTIONS', 'STOCK FUTURES', 'STOCK OPTIONS']
 
 const FIIDerivStatsPage = () => {
   const [data, setData] = useState([])
@@ -14,6 +24,11 @@ const FIIDerivStatsPage = () => {
   const [selectedInstrument, setSelectedInstrument] = useState('ALL')
   const [selectedDate, setSelectedDate] = useState('')
   const [previousDate, setPreviousDate] = useState('')
+  const [flowTimeframe, setFlowTimeframe] = useState('1M')
+  const [flowViewMode, setFlowViewMode] = useState('net')
+  const [hoveredFlowSession, setHoveredFlowSession] = useState(null)
+  const [oiTimeframe, setOiTimeframe] = useState('1M')
+  const [hoveredOiSession, setHoveredOiSession] = useState(null)
 
   const formatIndianNumber = (num) => {
     if (typeof num !== 'number') return num
@@ -22,8 +37,7 @@ const FIIDerivStatsPage = () => {
 
   const formatAmountInCrores = (amount) => {
     if (typeof amount !== 'number') return amount
-    const crores = amount / 1e7
-    return `₹${crores.toLocaleString('en-IN', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} Cr`
+    return formatRupeesCompact(amount)
   }
 
   useEffect(() => {
@@ -59,16 +73,19 @@ const FIIDerivStatsPage = () => {
     }
   }, [data, selectedDate])
 
-  if (loading) {
-    return <AnimatedLoader message="INITIALIZING FII FLOW INTELLIGENCE ENGINE" />
-  }
+  const instruments = useMemo(() => ['ALL', ...new Set(data.map(item => item.instrument))], [data])
+  
+  // Exclude double-counted summary vs individual items when 'ALL' is selected
+  const activeDataset = useMemo(() => {
+    if (selectedInstrument === 'ALL') {
+      return data.filter(item => SUMMARY_INSTRUMENTS.includes(item.instrument))
+    }
+    return data.filter(item => item.instrument === selectedInstrument)
+  }, [data, selectedInstrument])
 
-  const instruments = ['ALL', ...new Set(data.map(item => item.instrument))]
-  const filteredData = selectedInstrument === 'ALL' ? data : data.filter(item => item.instrument === selectedInstrument)
-
-  const totalBuyAmt = filteredData.reduce((sum, item) => sum + (item.buy_amt_adj || 0), 0)
-  const totalSellAmt = filteredData.reduce((sum, item) => sum + (item.sell_amt_adj || 0), 0)
-  const totalOI = filteredData.reduce((sum, item) => sum + (item.oi_amt_adj || 0), 0)
+  const totalBuyAmt = useMemo(() => activeDataset.reduce((sum, item) => sum + (item.buy_amt_adj || 0), 0), [activeDataset])
+  const totalSellAmt = useMemo(() => activeDataset.reduce((sum, item) => sum + (item.sell_amt_adj || 0), 0), [activeDataset])
+  const totalOI = useMemo(() => activeDataset.reduce((sum, item) => sum + (item.oi_amt_adj || 0), 0), [activeDataset])
   const netFlow = totalBuyAmt - totalSellAmt
 
   const roundToFifty = (value) => Math.round(value / 50) * 50
@@ -80,21 +97,21 @@ const FIIDerivStatsPage = () => {
     const oiAmountDiff = (latestData.oi_amt_adj || 0) - (previousData.oi_amt_adj || 0)
 
     if (oiContractDiff > 0) {
-      return `Added ${formatIndianNumber(Math.abs(oiContractDiff))} contracts worth ${formatAmountInCrores(Math.abs(oiAmountDiff))}`
+      return `Added ${formatIndianNumber(Math.abs(oiContractDiff))} contracts worth ${formatRupeesCompact(Math.abs(oiAmountDiff))}`
     } else if (oiContractDiff < 0) {
-      return `Liquidated ${formatIndianNumber(Math.abs(oiContractDiff))} contracts worth ${formatAmountInCrores(Math.abs(oiAmountDiff))}`
+      return `Liquidated ${formatIndianNumber(Math.abs(oiContractDiff))} contracts worth ${formatRupeesCompact(Math.abs(oiAmountDiff))}`
     } else {
       return "No net change in open interest position"
     }
   }
 
-  const availableDates = [...new Set(data.map(item => item.date))].sort((a, b) => {
+  const availableDates = useMemo(() => [...new Set(data.map(item => item.date))].sort((a, b) => {
     const [dayA, monthA, yearA] = a.split('-')
     const [dayB, monthB, yearB] = b.split('-')
     const dateA = new Date(`${yearA}-${monthA}-${dayA}`)
     const dateB = new Date(`${yearB}-${monthB}-${dayB}`)
     return dateB - dateA
-  })
+  }), [data])
 
   const indexOptions = ['NIFTY OPTIONS', 'BANKNIFTY OPTIONS', 'FINNIFTY OPTIONS', 'MIDCPNIFTY OPTIONS', 'NIFTYNXT50 OPTIONS']
 
@@ -103,38 +120,51 @@ const FIIDerivStatsPage = () => {
     data: data.find(item => item.date === selectedDate && item.instrument === option)
   }))
 
-  const chartData = data.reduce((acc, item) => {
-    const existingDate = acc.find(d => d.date === item.date)
-    if (existingDate) {
-      existingDate.buy_amt += item.buy_amt_adj || 0
-      existingDate.sell_amt += item.sell_amt_adj || 0
-      existingDate.oi_amt += item.oi_amt_adj || 0
-    } else {
-      acc.push({
-        date: item.date,
-        buy_amt: item.buy_amt_adj || 0,
-        sell_amt: item.sell_amt_adj || 0,
-        oi_amt: item.oi_amt_adj || 0,
-      })
-    }
-    return acc
-  }, [])
+  const rawChartData = useMemo(() => {
+    const map = new Map()
+    activeDataset.forEach(item => {
+      if (!map.has(item.date)) {
+        map.set(item.date, {
+          date: item.date,
+          buy_amt: item.buy_amt_adj || 0,
+          sell_amt: item.sell_amt_adj || 0,
+          oi_amt: item.oi_amt_adj || 0,
+          net_flow: (item.buy_amt_adj || 0) - (item.sell_amt_adj || 0),
+        })
+      } else {
+        const existing = map.get(item.date)
+        existing.buy_amt += item.buy_amt_adj || 0
+        existing.sell_amt += item.sell_amt_adj || 0
+        existing.oi_amt += item.oi_amt_adj || 0
+        existing.net_flow = existing.buy_amt - existing.sell_amt
+      }
+    })
 
-  const latestDateData = data.filter(item => item.date === selectedDate)
+    return Array.from(map.values()).sort((a, b) => {
+      const [dayA, monthA, yearA] = a.date.split('-')
+      const [dayB, monthB, yearB] = b.date.split('-')
+      return new Date(`${yearA}-${monthA}-${dayA}`) - new Date(`${yearB}-${monthB}-${dayB}`)
+    })
+  }, [activeDataset])
 
-  const mainFuturesOIData = latestDateData
+  const filteredFlowData = useMemo(() => filterByTimeframe(rawChartData, flowTimeframe), [rawChartData, flowTimeframe])
+  const filteredOiData = useMemo(() => filterByTimeframe(rawChartData, oiTimeframe), [rawChartData, oiTimeframe])
+
+  const latestDateData = useMemo(() => data.filter(item => item.date === selectedDate), [data, selectedDate])
+
+  const mainFuturesOIData = useMemo(() => latestDateData
     .filter(item => item.instrument.includes('FUTURES') && !item.instrument.includes('STOCK') && item.instrument !== 'INDEX FUTURES')
     .map(item => ({
       name: item.instrument.replace(' FUTURES', ''),
       value: item.oi_amt_adj || 0
-    }))
+    })), [latestDateData])
 
-  const mainOptionsOIData = latestDateData
+  const mainOptionsOIData = useMemo(() => latestDateData
     .filter(item => item.instrument.includes('OPTIONS') && !item.instrument.includes('STOCK') && item.instrument !== 'INDEX OPTIONS')
     .map(item => ({
       name: item.instrument.replace(' OPTIONS', ''),
       value: item.oi_amt_adj || 0
-    }))
+    })), [latestDateData])
 
   const COLORS = ['#10b981', '#06b6d4', '#38bdf8', '#818cf8', '#f59e0b', '#f43f5e']
 
@@ -164,6 +194,10 @@ const FIIDerivStatsPage = () => {
       opacity: 1,
       transition: { duration: 0.3 }
     }
+  }
+
+  if (loading) {
+    return <AnimatedLoader message="INITIALIZING FII FLOW INTELLIGENCE ENGINE" />
   }
 
   return (
@@ -241,125 +275,263 @@ const FIIDerivStatsPage = () => {
         </motion.div>
       </motion.div>
 
-      {/* Charts Grid */}
+      {/* Advanced Decluttered Charts Grid */}
       <div className="grid lg:grid-cols-2 gap-6">
+        {/* Buy vs Sell Flow / Net Institutional Turnover */}
         <motion.div variants={itemVariants} className="bg-[#0D121D]/90 backdrop-blur-xl border border-white/[0.08] rounded-2xl p-5 shadow-terminal">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="text-base font-bold text-white tracking-tight">Daily Buy vs Sell Flow (₹)</h3>
-              <p className="text-xs text-slate-400 font-mono">Turnover comparison across trading sessions</p>
-            </div>
+          <ChartHeaderHUD
+            title="Daily FII Turnover Dynamics"
+            subtitle={`Institutional turnover & net directional liquidity (${selectedInstrument})`}
+            tag="FII FLOW"
+            timeframe={flowTimeframe}
+            onTimeframeChange={setFlowTimeframe}
+            viewMode={flowViewMode}
+            viewOptions={[
+              { key: 'net', label: 'Net Flow (₹)' },
+              { key: 'gross', label: 'Gross Split' },
+            ]}
+            onViewModeChange={setFlowViewMode}
+            hoveredData={hoveredFlowSession}
+          />
+
+          <div className="h-[280px] w-full mt-2">
+            <ResponsiveContainer width="100%" height="100%">
+              {flowViewMode === 'net' ? (
+                <BarChart
+                  data={filteredFlowData}
+                  margin={{ top: 10, right: 10, left: -5, bottom: 0 }}
+                  onMouseMove={(state) => {
+                    if (state && state.activePayload && state.activePayload.length > 0) {
+                      const payload = state.activePayload[0].payload
+                      setHoveredFlowSession({
+                        date: payload.date,
+                        values: [
+                          { label: 'Net Flow', value: formatSignedRupeesCompact(payload.net_flow), color: payload.net_flow >= 0 ? '#10B981' : '#F43F5E' },
+                          { label: 'Buy Turn.', value: formatRupeesCompact(payload.buy_amt), color: '#38BDF8' },
+                          { label: 'Sell Turn.', value: formatRupeesCompact(payload.sell_amt), color: '#F59E0B' },
+                        ],
+                        bias: payload.net_flow >= 0 ? 'NET BUYER' : 'NET SELLER',
+                      })
+                    }
+                  }}
+                  onMouseLeave={() => setHoveredFlowSession(null)}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="#1E293B" vertical={false} />
+                  <XAxis
+                    dataKey="date"
+                    stroke="#64748B"
+                    fontSize={11}
+                    tickLine={false}
+                    tickFormatter={formatAxisDate}
+                    interval={getAxisInterval(filteredFlowData.length)}
+                  />
+                  <YAxis
+                    stroke="#64748B"
+                    fontSize={11}
+                    tickLine={false}
+                    tickFormatter={(v) => formatRupeesCompact(v)}
+                    width={70}
+                  />
+                  <ReferenceLine y={0} stroke="#334155" strokeWidth={1.5} />
+                  <Tooltip
+                    content={<SortedCustomTooltip formatter={(val) => formatRupeesCompact(val)} />}
+                    cursor={{ fill: 'rgba(255, 255, 255, 0.03)' }}
+                  />
+                  <Bar dataKey="net_flow" name="Net Flow" radius={[3, 3, 0, 0]} maxBarSize={28}>
+                    {filteredFlowData.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={entry.net_flow >= 0 ? '#10B981' : '#F43F5E'}
+                      />
+                    ))}
+                  </Bar>
+                </BarChart>
+              ) : (
+                <AreaChart
+                  data={filteredFlowData}
+                  margin={{ top: 10, right: 10, left: -5, bottom: 0 }}
+                  onMouseMove={(state) => {
+                    if (state && state.activePayload && state.activePayload.length > 0) {
+                      const payload = state.activePayload[0].payload
+                      setHoveredFlowSession({
+                        date: payload.date,
+                        values: [
+                          { label: 'Buy Turn.', value: formatRupeesCompact(payload.buy_amt), color: '#10B981' },
+                          { label: 'Sell Turn.', value: formatRupeesCompact(payload.sell_amt), color: '#F43F5E' },
+                          { label: 'Net Flow', value: formatSignedRupeesCompact(payload.net_flow), color: payload.net_flow >= 0 ? '#10B981' : '#F43F5E' },
+                        ],
+                        bias: payload.buy_amt >= payload.sell_amt ? 'NET BUY' : 'NET SELL',
+                      })
+                    }
+                  }}
+                  onMouseLeave={() => setHoveredFlowSession(null)}
+                >
+                  <defs>
+                    <linearGradient id="colorBuy" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                    </linearGradient>
+                    <linearGradient id="colorSell" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#f43f5e" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#1E293B" vertical={false} />
+                  <XAxis
+                    dataKey="date"
+                    stroke="#64748B"
+                    fontSize={11}
+                    tickLine={false}
+                    tickFormatter={formatAxisDate}
+                    interval={getAxisInterval(filteredFlowData.length)}
+                  />
+                  <YAxis
+                    stroke="#64748B"
+                    fontSize={11}
+                    tickLine={false}
+                    tickFormatter={(v) => formatRupeesCompact(v)}
+                    width={70}
+                  />
+                  <Tooltip
+                    content={<SortedCustomTooltip formatter={(val) => formatRupeesCompact(val)} />}
+                    cursor={{ stroke: '#475569', strokeDasharray: '3 3' }}
+                  />
+                  <Area type="monotone" dataKey="buy_amt" stroke="#10b981" strokeWidth={1.5} fill="url(#colorBuy)" name="Buy Amount" />
+                  <Area type="monotone" dataKey="sell_amt" stroke="#f43f5e" strokeWidth={1.5} fill="url(#colorSell)" name="Sell Amount" />
+                </AreaChart>
+              )}
+            </ResponsiveContainer>
           </div>
-          <ResponsiveContainer width="100%" height={320}>
-            <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-              <defs>
-                <linearGradient id="colorBuy" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.25} />
-                  <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-                </linearGradient>
-                <linearGradient id="colorSell" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.25} />
-                  <stop offset="95%" stopColor="#f43f5e" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-              <XAxis dataKey="date" stroke="#64748b" tick={{ fill: '#94a3b8', fontSize: 11, fontFamily: 'JetBrains Mono' }} axisLine={false} tickLine={false} />
-              <YAxis stroke="#64748b" tick={{ fill: '#94a3b8', fontSize: 11, fontFamily: 'JetBrains Mono' }} tickFormatter={(v) => `₹${(v/1e7).toFixed(0)}Cr`} axisLine={false} tickLine={false} width={65} />
-              <Tooltip content={<SortedCustomTooltip formatter={(val) => formatAmountInCrores(val)} />} />
-              <Legend wrapperStyle={{ fontSize: '11px', fontFamily: 'JetBrains Mono' }} />
-              <Area type="monotone" dataKey="buy_amt" stroke="#10b981" strokeWidth={2} fill="url(#colorBuy)" name="Buy Amount" />
-              <Area type="monotone" dataKey="sell_amt" stroke="#f43f5e" strokeWidth={2} fill="url(#colorSell)" name="Sell Amount" />
-            </AreaChart>
-          </ResponsiveContainer>
         </motion.div>
 
+        {/* Open Interest Valuation Trend */}
         <motion.div variants={itemVariants} className="bg-[#0D121D]/90 backdrop-blur-xl border border-white/[0.08] rounded-2xl p-5 shadow-terminal">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="text-base font-bold text-white tracking-tight">Open Interest Valuation Trend</h3>
-              <p className="text-xs text-slate-400 font-mono">Gross outstanding contract amount (₹)</p>
-            </div>
+          <ChartHeaderHUD
+            title="Open Interest Valuation Trend"
+            subtitle={`Gross outstanding contract amount (${selectedInstrument})`}
+            tag="OI VALUATION"
+            timeframe={oiTimeframe}
+            onTimeframeChange={setOiTimeframe}
+            hoveredData={hoveredOiSession}
+          />
+
+          <div className="h-[280px] w-full mt-2">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart
+                data={filteredOiData}
+                margin={{ top: 10, right: 10, left: -5, bottom: 0 }}
+                onMouseMove={(state) => {
+                  if (state && state.activePayload && state.activePayload.length > 0) {
+                    const payload = state.activePayload[0].payload
+                    setHoveredOiSession({
+                      date: payload.date,
+                      values: [
+                        { label: 'OI Amount', value: formatRupeesCompact(payload.oi_amt), color: '#06B6D4' },
+                      ],
+                    })
+                  }
+                }}
+                onMouseLeave={() => setHoveredOiSession(null)}
+              >
+                <defs>
+                  <linearGradient id="oiGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#06B6D4" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#06B6D4" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#1E293B" vertical={false} />
+                <XAxis
+                  dataKey="date"
+                  stroke="#64748B"
+                  fontSize={11}
+                  tickLine={false}
+                  tickFormatter={formatAxisDate}
+                  interval={getAxisInterval(filteredOiData.length)}
+                />
+                <YAxis
+                  stroke="#64748B"
+                  fontSize={11}
+                  tickLine={false}
+                  tickFormatter={(v) => formatRupeesCompact(v)}
+                  width={70}
+                />
+                <Tooltip
+                  content={<SortedCustomTooltip formatter={(val) => formatRupeesCompact(val)} />}
+                  cursor={{ stroke: '#475569', strokeDasharray: '3 3' }}
+                />
+                <Area type="monotone" dataKey="oi_amt" stroke="#06B6D4" strokeWidth={2} fill="url(#oiGrad)" name="Open Interest Amount" />
+              </AreaChart>
+            </ResponsiveContainer>
           </div>
-          <ResponsiveContainer width="100%" height={320}>
-            <LineChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-              <XAxis dataKey="date" stroke="#64748b" tick={{ fill: '#94a3b8', fontSize: 11, fontFamily: 'JetBrains Mono' }} axisLine={false} tickLine={false} />
-              <YAxis stroke="#64748b" tick={{ fill: '#94a3b8', fontSize: 11, fontFamily: 'JetBrains Mono' }} tickFormatter={(v) => `₹${(v/1e7).toFixed(0)}Cr`} axisLine={false} tickLine={false} width={65} />
-              <Tooltip content={<SortedCustomTooltip formatter={(val) => formatAmountInCrores(val)} />} />
-              <Legend wrapperStyle={{ fontSize: '11px', fontFamily: 'JetBrains Mono' }} />
-              <Line type="monotone" dataKey="oi_amt" stroke="#06b6d4" strokeWidth={2.5} dot={{ fill: '#06b6d4', r: 3 }} activeDot={{ r: 6 }} name="Open Interest Amount" />
-            </LineChart>
-          </ResponsiveContainer>
         </motion.div>
       </div>
-
-      {/* Net Flow Bar Chart */}
-      <motion.div variants={itemVariants} className="bg-[#0D121D]/90 backdrop-blur-xl border border-white/[0.08] rounded-2xl p-5 shadow-terminal">
-        <div className="mb-4">
-          <h3 className="text-base font-bold text-white tracking-tight">Daily Turnover Distribution</h3>
-          <p className="text-xs text-slate-400 font-mono">Segmented Buy vs Sell turnover volumes per session</p>
-        </div>
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-            <XAxis dataKey="date" stroke="#64748b" tick={{ fill: '#94a3b8', fontSize: 11, fontFamily: 'JetBrains Mono' }} axisLine={false} tickLine={false} />
-            <YAxis stroke="#64748b" tick={{ fill: '#94a3b8', fontSize: 11, fontFamily: 'JetBrains Mono' }} tickFormatter={(v) => `₹${(v/1e7).toFixed(0)}Cr`} axisLine={false} tickLine={false} width={65} />
-            <Tooltip content={<SortedCustomTooltip formatter={(val) => formatAmountInCrores(val)} />} />
-            <Legend wrapperStyle={{ fontSize: '11px', fontFamily: 'JetBrains Mono' }} />
-            <Bar dataKey="buy_amt" fill="#10b981" name="Buy Amount" radius={[4, 4, 0, 0]} />
-            <Bar dataKey="sell_amt" fill="#f43f5e" name="Sell Amount" radius={[4, 4, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
-      </motion.div>
 
       {/* Instrument Distribution Pie Charts */}
       <div className="grid lg:grid-cols-2 gap-6">
         <motion.div variants={itemVariants} className="bg-[#0D121D]/90 backdrop-blur-xl border border-white/[0.08] rounded-2xl p-5 shadow-terminal">
-          <h3 className="text-base font-bold text-white tracking-tight mb-1">Index Futures OI Distribution</h3>
-          <p className="text-xs text-slate-400 font-mono mb-4">Contract weighting on selected date: {selectedDate}</p>
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={mainFuturesOIData}
-                cx="50%"
-                cy="50%"
-                innerRadius={60}
-                outerRadius={95}
-                paddingAngle={4}
-                dataKey="value"
-                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-              >
-                {mainFuturesOIData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} stroke="rgba(0,0,0,0.3)" />
-                ))}
-              </Pie>
-              <Tooltip content={<SortedCustomTooltip formatter={(val) => formatAmountInCrores(val)} />} />
-            </PieChart>
-          </ResponsiveContainer>
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="text-base font-bold text-white tracking-tight">Index Futures OI Distribution</h3>
+              <p className="text-xs text-slate-400 font-mono">Contract weighting on selected date: {selectedDate}</p>
+            </div>
+            <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-semibold text-emerald-400">
+              FUTURES
+            </span>
+          </div>
+          <div className="h-[280px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={mainFuturesOIData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={65}
+                  outerRadius={95}
+                  paddingAngle={4}
+                  dataKey="value"
+                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                >
+                  {mainFuturesOIData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} stroke="rgba(0,0,0,0.3)" />
+                  ))}
+                </Pie>
+                <Tooltip content={<SortedCustomTooltip formatter={(val) => formatRupeesCompact(val)} />} />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
         </motion.div>
 
         <motion.div variants={itemVariants} className="bg-[#0D121D]/90 backdrop-blur-xl border border-white/[0.08] rounded-2xl p-5 shadow-terminal">
-          <h3 className="text-base font-bold text-white tracking-tight mb-1">Index Options OI Distribution</h3>
-          <p className="text-xs text-slate-400 font-mono mb-4">Option premium distribution across indices on: {selectedDate}</p>
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={mainOptionsOIData}
-                cx="50%"
-                cy="50%"
-                innerRadius={60}
-                outerRadius={95}
-                paddingAngle={4}
-                dataKey="value"
-                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-              >
-                {mainOptionsOIData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} stroke="rgba(0,0,0,0.3)" />
-                ))}
-              </Pie>
-              <Tooltip content={<SortedCustomTooltip formatter={(val) => formatAmountInCrores(val)} />} />
-            </PieChart>
-          </ResponsiveContainer>
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="text-base font-bold text-white tracking-tight">Index Options OI Distribution</h3>
+              <p className="text-xs text-slate-400 font-mono">Option premium distribution across indices on: {selectedDate}</p>
+            </div>
+            <span className="px-2 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-[10px] font-semibold text-cyan-400">
+              OPTIONS
+            </span>
+          </div>
+          <div className="h-[280px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={mainOptionsOIData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={65}
+                  outerRadius={95}
+                  paddingAngle={4}
+                  dataKey="value"
+                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                >
+                  {mainOptionsOIData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} stroke="rgba(0,0,0,0.3)" />
+                  ))}
+                </Pie>
+                <Tooltip content={<SortedCustomTooltip formatter={(val) => formatRupeesCompact(val)} />} />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
         </motion.div>
       </div>
 
@@ -404,7 +576,7 @@ const FIIDerivStatsPage = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {latestOptionsData.map(({ instrument, data }, index) => {
+            {latestOptionsData.map(({ instrument, data }) => {
               if (!data) return null
               const instrumentName = instrument.replace(' OPTIONS', '')
               const buyStrike = roundToFifty(data.buy_str_act || 0)
@@ -533,7 +705,7 @@ const FIIDerivStatsPage = () => {
       {/* Data Table */}
       <motion.div variants={itemVariants}>
         <DataTable
-          data={filteredData}
+          data={data}
           columns={columns}
           title="FII Derivatives Master Records"
           defaultSortKey="date"
